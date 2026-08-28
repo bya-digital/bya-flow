@@ -26,8 +26,16 @@ export default function HomePage() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <span className="text-xl font-bold text-brand-600">BYA Flow</span>
           <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
-            <Link href="#features">Fonctionnalités</Link>
-            <Link href="/dashboard">Tableau de bord</Link>
+            <Link href="#features" className="hidden sm:inline">
+              Fonctionnalités
+            </Link>
+            <Link href="/login">Connexion</Link>
+            <Link
+              href="/signup"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-white hover:bg-brand-700"
+            >
+              Commencer
+            </Link>
           </nav>
         </div>
       </header>
@@ -42,10 +50,10 @@ export default function HomePage() {
         </p>
         <div className="mt-10 flex justify-center gap-4">
           <Link
-            href="/dashboard"
+            href="/signup"
             className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow hover:bg-brand-700"
           >
-            Accéder au tableau de bord
+            Créer mon compte
           </Link>
           <Link
             href="#features"

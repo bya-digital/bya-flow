@@ -22,34 +22,62 @@ L'application démarre sur [http://localhost:3000](http://localhost:3000).
 
 ## Configuration
 
-Copiez `.env.example` en `.env.local` et renseignez vos clés Supabase :
+Copiez `.env.example` en `.env.local` et renseignez vos clés du projet
+Supabase **BYA FLOW** :
 
 ```bash
 cp .env.example .env.local
 ```
 
+Sans ces clés, le middleware d'authentification bloque toute page (y compris
+la page publique peut planter si l'URL est vide) : `NEXT_PUBLIC_SUPABASE_URL`
+et `NEXT_PUBLIC_SUPABASE_ANON_KEY` sont désormais requis pour lancer
+l'application, même en développement.
+
 ## Base de données
 
-Le schéma de départ est dans [sql/phase1_base.sql](sql/phase1_base.sql) (à
-remplacer par le modèle e-commerce/CRM multi-tenant en Phase 2). Exécutez-le
-dans l'éditeur SQL de votre projet Supabase.
+Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
+
+1. [sql/phase1_base.sql](sql/phase1_base.sql) — schéma initial (à faire
+   évoluer vers le modèle e-commerce/CRM complet à partir de la Phase 4).
+2. [sql/phase2_auth_multitenant.sql](sql/phase2_auth_multitenant.sql) —
+   `profiles`, `organizations`, `organization_members`, `stores`, RLS et
+   fonctions de création d'organisation.
+
+## Authentification & onboarding
+
+- Pages : `/login`, `/signup`, `/forgot-password`, `/reset-password`.
+- `middleware.ts` protège toutes les routes sauf la liste publique
+  (`/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`,
+  `/auth/callback`) et redirige vers `/onboarding` tant qu'un utilisateur n'a
+  pas d'organisation.
+- `/onboarding` : assistant en 6 étapes qui crée l'organisation et la
+  première boutique.
 
 ## Structure
 
 ```
 app/
   (marketing)/page.tsx   page d'accueil publique
-  (app)/layout.tsx       layout applicatif (AppShell)
+  (auth)/*/page.tsx       login, signup, forgot/reset password
+  (app)/layout.tsx       layout applicatif (AppShell) + garde onboarding
   (app)/*/page.tsx        un dossier par module produit
+  auth/callback/route.ts échange du code Supabase (confirmation/reset)
+  onboarding/page.tsx    assistant de création d'organisation
 components/
   ui/                     design system (Button, Card, Badge, EmptyState, ...)
   layout/                 Sidebar, Topbar, AppShell, ModulePlaceholder
+  onboarding/             OnboardingWizard
 lib/
+  actions/                Server Actions (auth.ts, onboarding.ts)
   nav.ts                  définition de la navigation
-  supabase/client.ts      client Supabase
+  supabase/client.ts      client Supabase (navigateur)
+  supabase/server.ts      client Supabase (Server Components/Route Handlers)
   utils.ts                helper cn()
 sql/
-  phase1_base.sql         schéma de base (à faire évoluer)
+  phase1_base.sql              schéma initial
+  phase2_auth_multitenant.sql  auth, organisations, RLS
+middleware.ts             session + protection des routes
 ```
 
 ## Feuille de route
