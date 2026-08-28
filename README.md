@@ -43,6 +43,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 2. [sql/phase2_auth_multitenant.sql](sql/phase2_auth_multitenant.sql) —
    `profiles`, `organizations`, `organization_members`, `stores`, RLS et
    fonctions de création d'organisation.
+3. [sql/phase3_dashboard_data.sql](sql/phase3_dashboard_data.sql) —
+   `customers`, `products`, `orders`, `order_items` (schéma minimal pour le
+   tableau de bord, étendu en Phase 4/5).
 
 ## Authentification & onboarding
 
@@ -68,6 +71,7 @@ components/
   ui/                     design system (Button, Card, Badge, EmptyState, ...)
   layout/                 Sidebar, Topbar, AppShell, ModulePlaceholder
   onboarding/             OnboardingWizard
+  dashboard/              KpiCard, SalesChart, TopProducts, RecommendationsPanel
 lib/
   actions/                Server Actions (auth.ts, onboarding.ts)
   nav.ts                  définition de la navigation
@@ -77,6 +81,7 @@ lib/
 sql/
   phase1_base.sql              schéma initial
   phase2_auth_multitenant.sql  auth, organisations, RLS
+  phase3_dashboard_data.sql    customers, products, orders, order_items
 middleware.ts             session + protection des routes
 ```
 

@@ -95,7 +95,42 @@ manuellement (Authentication + Table Editor) avant le lancement si vous ne
 voulez pas les garder — je n'ai pas les droits pour le faire moi-même (aucune
 policy de suppression définie, ni clé `service_role`).
 
-## Prochaines étapes (Phase 3)
+## 2026-08-28 — Phase 3 : tableau de bord
 
-- [ ] Construire le tableau de bord (chiffre d'affaires, commandes, panier
-      moyen, clients, produits les plus vendus, zone "BYA Flow recommande").
+- **Base de données** (`sql/phase3_dashboard_data.sql`) : `customers`,
+  `products`, `orders`, `order_items` — schéma volontairement minimal (juste
+  ce qu'il faut pour calculer les indicateurs honnêtement) ; colonnes
+  complètes (variantes, images, SKU, adresses...) prévues en Phase 4/5.
+  Fonctions `is_store_member()` / `is_order_member()` en `SECURITY DEFINER`,
+  même logique anti-récursion RLS qu'en Phase 2.
+- **Dashboard réel** (`app/(app)/dashboard/page.tsx`) branché sur ces tables :
+  - 4 cartes KPI (`components/dashboard/KpiCard.tsx`) : chiffre d'affaires,
+    commandes, panier moyen, nouveaux clients — 30 derniers jours.
+  - Graphique d'évolution des ventes (`components/dashboard/SalesChart.tsx`,
+    via `recharts`).
+  - Produits les plus vendus (`components/dashboard/TopProducts.tsx`), avec
+    état vide dédié.
+  - Zone "BYA Flow recommande" (`components/dashboard/RecommendationsPanel.tsx`)
+    : structure prête, message honnête tant qu'aucune donnée n'existe (pas de
+    recommandation inventée — l'IA qui les générera arrive en Phase 11).
+- Volontairement exclus de cette phase : taux de conversion (nécessite
+  `analytics_events`, Phase 9) et campagnes performantes (nécessite le module
+  Marketing, Phase 7) — cartes qui auraient été vides ou trompeuses sans ces
+  fondations.
+- Vérifié : `next build` (25 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase3_dashboard_data.sql` exécuté sur le projet Supabase "BYA FLOW".
+Testé dans le navigateur avec le compte de test existant (déjà onboardé) :
+dashboard affiche honnêtement 0 € / 0 commandes / "—" panier moyen / 0
+nouveaux clients, graphique des 30 derniers jours rendu (recharts), états
+vides corrects pour produits et recommandations. Aucune erreur console ni
+serveur. Layout desktop vérifié (grille 4 colonnes, graphique redimensionné
+correctement).
+
+## Prochaines étapes (Phase 4)
+
+- [ ] Boutique + produits : personnalisation boutique, CRUD produits
+      (variantes, images, catégories, stock, SKU), qui alimenteront enfin
+      les indicateurs du dashboard avec de vraies données.
