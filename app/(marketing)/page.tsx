@@ -2,20 +2,20 @@ import Link from "next/link";
 
 const features = [
   {
-    title: "Campagnes",
-    description: "Créez et planifiez vos campagnes email et réseaux sociaux depuis un seul endroit.",
+    title: "Boutique & produits",
+    description: "Gérez votre catalogue, vos stocks et vos prix depuis un seul endroit.",
   },
   {
-    title: "Contacts & segments",
-    description: "Centralisez vos contacts et segmentez votre audience pour des messages ciblés.",
+    title: "Clients & CRM",
+    description: "Centralisez prospects et clients, suivez leur historique et segmentez-les.",
   },
   {
-    title: "Automations",
-    description: "Déclenchez des séquences marketing automatiques selon le comportement des contacts.",
+    title: "Marketing & automatisations",
+    description: "Lancez des campagnes, récupérez vos paniers abandonnés, automatisez vos relances.",
   },
   {
-    title: "Analytics",
-    description: "Suivez ouvertures, clics et conversions pour piloter vos décisions.",
+    title: "Analytics & IA",
+    description: "Suivez vos performances et recevez des recommandations de croissance.",
   },
 ];
 
@@ -34,11 +34,11 @@ export default function HomePage() {
 
       <section className="mx-auto max-w-6xl px-6 py-24 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-          Le marketing en ligne, simplifié.
+          Le système de pilotage de votre croissance commerciale.
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-600">
-          BYA Flow réunit campagnes, contacts, automations et analytics dans une
-          seule plateforme, pensée pour lancer et suivre vos actions marketing rapidement.
+          BYA Flow réunit boutique, produits, commandes, clients, marketing et
+          analytics dans un seul espace pour piloter et accélérer votre activité.
         </p>
         <div className="mt-10 flex justify-center gap-4">
           <Link
