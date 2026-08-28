@@ -46,6 +46,10 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 3. [sql/phase3_dashboard_data.sql](sql/phase3_dashboard_data.sql) —
    `customers`, `products`, `orders`, `order_items` (schéma minimal pour le
    tableau de bord, étendu en Phase 4/5).
+4. [sql/phase4_boutique_produits.sql](sql/phase4_boutique_produits.sql) —
+   personnalisation boutique, `product_categories`, `product_images`,
+   `product_variants`, colonnes complètes sur `products`, buckets Storage
+   `product-images` et `store-assets`.
 
 ## Authentification & onboarding
 
@@ -64,7 +68,7 @@ app/
   (marketing)/page.tsx   page d'accueil publique
   (auth)/*/page.tsx       login, signup, forgot/reset password
   (app)/layout.tsx       layout applicatif (AppShell) + garde onboarding
-  (app)/*/page.tsx        un dossier par module produit
+  (app)/*/page.tsx        un dossier par module produit (dont produits/nouveau, produits/[id])
   auth/callback/route.ts échange du code Supabase (confirmation/reset)
   onboarding/page.tsx    assistant de création d'organisation
 components/
@@ -72,16 +76,21 @@ components/
   layout/                 Sidebar, Topbar, AppShell, ModulePlaceholder
   onboarding/             OnboardingWizard
   dashboard/              KpiCard, SalesChart, TopProducts, RecommendationsPanel
+  boutique/               StoreForm
+  produits/               ProductForm, ProductImages, ProductVariants,
+                          CategoryQuickCreate, DeleteProductButton
 lib/
-  actions/                Server Actions (auth.ts, onboarding.ts)
+  actions/                Server Actions (auth.ts, onboarding.ts, store.ts, products.ts)
+  data/store.ts           getCurrentStore() (organisation → boutique)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
   supabase/server.ts      client Supabase (Server Components/Route Handlers)
-  utils.ts                helper cn()
+  utils.ts                helpers cn(), slugify()
 sql/
   phase1_base.sql              schéma initial
   phase2_auth_multitenant.sql  auth, organisations, RLS
   phase3_dashboard_data.sql    customers, products, orders, order_items
+  phase4_boutique_produits.sql boutique, catégories, produits complets, Storage
 middleware.ts             session + protection des routes
 ```
 

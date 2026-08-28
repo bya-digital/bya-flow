@@ -129,8 +129,66 @@ vides corrects pour produits et recommandations. Aucune erreur console ni
 serveur. Layout desktop vérifié (grille 4 colonnes, graphique redimensionné
 correctement).
 
-## Prochaines étapes (Phase 4)
+## 2026-08-28 — Phase 4 : boutique & produits
 
-- [ ] Boutique + produits : personnalisation boutique, CRUD produits
-      (variantes, images, catégories, stock, SKU), qui alimenteront enfin
-      les indicateurs du dashboard avec de vraies données.
+- **Base de données** (`sql/phase4_boutique_produits.sql`) :
+  - `stores` étendue (description, logo_url, slug unique).
+  - `product_categories` (par boutique).
+  - `products` étendue avec toutes les colonnes du cahier des charges (slug,
+    description, prix de comparaison, SKU, stock, poids, catégorie,
+    métadonnées, statut draft/active/archived) ; `is_active` retiré (remplacé
+    par `status`, plus précis).
+  - `product_images`, `product_variants`.
+  - Fonction `is_product_member()` (même logique `SECURITY DEFINER`).
+  - Policies d'écriture (insert/update/delete) ajoutées sur `products` et
+    toutes les nouvelles tables — première phase où l'écriture est réellement
+    ouverte aux membres de l'organisation.
+  - Buckets Supabase Storage `product-images` et `store-assets` (lecture
+    publique, écriture réservée aux membres de la boutique via policy sur
+    `storage.objects`).
+- **Boutique** (`/boutique`) : formulaire réel (nom, slug, description, pays,
+  devise en lecture seule, logo uploadé vers Storage, statut actif/inactif).
+- **Produits** :
+  - `/produits` : liste avec vignette, SKU, prix, stock, statut (badge),
+    état vide dédié.
+  - `/produits/nouveau` et `/produits/[id]` : formulaire partagé
+    (`ProductForm`) pour la création et l'édition — slug auto-généré depuis
+    le nom tant qu'il n'est pas modifié manuellement.
+  - Catégories créées à la volée depuis le formulaire produit
+    (`CategoryQuickCreate`).
+  - Images : upload multiple vers Supabase Storage, suppression (fichier +
+    ligne) depuis `/produits/[id]`.
+  - Variantes : édition en tableau (nom, prix, prix comparé, SKU, stock),
+    enregistrement en une fois (remplace la collection existante).
+  - Suppression d'un produit avec confirmation (`window.confirm`), cascade
+    SQL sur variantes/images.
+- **Bug trouvé et corrigé pendant les tests** : `CategoryQuickCreate` était
+  d'abord un `<form>` imbriqué dans le `<form>` du produit (HTML invalide) —
+  un clic sur "Nouvelle catégorie" pouvait en réalité soumettre le formulaire
+  produit et écraser son nom. Corrigé en appelant la Server Action
+  directement (`startTransition`) au lieu d'un `<form>` imbriqué. Leçon à
+  retenir pour toute future action rapide imbriquée dans un formulaire plus
+  large.
+- Vérifié : `next build` (26 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase4_boutique_produits.sql` exécuté sur le projet Supabase "BYA FLOW".
+Testé de bout en bout avec le compte existant : mise à jour boutique
+(description persistée), création produit complet (prix, SKU, stock, poids,
+statut), création et assignation de catégorie (après correction du bug
+ci-dessus), ajout de variante (persistée), upload et suppression d'image
+(fichier réellement supprimé de Storage, vérifié en dehors du cache CDN),
+suppression du produit avec cascade. Dashboard revérifié : aucune régression,
+"produits les plus vendus" reste vide tant qu'aucune commande n'existe
+(normal, Phase 5). Aucune erreur serveur.
+
+⚠️ Une catégorie de test "Vêtements" reste dans le projet Supabase réel (sans
+produit associé) — à supprimer via Table Editor si besoin, avec le reste des
+données de test déjà signalées en Phase 2.
+
+## Prochaines étapes (Phase 5)
+
+- [ ] Commandes + clients : création/consultation de commandes, statuts,
+      fiches clients — ce qui alimentera enfin le dashboard (CA, panier
+      moyen, produits les plus vendus) avec de vraies données transactionnelles.
