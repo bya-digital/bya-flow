@@ -64,23 +64,38 @@ partir de la Phase 2.
 - Topbar connectée : email de l'utilisateur, nom de l'organisation, menu de
   déconnexion fonctionnel (`signOut`).
 - Vérifié : `next build` (25 routes, pages authentifiées en rendu dynamique
-  `ƒ` comme attendu), `next lint` (aucune erreur), test en navigateur avec un
-  projet Supabase factice — protection des routes, redirections
-  onboarding/login et affichage des erreurs (`fetch failed` sur backend
-  inexistant) tous corrects.
+  `ƒ` comme attendu), `next lint` (aucune erreur).
 
-⚠️ **Non vérifiable en conditions réelles pour l'instant** : aucune clé
-Supabase du projet "BYA FLOW" n'a été fournie. Le code est correct et testé
-contre un backend factice, mais l'inscription/connexion réelle, l'envoi
-d'emails (confirmation, reset) et l'exécution de `sql/phase2_auth_multitenant.sql`
-restent à valider avec le vrai projet Supabase avant de considérer la Phase 2
-comme définitivement close.
+### Validation en conditions réelles (projet Supabase "BYA FLOW")
+
+`sql/phase1_base.sql` et `sql/phase2_auth_multitenant.sql` exécutés sur le
+vrai projet Supabase. Testé de bout en bout dans le navigateur avec un compte
+réel :
+
+- Inscription → email de confirmation reçu et requis (confirmation activée
+  sur le projet) → connexion refusée tant que non confirmé (message clair)
+  → connexion acceptée après confirmation.
+- Onboarding 6 étapes complété → organisation, boutique et
+  `organization_members` (rôle `owner`) créés en base via
+  `create_organization_with_owner`.
+- Redirection automatique vers `/dashboard` après onboarding ; `/parametres`
+  affiche les vraies données (organisation + profil) lues via RLS.
+- Topbar affiche le nom de l'organisation et l'email réels ; déconnexion
+  fonctionnelle, session bien invalidée (page protégée → redirigée vers
+  `/login`).
+- Reconnexion : redirection directe vers `/dashboard` (onboarding non
+  représenté, comme attendu).
+- Aucune erreur console ni serveur sur l'ensemble du parcours.
+
+**Phase 2 est donc validée en conditions réelles, pas seulement en local.**
+
+⚠️ Un compte de test (`byadigital2026+byaflow@gmail.com`) et une organisation
+"BYA Flow Test" existent maintenant dans le projet Supabase réel. À supprimer
+manuellement (Authentication + Table Editor) avant le lancement si vous ne
+voulez pas les garder — je n'ai pas les droits pour le faire moi-même (aucune
+policy de suppression définie, ni clé `service_role`).
 
 ## Prochaines étapes (Phase 3)
 
-- [ ] Exécuter `sql/phase2_auth_multitenant.sql` sur le projet Supabase "BYA
-      FLOW" et renseigner `.env.local` avec les vraies clés.
-- [ ] Tester en conditions réelles : inscription, confirmation email,
-      connexion, mot de passe oublié, onboarding complet.
 - [ ] Construire le tableau de bord (chiffre d'affaires, commandes, panier
       moyen, clients, produits les plus vendus, zone "BYA Flow recommande").
