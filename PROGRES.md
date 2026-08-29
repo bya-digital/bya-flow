@@ -427,7 +427,46 @@ désormais qu'un seul produit sur deux a généré une vente — la cascade entr
 opportunités et score fonctionne comme prévu, aucune donnée inventée.
 Aucune erreur console ni serveur.
 
-## Prochaines étapes (Phase 12)
+## 2026-08-29 — Phase 12 : facturation SaaS
 
-- [ ] Facturation SaaS : plans d'abonnement, moyens de paiement, période
-      d'essai — première brique visible de la monétisation de BYA Flow.
+Aucune section dédiée dans le cahier des charges détaillé (contrairement aux
+autres modules) : périmètre défini raisonnablement — 4 plans, limites
+d'usage réellement appliquées, aucune passerelle de paiement (cohérent avec
+"ne pas intégrer de service externe complexe sans nécessité").
+
+- **Catalogue de plans** (`lib/billing/plans.ts`) : Free (gratuit, 10
+  produits/20 commandes-mois/1 membre), Starter (19 €), Pro (49 €), Business
+  (99 €, illimité) — logique pure, modifiable sans toucher au reste du code.
+- **Base de données** (`sql/phase12_facturation.sql`) : table
+  `subscriptions` (1 par organisation), backfill au plan gratuit pour les
+  organisations déjà créées, `create_organization_with_owner()` (Phase 2)
+  étendue pour créer automatiquement l'abonnement gratuit des nouvelles
+  organisations.
+- **Limite réellement appliquée** : la création de produit
+  (`lib/actions/products.ts`) vérifie le nombre de produits existants contre
+  la limite du plan avant d'insérer — pas une limite décorative, un vrai
+  blocage avec message clair.
+- **Page `/facturation`** : abonnement actuel avec usage réel (produits,
+  commandes du mois, membres), comparatif des 4 plans, changement de plan
+  immédiat et gratuit (aucun moyen de paiement connecté, explicitement
+  indiqué), historique de facturation honnêtement vide.
+- Vérifié : `next build` (36 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+Testé sur le projet Supabase "BYA FLOW" : changement de plan Free → Starter
+→ Free confirmé (limites affichées mises à jour instantanément). Limite de
+10 produits du plan Free testée en conditions réelles jusqu'au bout : 8
+produits de test créés pour atteindre exactement 10/10, la 11ᵉ tentative
+correctement bloquée avec le message "Limite de 10 produits atteinte pour
+le plan Free...", puis passage au plan Starter (limite 100) et la même
+création aboutit immédiatement — la limite suit bien le plan en temps réel.
+Produits de test supprimés après vérification pour ne laisser que le
+catalogue réel. Aucune erreur console ni serveur.
+
+## Prochaines étapes (Phase 13)
+
+- [ ] Tests, sécurité et optimisation : revue de sécurité transverse (RLS,
+      secrets, validation des entrées), vérification des performances
+      (pagination, requêtes), avant la préparation à la production
+      (Phase 14).

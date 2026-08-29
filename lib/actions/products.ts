@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getPlan } from "@/lib/billing/plans";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
@@ -30,6 +31,27 @@ export async function createProduct(formData: FormData) {
   if (!store) redirect("/onboarding");
 
   const supabase = createClient();
+
+  const [{ count: productCount }, { data: subscription }] = await Promise.all([
+    supabase.from("products").select("*", { count: "exact", head: true }).eq("store_id", store.id),
+    supabase
+      .from("subscriptions")
+      .select("plan")
+      .eq("organization_id", store.organization_id)
+      .maybeSingle(),
+  ]);
+
+  const plan = getPlan(subscription?.plan);
+
+  if ((productCount ?? 0) >= plan.maxProducts) {
+    redirect(
+      `/produits/nouveau?error=${encodeURIComponent(
+        `Limite de ${plan.maxProducts} produits atteinte pour le plan ${plan.name}. Passez à un plan supérieur pour en ajouter davantage.`
+      )}`
+    );
+    return;
+  }
+
   const { data: product, error } = await supabase
     .from("products")
     .insert({ store_id: store.id, ...readProductFields(formData) })

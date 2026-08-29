@@ -68,6 +68,10 @@ La Phase 10 (BYA Flow Score) n'ajoute aucune table : le score se calcule à
 la volée depuis les données existantes (voir `lib/score/calculateScore.ts`).
 La Phase 11 (couche IA) non plus : voir `lib/ai/`.
 
+9. [sql/phase12_facturation.sql](sql/phase12_facturation.sql) —
+   `subscriptions` (un plan par organisation), backfill au plan gratuit,
+   `create_organization_with_owner()` étendue.
+
 ## Authentification & onboarding
 
 - Pages : `/login`, `/signup`, `/forgot-password`, `/reset-password`.
@@ -105,14 +109,17 @@ components/
   notifications/          NotificationList
   analytics/              PeriodSelector, OrderStatusBreakdown
   score/                  GrowthScoreGauge, ScoreBreakdown
+  facturation/            PlanCard
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
-                          automations, notifications, ai)
+                          automations, notifications, ai, billing)
   ai/                      architecture IA abstraite (types, fournisseur
                           heuristique par défaut, opportunités de croissance)
+  billing/plans.ts        catalogue des plans SaaS (logique pure)
   data/store.ts           getCurrentStore() (organisation → boutique)
   data/growthScore.ts     récupération des données du BYA Flow Score
+  data/subscription.ts    récupération de l'abonnement + usage réel
   score/calculateScore.ts logique pure du score (facteurs, poids, bandes)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
