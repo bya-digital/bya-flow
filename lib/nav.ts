@@ -3,6 +3,7 @@ import {
   Bell,
   Building2,
   CreditCard,
+  Landmark,
   LayoutDashboard,
   Megaphone,
   Package,
@@ -42,6 +43,7 @@ export const navSections: NavSection[] = [
       { label: "Produits", href: "/produits", icon: Package },
       { label: "Commandes", href: "/commandes", icon: ShoppingCart },
       { label: "Livraison", href: "/livraison", icon: Truck },
+      { label: "Paiements", href: "/paiements", icon: Landmark },
     ],
   },
   {

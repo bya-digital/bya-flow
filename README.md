@@ -93,6 +93,10 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 15. [sql/phase20_livraison.sql](sql/phase20_livraison.sql) — table
     `shipping_methods`, `checkout_cart()` étendue (coût de livraison
     recalculé côté serveur), `orders.subtotal`/`shipping_cost`.
+16. [sql/phase21_paiements.sql](sql/phase21_paiements.sql) —
+    `payment_providers` et `payment_transactions` : terrain préparé pour
+    un vrai fournisseur (Orange Money, Wave, MTN/Moov Money, Chariow,
+    Maketou, iKeepay, Kkiapay), aucune API réellement connectée.
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
@@ -149,6 +153,7 @@ components/
   clients/                ClientForm, DeleteCustomerButton
   commandes/              OrderCreateForm, OrderStatusForm, CustomerQuickCreate
   livraison/              ShippingMethodForm, DeleteShippingMethodButton
+  paiements/              PaymentProviderCard
   campagnes/              CampaignForm, SendCampaignButton, DeleteCampaignButton
   promotions/             CouponForm, DeleteCouponButton
   paniers/                CartCreateForm, CartActions
@@ -162,7 +167,9 @@ lib/
                           customers, orders, campaigns, coupons, carts,
                           automations, notifications, ai, billing,
                           platformAdmin, publicCart, checkout,
-                          customerAuth, shipping)
+                          customerAuth, shipping, payments)
+  payments/               interface PaymentProvider abstraite, registre
+                          des 8 fournisseurs (aucune API réelle connectée)
   ai/                      architecture IA abstraite (types, fournisseur
                           heuristique par défaut, opportunités de croissance)
   billing/plans.ts        catalogue des plans SaaS (logique pure)

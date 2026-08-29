@@ -924,3 +924,38 @@ boutique publique ne pouvait plus atteindre `/login` normalement
 Corrigé en distinguant explicitement une session réelle (`user.email`
 présent) d'une session anonyme pour toute la logique de garde de
 l'espace marchand.
+
+## 2026-08-29 — Terrain préparé pour les paiements (multi-fournisseur)
+
+Décision du porteur de projet : ne pas encore intégrer un vrai
+fournisseur de paiement, mais préparer l'architecture pour huit
+fournisseurs d'Afrique de l'Ouest (Orange Money, Wave, MTN Mobile Money,
+Moov Money, Chariow, Maketou, iKeepay, Kkiapay). **Aucune vraie API n'est
+connectée** — conforme à la règle du cahier des charges de ne jamais
+simuler un paiement comme s'il était réel.
+
+- **`lib/payments/`** : interface `PaymentProvider` abstraite (même
+  principe que `lib/ai/` pour la couche IA), un `stubProvider` factorisé
+  (pas de duplication entre les 8 fournisseurs) dont `isConfigured()` et
+  les champs de formulaire fonctionnent réellement, mais dont
+  `initiate()`/`checkStatus()` renvoient explicitement "pas encore
+  connecté" plutôt que de faire semblant de réussir. Brancher un vrai
+  fournisseur plus tard = remplacer une entrée du registre
+  (`lib/payments/index.ts`) par une vraie implémentation, sans toucher
+  au reste de l'application.
+- **`sql/phase21_paiements.sql`** : `payment_providers` (config par
+  boutique, un identifiant marchand chacun — jamais de données bancaires
+  de client), `payment_transactions` (prête à recevoir de vraies
+  transactions le jour venu). Le checkout public n'utilise pas encore
+  ces tables.
+- **`/paiements`** (commerçant) : une carte par fournisseur, formulaire
+  de clés API en écriture seule (jamais renvoyées au navigateur une fois
+  enregistrées — un champ vide au ré-enregistrement conserve la valeur
+  existante), activation bloquée tant que tous les champs requis ne sont
+  pas renseignés. Un encart rappelle explicitement qu'aucun paiement
+  n'est encore traité.
+- **Champs de configuration volontairement génériques** (clé
+  publique/privée/secrète) — à vérifier contre la documentation
+  officielle de chaque fournisseur au moment de l'intégration réelle,
+  jamais inventés comme s'ils étaient exacts.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
