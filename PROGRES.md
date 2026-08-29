@@ -658,3 +658,53 @@ tentant de charger l'image (boucle silencieuse, image cassée). Corrigé en
 excluant les fichiers statiques (`png`, `jpg`, `svg`, etc.) du matcher,
 plutôt que d'énumérer chaque asset un par un dans `PUBLIC_PATHS`. Vérifié
 en navigateur, déconnecté, sur `/`, `/login` et `/signup`.
+
+## 2026-08-29 — Nouveau cahier des charges : BYA Flow e-commerce complet
+
+Brief maître reçu élargissant la vision : BYA Flow doit devenir une
+plateforme e-commerce complète à 3 expériences (**Admin** BYA Digital,
+**Business** commerçant, **Shop** client final), avec un vrai parcours
+d'achat public (boutique → produit → panier → checkout → paiement →
+commande → livraison → fidélisation). Développement replanifié en 30
+phases. Périmètre confirmé inchangé : uniquement `BYA-Flow` /
+`bya-digital/bya-flow` / Vercel `bya-flow` / Supabase `BYA FLOW`.
+
+### Audit complet avant toute modification
+
+- **Git** : arbre propre, remote `bya-digital/bya-flow` confirmé, historique
+  intact.
+- **Vercel/Next.js** : configuration saine (`next.config.js` correct,
+  aucun `vercel.json` figeant un mode statique). Le seul vrai problème
+  trouvé — Output Directory réglé sur `public` côté dashboard Vercel,
+  qui faisait échouer silencieusement tous les déploiements depuis
+  plusieurs semaines — a été corrigé en direct avec le porteur de projet
+  le 2026-08-29, avant ce brief.
+- **Supabase / RLS** : 23 tables, RLS activée sur la totalité (vérifié
+  programmatiquement, aucune exception). Isolation multi-tenant par
+  `organization_id`/`store_id` via des fonctions `SECURITY DEFINER`,
+  cohérente sur tout le schéma.
+- **Fonctionnalités réelles vs simulées** : le cœur (auth, onboarding,
+  boutique/produits/commandes/clients, automatisations réelles,
+  facturation avec limites appliquées) fonctionne réellement. Les zones
+  volontairement non branchées (envoi de campagnes, paiements, IA
+  générative) sont documentées comme telles dans le code, jamais
+  présentées comme opérationnelles. `/audit` (Sécurité & audit) reste un
+  placeholder.
+- **Trou principal confirmé** : aucune route d'achat public n'existe
+  (`/store/[slug]`, panier, checkout, compte client) — exactement le
+  constat du nouveau brief (section 6/70).
+- **Bonne surprise** : le schéma Phase 4 avait déjà anticipé une partie du
+  terrain — `stores.slug` (unique, backfillé), `stores.is_active`,
+  `products.slug` (unique par boutique) et `products.status`
+  (`draft`/`active`/`archived`) existent déjà. Le Store Builder et la
+  boutique publique (Phases 3-4 du nouveau plan) pourront s'appuyer
+  dessus sans migration de rattrapage.
+
+### Phase 1 (nouveau plan) — Correction socle
+
+Conclusion de l'audit : **aucune correction destructive ou corrective
+n'est nécessaire**. Le socle technique (Git, Vercel, Next.js, schéma
+Supabase, RLS) est déjà sain. Phase 1 est donc close sans changement de
+code — la prochaine étape utile est directement la Phase 2 (design
+system) ou la Phase 3/4 (Store Builder + boutique publique), à trancher
+avec le porteur de projet compte tenu de l'ampleur de chacune.
