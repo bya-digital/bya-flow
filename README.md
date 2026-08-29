@@ -90,6 +90,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 14. [sql/phase19_compte_client.sql](sql/phase19_compte_client.sql) —
     policies de lecture par `auth.email()` (commandes/client du compte),
     fonction `merge_cart()` (fusion panier invité → panier du compte).
+15. [sql/phase20_livraison.sql](sql/phase20_livraison.sql) — table
+    `shipping_methods`, `checkout_cart()` étendue (coût de livraison
+    recalculé côté serveur), `orders.subtotal`/`shipping_cost`.
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
@@ -145,6 +148,7 @@ components/
                           CategoryQuickCreate, DeleteProductButton
   clients/                ClientForm, DeleteCustomerButton
   commandes/              OrderCreateForm, OrderStatusForm, CustomerQuickCreate
+  livraison/              ShippingMethodForm, DeleteShippingMethodButton
   campagnes/              CampaignForm, SendCampaignButton, DeleteCampaignButton
   promotions/             CouponForm, DeleteCouponButton
   paniers/                CartCreateForm, CartActions
@@ -158,7 +162,7 @@ lib/
                           customers, orders, campaigns, coupons, carts,
                           automations, notifications, ai, billing,
                           platformAdmin, publicCart, checkout,
-                          customerAuth)
+                          customerAuth, shipping)
   ai/                      architecture IA abstraite (types, fournisseur
                           heuristique par défaut, opportunités de croissance)
   billing/plans.ts        catalogue des plans SaaS (logique pure)

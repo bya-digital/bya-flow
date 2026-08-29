@@ -878,3 +878,40 @@ indépendante.
   Vérification en conditions réelles (inscription email/mot de passe
   soumise à confirmation par email, non automatisable ici) à faire par
   le porteur de projet.
+
+**Vérifié en production le 2026-08-29** : inscription confirmée par
+email, connexion réussie, fusion du panier invité confirmée (produit
+ajouté avant connexion retrouvé dans le panier du compte après),
+isolation confirmée (aucune commande d'un autre client visible), email
+verrouillé au checkout pour un compte connecté.
+
+## 2026-08-29 — Phase 10 (nouveau plan) : livraison
+
+Architecture volontairement simple pour cette phase : des méthodes de
+livraison à plat (nom, prix, seuil de gratuité optionnel) plutôt que des
+zones géographiques ou des transporteurs — l'essentiel (le client choisit
+une option, son prix s'ajoute réellement au total) fonctionne, sans
+sur-construire une gestion de zones qui n'a pas encore d'utilité prouvée.
+
+- **`sql/phase20_livraison.sql`** : table `shipping_methods` (nom,
+  description, prix, `free_above` optionnel, actif/inactif), lecture
+  anonyme des méthodes actives d'une boutique publiée (même principe que
+  les produits). `checkout_cart()` étendue avec `p_shipping_method_id`
+  (optionnel, pour rester compatible) — le coût est **recalculé
+  côté serveur** à partir du prix réel de la méthode et du sous-total du
+  panier, jamais fait confiance à un montant envoyé par le client.
+  `orders` gagne `subtotal`, `shipping_method_name` (figé, comme
+  `unit_price` sur les lignes de commande) et `shipping_cost`.
+- **`/livraison`** (commerçant) : CRUD complet des méthodes de livraison,
+  même structure que Promotions & coupons.
+- **Checkout public** : sélection de la méthode de livraison (radios avec
+  prix, "Gratuite" si le seuil est atteint) ; le sous-total et le détail
+  de la livraison sont maintenant affichés séparément sur la
+  confirmation de commande, le détail commande du compte client et le
+  détail commande côté commerçant.
+- **Rétrocompatible** : une boutique sans méthode configurée garde un
+  checkout fonctionnel (livraison gratuite implicite, comme avant cette
+  phase).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles à faire une fois la migration
+  exécutée.

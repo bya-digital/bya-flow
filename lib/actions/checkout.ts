@@ -11,6 +11,7 @@ interface CheckoutOrderResult {
 export async function submitCheckout(formData: FormData) {
   const storeSlug = formData.get("storeSlug") as string;
   const cartId = formData.get("cartId") as string;
+  const shippingMethodId = (formData.get("shippingMethodId") as string) || null;
   const fullName = formData.get("fullName") as string;
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
@@ -34,6 +35,7 @@ export async function submitCheckout(formData: FormData) {
       p_phone: phone,
       p_shipping: shipping,
       p_notes: notes,
+      p_shipping_method_id: shippingMethodId,
     })
     .single<CheckoutOrderResult>();
 

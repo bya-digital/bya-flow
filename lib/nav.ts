@@ -13,6 +13,7 @@ import {
   Sparkles,
   Store,
   Ticket,
+  Truck,
   Users,
   Workflow,
   type LucideIcon,
@@ -40,6 +41,7 @@ export const navSections: NavSection[] = [
       { label: "Boutique", href: "/boutique", icon: Store },
       { label: "Produits", href: "/produits", icon: Package },
       { label: "Commandes", href: "/commandes", icon: ShoppingCart },
+      { label: "Livraison", href: "/livraison", icon: Truck },
     ],
   },
   {

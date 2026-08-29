@@ -30,6 +30,33 @@ export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | 
   };
 }
 
+export interface PublicShippingMethod {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number;
+  freeAbove: number | null;
+}
+
+export async function getPublicShippingMethods(storeId: string): Promise<PublicShippingMethod[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("shipping_methods")
+    .select("id, name, description, price, free_above")
+    .eq("store_id", storeId)
+    .eq("is_active", true)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((method) => ({
+    id: method.id,
+    name: method.name,
+    description: method.description,
+    price: Number(method.price),
+    freeAbove: method.free_above !== null ? Number(method.free_above) : null,
+  }));
+}
+
 interface ProductImageRow {
   url: string;
   position: number;

@@ -46,11 +46,25 @@ export default async function StoreOrderConfirmationPage({
             </div>
           ))}
         </div>
-        <div className="flex items-center justify-between border-t border-slate-200 p-4">
-          <span className="text-sm font-semibold text-slate-900">Total</span>
-          <span className="text-lg font-bold text-slate-900">
-            {currencyFormatter.format(order.total)}
-          </span>
+        <div className="space-y-1 border-t border-slate-200 p-4">
+          <div className="flex items-center justify-between text-sm text-slate-500">
+            <span>Sous-total</span>
+            <span>{currencyFormatter.format(order.subtotal)}</span>
+          </div>
+          {order.shippingMethodName && (
+            <div className="flex items-center justify-between text-sm text-slate-500">
+              <span>Livraison ({order.shippingMethodName})</span>
+              <span>
+                {order.shippingCost === 0 ? "Gratuite" : currencyFormatter.format(order.shippingCost)}
+              </span>
+            </div>
+          )}
+          <div className="flex items-center justify-between pt-1">
+            <span className="text-sm font-semibold text-slate-900">Total</span>
+            <span className="text-lg font-bold text-slate-900">
+              {currencyFormatter.format(order.total)}
+            </span>
+          </div>
         </div>
       </div>
 

@@ -82,14 +82,29 @@ export default async function CommandeDetailPage({
                   ))}
                 </tbody>
               </table>
-              {Number(order.discount_amount) > 0 && (
-                <p className="mt-4 text-right text-sm text-emerald-600">
-                  Remise appliquée : -{Number(order.discount_amount).toFixed(2)} €
+              <div className="mt-4 space-y-1 text-right text-sm">
+                {Number(order.subtotal) > 0 && (
+                  <p className="text-slate-500">
+                    Sous-total : {Number(order.subtotal).toFixed(2)} €
+                  </p>
+                )}
+                {order.shipping_method_name && (
+                  <p className="text-slate-500">
+                    Livraison ({order.shipping_method_name}) :{" "}
+                    {Number(order.shipping_cost) === 0
+                      ? "Gratuite"
+                      : `${Number(order.shipping_cost).toFixed(2)} €`}
+                  </p>
+                )}
+                {Number(order.discount_amount) > 0 && (
+                  <p className="text-emerald-600">
+                    Remise appliquée : -{Number(order.discount_amount).toFixed(2)} €
+                  </p>
+                )}
+                <p className="text-base font-semibold text-slate-900">
+                  Total : {Number(order.total).toFixed(2)} €
                 </p>
-              )}
-              <p className="mt-1 text-right text-base font-semibold text-slate-900">
-                Total : {Number(order.total).toFixed(2)} €
-              </p>
+              </div>
             </CardContent>
           </Card>
 
