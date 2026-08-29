@@ -14,22 +14,36 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   } = await supabase.auth.getUser();
 
   let organizationName = "Mon organisation";
+  let unreadNotifications = 0;
 
   if (user) {
     const { data: membership } = await supabase
       .from("organization_members")
-      .select("organizations(name)")
+      .select("organization_id, organizations(name)")
       .eq("user_id", user.id)
       .limit(1)
-      .maybeSingle<MembershipRow>();
+      .maybeSingle<MembershipRow & { organization_id: string }>();
 
     if (membership?.organizations) {
       organizationName = membership.organizations.name;
     }
+
+    if (membership?.organization_id) {
+      const { count } = await supabase
+        .from("notifications")
+        .select("*", { count: "exact", head: true })
+        .eq("organization_id", membership.organization_id)
+        .is("read_at", null);
+      unreadNotifications = count ?? 0;
+    }
   }
 
   return (
-    <AppShell userEmail={user?.email ?? ""} organizationName={organizationName}>
+    <AppShell
+      userEmail={user?.email ?? ""}
+      organizationName={organizationName}
+      unreadNotifications={unreadNotifications}
+    >
       {children}
     </AppShell>
   );

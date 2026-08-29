@@ -8,9 +8,15 @@ interface AppShellProps {
   children: ReactNode;
   userEmail: string;
   organizationName: string;
+  unreadNotifications: number;
 }
 
-export function AppShell({ children, userEmail, organizationName }: AppShellProps) {
+export function AppShell({
+  children,
+  userEmail,
+  organizationName,
+  unreadNotifications,
+}: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -21,6 +27,7 @@ export function AppShell({ children, userEmail, organizationName }: AppShellProp
           onMenuClick={() => setMobileOpen(true)}
           userEmail={userEmail}
           organizationName={organizationName}
+          unreadNotifications={unreadNotifications}
         />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>

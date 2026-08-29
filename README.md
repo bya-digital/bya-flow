@@ -57,6 +57,10 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
    orphelines de la Phase 1 (`contacts`, `campaigns` v1, `campaign_events`),
    recrée `campaigns`/`campaign_recipients`, ajoute `coupons`, `carts`,
    `cart_items`.
+7. [sql/phase8_automatisations.sql](sql/phase8_automatisations.sql) —
+   `automations`, `automation_runs`, `notifications`, et les triggers
+   Postgres qui les font réagir automatiquement (commande créée/livrée,
+   panier abandonné).
 
 ## Authentification & onboarding
 
@@ -91,9 +95,12 @@ components/
   campagnes/              CampaignForm, SendCampaignButton, DeleteCampaignButton
   promotions/             CouponForm, DeleteCouponButton
   paniers/                CartCreateForm, CartActions
+  automatisations/        AutomationForm, DeleteAutomationButton
+  notifications/          NotificationList
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
-                          customers, orders, campaigns, coupons, carts)
+                          customers, orders, campaigns, coupons, carts,
+                          automations, notifications)
   data/store.ts           getCurrentStore() (organisation → boutique)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
@@ -106,6 +113,7 @@ sql/
   phase4_boutique_produits.sql boutique, catégories, produits complets, Storage
   phase5_commandes_clients.sql fiche client, paiement, expédition, écriture
   phase7_marketing.sql        campagnes, coupons, paniers abandonnés
+  phase8_automatisations.sql  automations, notifications, triggers Postgres
 middleware.ts             session + protection des routes
 ```
 

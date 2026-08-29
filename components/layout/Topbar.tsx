@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, LogOut, Menu, Search } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { signOut } from "@/lib/actions/auth";
 
@@ -8,9 +9,15 @@ interface TopbarProps {
   onMenuClick: () => void;
   userEmail: string;
   organizationName: string;
+  unreadNotifications: number;
 }
 
-export function Topbar({ onMenuClick, userEmail, organizationName }: TopbarProps) {
+export function Topbar({
+  onMenuClick,
+  userEmail,
+  organizationName,
+  unreadNotifications,
+}: TopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -33,12 +40,18 @@ export function Topbar({ onMenuClick, userEmail, organizationName }: TopbarProps
       </div>
 
       <div className="relative ml-auto flex items-center gap-4">
-        <button
+        <Link
+          href="/notifications"
           className="relative text-slate-500 hover:text-slate-700"
           aria-label="Notifications"
         >
           <Bell className="h-5 w-5" />
-        </button>
+          {unreadNotifications > 0 && (
+            <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold text-white">
+              {unreadNotifications > 9 ? "9+" : unreadNotifications}
+            </span>
+          )}
+        </Link>
 
         <button
           onClick={() => setMenuOpen((open) => !open)}

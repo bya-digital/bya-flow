@@ -276,9 +276,52 @@ moyen, 6 unités vendues — tous les montants correspondent exactement à la
 somme des commandes créées. Aucune erreur console ni serveur (vérifié sur un
 onglet neuf).
 
-## Prochaines étapes (Phase 8)
+## 2026-08-29 — Phase 8 : automatisations
 
-- [ ] Automatisations : moteur déclencheur → condition → action.
-      Cas d'usage déjà préparés par les phases précédentes : relance
-      automatique des paniers abandonnés (`last_reminder_at`), réactivation
-      client inactif, notification à la livraison d'une commande.
+- **Base de données** (`sql/phase8_automatisations.sql`) : `automations`
+  (déclencheur/condition/action), `automation_runs` (historique
+  d'exécution), `notifications` (nouvelle table réelle pour le module
+  Notifications, jusqu'ici un placeholder).
+- **Déclencheurs événementiels réels** — de vrais triggers Postgres, aucun
+  code applicatif ne les invoque :
+  - `order_created` (AFTER INSERT ON orders)
+  - `order_delivered` (AFTER UPDATE ON orders, transition vers `delivered`)
+  - `cart_abandoned` (AFTER UPDATE ON carts, transition vers `abandoned`)
+- **Déclencheur temporel** `customer_inactive` : pas de planification
+  automatique (aucun `pg_cron` activé par précaution) — s'exécute à la
+  demande via un bouton "Exécuter maintenant" (RPC
+  `run_customer_inactivity_check`, protégée par vérification d'appartenance
+  à l'organisation).
+- **Action unique** : créer une notification interne. Comme pour l'envoi de
+  campagnes (Phase 7), aucun fournisseur externe n'est connecté — c'est
+  explicite dans l'UI du formulaire.
+- **Module Notifications** (`/notifications`) : passe de placeholder à
+  contenu réel — liste, marquage lu/tout lu, badge de compteur non lu dans
+  la Topbar (calculé côté serveur dans `app/(app)/layout.tsx`).
+- Vérifié : `next build` (36 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase8_automatisations.sql` exécuté sur le projet Supabase "BYA FLOW".
+Testé de bout en bout :
+- Automatisation "commande livrée" créée → commande #2 passée au statut
+  "Livrée" via l'UI habituelle (aucun code spécifique appelé) → notification
+  "Demander un avis" apparue automatiquement avec `{{order_number}}`
+  correctement substitué. Badge Topbar passé à 1, retombé à 0 après lecture.
+- Automatisation "commande créée" → nouvelle commande #4 → notification
+  générée automatiquement, dans le bon ordre chronologique.
+- Automatisation "client inactif" (1 jour) → exécution manuelle → 0
+  notification créée, résultat correct (la seule cliente a commandé le jour
+  même, donc pas inactive) : confirme l'absence de faux positif.
+- Bug mineur trouvé pendant les tests : le champ "jours" avait `min="1"`,
+  une valeur de test à `0` bloquait silencieusement la soumission (validation
+  HTML5 native) — comportement correct du formulaire, pas un bug de
+  l'automatisation ; juste une valeur de test invalide de ma part.
+- Aucune erreur console ni serveur (vérifié sur un onglet neuf).
+
+## Prochaines étapes (Phase 9)
+
+- [ ] Analytics : chiffre d'affaires, conversion, évolution temporelle,
+      meilleures ventes — poser les bases de `analytics_events` pour,
+      entre autres, activer enfin le taux de conversion du dashboard
+      (volontairement laissé de côté en Phase 3).
