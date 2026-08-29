@@ -13,8 +13,8 @@ export function SalesChart({ data }: { data: SalesChartPoint[] }) {
       <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#6d55ff" stopOpacity={0.25} />
-            <stop offset="100%" stopColor="#6d55ff" stopOpacity={0} />
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.25} />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
           </linearGradient>
         </defs>
         <XAxis
@@ -41,7 +41,7 @@ export function SalesChart({ data }: { data: SalesChartPoint[] }) {
         <Area
           type="monotone"
           dataKey="revenue"
-          stroke="#6d55ff"
+          stroke="#3b82f6"
           strokeWidth={2}
           fill="url(#revenueGradient)"
         />
