@@ -50,6 +50,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
    personnalisation boutique, `product_categories`, `product_images`,
    `product_variants`, colonnes complètes sur `products`, buckets Storage
    `product-images` et `store-assets`.
+5. [sql/phase5_commandes_clients.sql](sql/phase5_commandes_clients.sql) —
+   fiche client complète (tags, statut, notes), numérotation des commandes,
+   paiement, adresse de livraison, policies d'écriture.
 
 ## Authentification & onboarding
 
@@ -79,8 +82,11 @@ components/
   boutique/               StoreForm
   produits/               ProductForm, ProductImages, ProductVariants,
                           CategoryQuickCreate, DeleteProductButton
+  clients/                ClientForm, DeleteCustomerButton
+  commandes/              OrderCreateForm, OrderStatusForm, CustomerQuickCreate
 lib/
-  actions/                Server Actions (auth.ts, onboarding.ts, store.ts, products.ts)
+  actions/                Server Actions (auth, onboarding, store, products,
+                          customers, orders)
   data/store.ts           getCurrentStore() (organisation → boutique)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
@@ -91,6 +97,7 @@ sql/
   phase2_auth_multitenant.sql  auth, organisations, RLS
   phase3_dashboard_data.sql    customers, products, orders, order_items
   phase4_boutique_produits.sql boutique, catégories, produits complets, Storage
+  phase5_commandes_clients.sql fiche client, paiement, expédition, écriture
 middleware.ts             session + protection des routes
 ```
 

@@ -187,8 +187,55 @@ suppression du produit avec cascade. Dashboard revérifié : aucune régression,
 produit associé) — à supprimer via Table Editor si besoin, avec le reste des
 données de test déjà signalées en Phase 2.
 
-## Prochaines étapes (Phase 5)
+## 2026-08-29 — Phase 5 : commandes & clients (CRM)
 
-- [ ] Commandes + clients : création/consultation de commandes, statuts,
-      fiches clients — ce qui alimentera enfin le dashboard (CA, panier
-      moyen, produits les plus vendus) avec de vraies données transactionnelles.
+- **Base de données** (`sql/phase5_commandes_clients.sql`) :
+  - `customers` étendue : téléphone, tags, notes, statut prospect/client.
+    Montant dépensé et dernière activité volontairement **non stockés** —
+    calculés à la lecture depuis `orders` pour éviter toute désynchronisation.
+  - `orders` étendue : `order_number` (numérotation auto via `bigserial`),
+    `payment_status` (pending/paid/refunded), `shipping_address` (jsonb),
+    `notes`.
+  - Policies d'écriture ouvertes sur `customers`/`orders`/`order_items`.
+    Choix assumé : pas de policy de suppression sur `orders` (une commande
+    s'annule via son statut, ne se supprime jamais — intégrité comptable).
+- **Clients & CRM** (`/clients`) : liste avec tags, statut, montant dépensé
+  et dernière commande calculés dynamiquement ; fiche client
+  (`/clients/[id]`) avec informations éditables, historique des commandes,
+  statistiques, suppression avec confirmation.
+- **Commandes** (`/commandes`) :
+  - Liste avec client, montant, statut, paiement, date.
+  - `/commandes/nouvelle` : sélection ou création rapide de client
+    (`CustomerQuickCreate`, appel direct de la Server Action — bug de
+    formulaire imbriqué de la Phase 4 déjà évité), lignes de produits
+    dynamiques (quantité plafonnée au stock côté client **et** revalidée
+    côté serveur), adresse de livraison, calcul du total.
+  - **Décrément de stock automatique** à la création d'une commande, avec
+    blocage serveur si la quantité demandée dépasse le stock disponible.
+  - `/commandes/[id]` : lignes de commande en lecture seule (volontairement
+    immuables après création — une correction passe par un statut, pas une
+    édition rétroactive), statut/paiement/livraison/notes modifiables.
+- Vérifié : `next build` (28 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase5_commandes_clients.sql` exécuté sur le projet Supabase "BYA FLOW".
+Testé de bout en bout : création client (tags, statut, notes), création
+produit, création d'une commande de 3 unités (stock 10 → 7, `order_number`
+généré automatiquement à `#1`), tentative volontaire de survente (999 unités)
+bloquée côté serveur avec message clair, stock resté intact après le refus.
+Mise à jour de statut (`Livrée`) répercutée sur la liste des commandes.
+Dashboard revérifié : le chiffre d'affaires (45 €), les commandes (1), le
+panier moyen (45 €), les nouveaux clients (1) et "produits les plus vendus"
+affichent désormais de vraies données — la Phase 3 s'active automatiquement
+sans aucune modification, comme prévu par l'architecture en phases. Fiche
+client : montant dépensé et historique corrects. Aucune erreur console ni
+serveur (vérifié sur un onglet neuf).
+
+## Prochaines étapes (Phase 6)
+
+- [ ] CRM approfondi : segments, prospects vs clients plus travaillés,
+      éventuellement notes horodatées / activité détaillée — à cadrer selon
+      les retours d'usage des Phases 5.
+- [ ] Ou enchaîner directement sur la Phase 7 (Marketing) selon la priorité
+      du porteur de projet.
