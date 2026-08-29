@@ -72,14 +72,13 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
    panier abandonné).
 8. [sql/phase9_analytics.sql](sql/phase9_analytics.sql) — `analytics_events`
    (préparation pour la Phase 11, vide pour l'instant).
-
-La Phase 10 (BYA Flow Score) n'ajoute aucune table : le score se calcule à
-la volée depuis les données existantes (voir `lib/score/calculateScore.ts`).
-La Phase 11 (couche IA) non plus : voir `lib/ai/`.
-
 9. [sql/phase12_facturation.sql](sql/phase12_facturation.sql) —
    `subscriptions` (un plan par organisation), backfill au plan gratuit,
    `create_organization_with_owner()` étendue.
+
+Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
+(production) n'ajoutent aucune table : tout se calcule à la volée depuis les
+données existantes (voir `lib/score/`, `lib/ai/`).
 
 ## Authentification & onboarding
 
@@ -101,8 +100,10 @@ app/
   (app)/*/page.tsx        un dossier par module produit (dont produits/nouveau, produits/[id])
   auth/callback/route.ts échange du code Supabase (confirmation/reset)
   onboarding/page.tsx    assistant de création d'organisation
+  icon.svg                favicon
 components/
-  ui/                     design system (Button, Card, Badge, EmptyState, ...)
+  ui/                     design system (Button, Card, Badge, EmptyState,
+                          Pagination, ...)
   layout/                 Sidebar, Topbar, AppShell, ModulePlaceholder
   onboarding/             OnboardingWizard
   dashboard/              KpiCard, SalesChart, TopProducts, RecommendationsPanel
@@ -131,6 +132,7 @@ lib/
   data/subscription.ts    récupération de l'abonnement + usage réel
   score/calculateScore.ts logique pure du score (facteurs, poids, bandes)
   nav.ts                  définition de la navigation
+  pagination.ts           taille de page et helpers .range()
   supabase/client.ts      client Supabase (navigateur)
   supabase/server.ts      client Supabase (Server Components/Route Handlers)
   utils.ts                helpers cn(), slugify()
@@ -143,8 +145,34 @@ sql/
   phase7_marketing.sql        campagnes, coupons, paniers abandonnés
   phase8_automatisations.sql  automations, notifications, triggers Postgres
   phase9_analytics.sql        analytics_events (préparation)
+  phase12_facturation.sql     subscriptions, plans
 middleware.ts             session + protection des routes
 ```
+
+## Déploiement (Vercel)
+
+Le projet cible est **`bya-flow`**. Le dépôt GitHub est déjà connecté
+(`bya-digital/bya-flow`, branche `main`).
+
+1. Sur [vercel.com](https://vercel.com), importez le dépôt
+   `bya-digital/bya-flow` (ou vérifiez qu'il est déjà importé sous le nom de
+   projet `bya-flow`).
+2. Framework preset : **Next.js** (détecté automatiquement). Ne changez pas
+   l'Output Directory — Vercel gère `.next` automatiquement, ne jamais le
+   configurer sur `public` ni sur "Static Site".
+3. Renseignez les variables d'environnement (Project Settings →
+   Environment Variables), pour l'environnement **Production** :
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SITE_URL` — l'URL finale de production (ex.
+     `https://bya-flow.vercel.app` ou votre domaine personnalisé)
+4. Déployez.
+5. **Étape à ne pas oublier côté Supabase** : dans le projet Supabase
+   **BYA FLOW** → Authentication → URL Configuration, ajoutez l'URL de
+   production à la liste "Redirect URLs" (et mettez à jour "Site URL").
+   Sans cette étape, les liens de confirmation d'inscription et de
+   réinitialisation de mot de passe ne fonctionneront pas en production
+   (ils redirigeront vers `localhost`).
 
 ## Feuille de route
 
