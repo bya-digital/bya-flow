@@ -64,6 +64,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 8. [sql/phase9_analytics.sql](sql/phase9_analytics.sql) — `analytics_events`
    (préparation pour la Phase 11, vide pour l'instant).
 
+La Phase 10 (BYA Flow Score) n'ajoute aucune table : le score se calcule à
+la volée depuis les données existantes (voir `lib/score/calculateScore.ts`).
+
 ## Authentification & onboarding
 
 - Pages : `/login`, `/signup`, `/forgot-password`, `/reset-password`.
@@ -100,11 +103,14 @@ components/
   automatisations/        AutomationForm, DeleteAutomationButton
   notifications/          NotificationList
   analytics/              PeriodSelector, OrderStatusBreakdown
+  score/                  GrowthScoreGauge, ScoreBreakdown
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
                           automations, notifications)
   data/store.ts           getCurrentStore() (organisation → boutique)
+  data/growthScore.ts     récupération des données du BYA Flow Score
+  score/calculateScore.ts logique pure du score (facteurs, poids, bandes)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
   supabase/server.ts      client Supabase (Server Components/Route Handlers)

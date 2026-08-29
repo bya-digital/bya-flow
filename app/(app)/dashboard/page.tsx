@@ -1,10 +1,13 @@
 import { BarChart3, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import Link from "next/link";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { RecommendationsPanel } from "@/components/dashboard/RecommendationsPanel";
 import { SalesChart } from "@/components/dashboard/SalesChart";
 import { TopProducts } from "@/components/dashboard/TopProducts";
+import { GrowthScoreGauge } from "@/components/score/GrowthScoreGauge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getGrowthScore } from "@/lib/data/growthScore";
 import { createClient } from "@/lib/supabase/server";
 
 const dayLabelFormatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" });
@@ -124,6 +127,8 @@ export default async function DashboardPage() {
     .sort((a, b) => b.quantity - a.quantity)
     .slice(0, 5);
 
+  const growthScore = await getGrowthScore();
+
   return (
     <>
       <PageHeader
@@ -178,8 +183,26 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-6">
-        <RecommendationsPanel recommendations={[]} />
+      <div className="mt-6 grid gap-6 lg:grid-cols-3">
+        {growthScore && (
+          <Card className="flex flex-col items-center justify-center p-6">
+            <div className="mb-3 flex w-full items-center justify-between">
+              <h2 className="text-sm font-semibold text-slate-900">BYA Flow Score</h2>
+              <Link href="/ia" className="text-xs font-medium text-brand-600 hover:underline">
+                Détail
+              </Link>
+            </div>
+            <GrowthScoreGauge
+              score={growthScore.score}
+              band={growthScore.band}
+              bandLabel={growthScore.bandLabel}
+              size={140}
+            />
+          </Card>
+        )}
+        <div className="lg:col-span-2">
+          <RecommendationsPanel recommendations={[]} />
+        </div>
       </div>
     </>
   );

@@ -351,9 +351,43 @@ Sélecteurs de période 7 jours et 12 mois testés : bornes de date et
 agrégation (quotidienne / mensuelle) correctes dans les deux cas. Aucune
 erreur console ni serveur (vérifié sur un onglet neuf).
 
-## Prochaines étapes (Phase 10)
+## 2026-08-29 — Phase 10 : BYA Flow Score
 
-- [ ] BYA Flow Score : score de santé commerciale (0-100) à partir des
-      signaux déjà disponibles (ventes, conversion, activité client, panier
-      moyen, fréquence d'achat) — l'architecture analytics de cette phase
-      fournit déjà la matière première.
+- **Architecture évolutive** (`lib/score/calculateScore.ts`) : logique de
+  calcul pure, sans accès base de données, séparée de la récupération des
+  données (`lib/data/growthScore.ts`). 8 facteurs notés indépendamment sur
+  0-100 puis combinés par une moyenne pondérée (poids par défaut exportés
+  dans `DEFAULT_WEIGHTS`, modifiables sans toucher au reste du code) :
+  évolution des ventes (20 %), conversion panier→commande (15 %), activité
+  client (15 %), évolution du panier moyen (10 %), fréquence d'achat (15 %),
+  paniers abandonnés (10 %), performance produits (10 %), activité
+  marketing (5 %).
+- Bandes de score conformes au cahier des charges : 0-30 critique, 31-50
+  faible, 51-70 moyen, 71-85 bon, 86-100 excellent.
+- **Page `/ia`** : jauge circulaire SVG colorée selon la bande, détail des
+  8 facteurs avec leur poids, section "Opportunités de croissance"
+  clairement annoncée pour la Phase 11 (pas de recommandation inventée).
+- **Résumé sur le dashboard** : jauge compacte + lien vers le détail,
+  réutilisant exactement la même fonction de calcul (aucune duplication de
+  logique).
+- Aucune nouvelle table : tout se calcule à la volée depuis
+  `orders`/`order_items`/`customers`/`carts`/`campaigns` déjà existants.
+- Vérifié : `next build` (36 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+Testé sur les données cumulées des phases précédentes : score de **91
+(Excellent)**, recalculé manuellement facteur par facteur pour vérifier la
+formule — 70×20 % + 100×15 % + 100×15 % + 70×10 % + 100×15 % + 100×10 % +
+100×10 % + 100×5 % = 91, exact. Jauge SVG vérifiée par inspection du DOM :
+`stroke-dasharray` correspond exactement à 91 % de la circonférence, couleur
+verte de la bande "excellent". Cohérence dashboard ↔ page `/ia` confirmée
+(même score affiché aux deux endroits). Aucune erreur console ni serveur.
+
+## Prochaines étapes (Phase 11)
+
+- [ ] Couche IA : interfaces/services abstraits pour un futur fournisseur
+      IA (pas de connexion à une API payante sans nécessité), génération de
+      contenus (descriptions produits, emails, textes publicitaires),
+      recommandations concrètes dans "Opportunités de croissance" à partir
+      des facteurs du BYA Flow Score.
