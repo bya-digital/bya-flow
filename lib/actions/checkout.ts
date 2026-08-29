@@ -1,0 +1,50 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+
+interface CheckoutOrderResult {
+  id: string;
+  order_number: number;
+}
+
+export async function submitCheckout(formData: FormData) {
+  const storeSlug = formData.get("storeSlug") as string;
+  const cartId = formData.get("cartId") as string;
+  const fullName = formData.get("fullName") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const notes = (formData.get("notes") as string) || null;
+  const checkoutUrl = `/store/${storeSlug}/checkout`;
+
+  const shipping = {
+    name: fullName,
+    address: (formData.get("address") as string) || "",
+    city: (formData.get("city") as string) || "",
+    postalCode: (formData.get("postalCode") as string) || "",
+    country: (formData.get("country") as string) || "",
+  };
+
+  const supabase = createClient();
+  const { data: order, error } = await supabase
+    .rpc("checkout_cart", {
+      p_cart_id: cartId,
+      p_full_name: fullName,
+      p_email: email,
+      p_phone: phone,
+      p_shipping: shipping,
+      p_notes: notes,
+    })
+    .single<CheckoutOrderResult>();
+
+  if (error || !order) {
+    redirect(
+      `${checkoutUrl}?error=${encodeURIComponent(
+        error?.message ?? "Impossible de finaliser la commande."
+      )}`
+    );
+    return;
+  }
+
+  redirect(`/store/${storeSlug}/commande/${order.id}`);
+}

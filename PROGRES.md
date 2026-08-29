@@ -790,3 +790,46 @@ anonyme** dès qu'un visiteur atteint `/store/*` sans session — un vrai
   Vérification en conditions réelles (anonyme, ajout/modif/retrait) à
   faire une fois la migration exécutée et l'auth anonyme activée côté
   Supabase.
+
+**Vérifié en production le 2026-08-29** : panier testé de bout en bout en
+visiteur anonyme réel (nouvel onglet jamais connecté) — ajout depuis la
+fiche produit, modification de quantité avec recalcul du sous-total,
+retrait, badge du compteur synchronisé dans l'en-tête à chaque action.
+
+## 2026-08-29 — Phases 7-8 (nouveau plan) : checkout + commande publique
+
+Transformer un panier en vraie commande implique plusieurs écritures
+liées (client CRM, commande, lignes, décrément de stock, panier marqué
+"converti") qui doivent réussir ou échouer ensemble. Plutôt que d'ouvrir
+des policies RLS d'écriture anonymes sur 4 tables différentes, tout passe
+par une seule fonction `checkout_cart()` SECURITY DEFINER — même principe
+que `create_organization_with_owner()` de la Phase 2 : la fonction
+vérifie elle-même que l'appelant possède le panier (`anon_user_id =
+auth.uid()`) avant d'écrire quoi que ce soit, et revalide le stock et le
+statut des produits au moment du checkout (pas seulement à l'ajout au
+panier).
+
+- **`sql/phase18_checkout.sql`** : colonne `orders.cart_id` (traçabilité
+  + scoping RLS), fonction `checkout_cart()` (client CRM retrouvé par
+  email ou créé, commande + lignes insérées, stock décrémenté, panier
+  marqué `converted`, le tout dans une seule transaction — un échec à
+  n'importe quelle étape annule tout), et policies de lecture pour que
+  le client anonyme puisse revoir sa propre commande juste après
+  l'avoir passée.
+- **La commande produite est une vraie commande** : elle apparaît
+  immédiatement dans `/commandes` côté commerçant, avec le même format
+  d'adresse de livraison que les commandes créées manuellement — aucun
+  système parallèle.
+- **`app/store/[slug]/checkout/page.tsx`** : coordonnées, adresse de
+  livraison, récapitulatif du panier. Redirige vers `/panier` si le
+  panier est vide (pas de checkout sur rien).
+- **`app/store/[slug]/commande/[orderId]/page.tsx`** : confirmation avec
+  numéro de commande, articles, adresse, total.
+- **Paiement volontairement absent** : la commande est créée avec
+  `payment_status = 'pending'`, jamais `'paid'` — la page de confirmation
+  indique clairement que la boutique contactera le client pour le
+  règlement, plutôt que de simuler un paiement réussi (Phase 11, pas
+  commencée : nécessite un vrai fournisseur).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles à faire une fois la migration
+  exécutée.

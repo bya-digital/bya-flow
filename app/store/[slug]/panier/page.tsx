@@ -110,10 +110,12 @@ export default async function StoreCartPage({
             </span>
           </div>
 
-          <div className="mt-6 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            Le paiement en ligne (validation de commande) arrive dans une prochaine étape.
-            Contactez la boutique directement pour finaliser cette commande dès maintenant.
-          </div>
+          <Link
+            href={`/store/${store.slug}/checkout`}
+            className="mt-6 flex w-full items-center justify-center rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+          >
+            Passer commande
+          </Link>
         </>
       )}
     </div>
