@@ -36,6 +36,12 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Une session anonyme (Phase 6 : panier boutique publique) a un
+  // auth.uid() mais pas d'email — elle ne doit jamais compter comme "déjà
+  // connecté" côté espace marchand (sinon un visiteur qui a simplement
+  // parcouru une boutique ne pourrait plus atteindre /login normalement).
+  const isRealUser = Boolean(user?.email);
+
   const { pathname } = request.nextUrl;
   const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/store/");
 
@@ -47,6 +53,14 @@ export async function middleware(request: NextRequest) {
       await supabase.auth.signInAnonymously();
       return response;
     }
+    if (isPublicPath) return response;
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirect", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  if (!isRealUser) {
     if (isPublicPath) return response;
     const url = request.nextUrl.clone();
     url.pathname = "/login";

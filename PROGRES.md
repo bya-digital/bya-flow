@@ -915,3 +915,12 @@ sur-construire une gestion de zones qui n'a pas encore d'utilité prouvée.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
   Vérification en conditions réelles à faire une fois la migration
   exécutée.
+
+**Bug réel trouvé et corrigé en marge** : `middleware.ts` traitait une
+session anonyme (Phase 6, `auth.uid()` sans email) comme "déjà connecté"
+sur les routes marchand — un visiteur qui avait simplement parcouru la
+boutique publique ne pouvait plus atteindre `/login` normalement
+(redirigé vers `/dashboard` puis `/onboarding`, sans organisation).
+Corrigé en distinguant explicitement une session réelle (`user.email`
+présent) d'une session anonyme pour toute la logique de garde de
+l'espace marchand.
