@@ -100,6 +100,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 17. [sql/phase22_store_builder.sql](sql/phase22_store_builder.sql) —
     personnalisation de la boutique publique (hero, couleur d'accent,
     réseaux sociaux, footer), `store_testimonials`, `store_faqs`.
+18. [sql/phase23_avis_favoris.sql](sql/phase23_avis_favoris.sql) —
+    `product_reviews` (fonction `submit_review()`, achat vérifié),
+    `wishlist_items`.
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
@@ -170,7 +173,8 @@ lib/
                           customers, orders, campaigns, coupons, carts,
                           automations, notifications, ai, billing,
                           platformAdmin, publicCart, checkout,
-                          customerAuth, shipping, payments, storeContent)
+                          customerAuth, shipping, payments, storeContent,
+                          reviews, wishlist)
   payments/               interface PaymentProvider abstraite, registre
                           des 8 fournisseurs (aucune API réelle connectée)
   ai/                      architecture IA abstraite (types, fournisseur

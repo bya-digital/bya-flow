@@ -6,6 +6,7 @@ import {
   Landmark,
   LayoutDashboard,
   Megaphone,
+  MessageSquareQuote,
   Package,
   Settings,
   ShieldCheck,
@@ -44,6 +45,7 @@ export const navSections: NavSection[] = [
       { label: "Commandes", href: "/commandes", icon: ShoppingCart },
       { label: "Livraison", href: "/livraison", icon: Truck },
       { label: "Paiements", href: "/paiements", icon: Landmark },
+      { label: "Avis clients", href: "/avis", icon: MessageSquareQuote },
     ],
   },
   {

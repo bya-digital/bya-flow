@@ -997,3 +997,33 @@ moins bien qu'une vitrine à l'image du commerçant).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
   Vérification en conditions réelles à faire une fois la migration
   exécutée.
+
+## 2026-08-29 — Phase 12 (nouveau plan) : avis clients & favoris
+
+Renforce la confiance (preuve sociale) et le retour des clients, dans la
+continuité directe du Store Builder — les témoignages sont saisis par le
+commerçant, les avis sont désormais écrits par de vrais clients.
+
+- **`sql/phase23_avis_favoris.sql`** : table `product_reviews` avec la
+  règle métier explicitement vérifiée — un client ne peut noter qu'un
+  produit qu'il a réellement acheté (commande non annulée à son email).
+  Cette vérification traverse plusieurs tables qu'un client ne peut pas
+  toutes lire directement, donc passe par une fonction SECURITY DEFINER
+  `submit_review()` (même principe que `checkout_cart()`), jamais par une
+  policy d'insertion directe. Table `wishlist_items`, scoping par
+  `auth.email()` comme le reste du compte client — exige donc un vrai
+  compte (pas de fusion panier-invité ici, choix assumé pour rester
+  simple).
+- **Fiche produit** : note moyenne + liste des avis, formulaire visible
+  uniquement pour un client ayant acheté ce produit (peut aussi modifier
+  son propre avis), bouton favori.
+- **`/avis`** (commerçant) : modération (masquer/afficher) et réponse
+  publique à chaque avis, par produit.
+- **`/store/[slug]/compte/favoris`** : liste des favoris du compte
+  connecté ; bouton favori également sur la grille de la page d'accueil.
+- **Volontairement absent** : pas de photo dans les avis, pas de
+  signalement, pas de notification de retour en stock/baisse de prix
+  (Phase 25+, pas commencée) — hors scope de cette phase.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles à faire une fois la migration
+  exécutée.

@@ -1,20 +1,23 @@
 import { Package } from "lucide-react";
 import Link from "next/link";
+import { WishlistButton } from "@/components/store/WishlistButton";
 import {
   getPublicFaqs,
   getPublicProducts,
   getPublicStoreBySlug,
   getPublicTestimonials,
 } from "@/lib/data/publicStore";
+import { getWishlistProductIds } from "@/lib/data/wishlist";
 
 export default async function StoreHomePage({ params }: { params: { slug: string } }) {
   const store = await getPublicStoreBySlug(params.slug);
   if (!store) return null;
 
-  const [products, testimonials, faqs] = await Promise.all([
+  const [products, testimonials, faqs, wishlistIds] = await Promise.all([
     getPublicProducts(store.id),
     getPublicTestimonials(store.id),
     getPublicFaqs(store.id),
+    getWishlistProductIds(store.id),
   ]);
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -71,44 +74,51 @@ export default async function StoreHomePage({ params }: { params: { slug: string
       ) : (
         <div className="grid grid-cols-2 gap-6 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/store/${store.slug}/produits/${product.slug}`}
-              className="group"
-            >
-              <div className="aspect-square overflow-hidden rounded-xl bg-slate-100">
-                {product.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={product.imageUrl}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center">
-                    <Package className="h-8 w-8 text-slate-300" strokeWidth={1.5} />
-                  </div>
-                )}
+            <div key={product.id} className="group relative">
+              <div className="absolute right-2 top-2 z-10">
+                <WishlistButton
+                  storeId={store.id}
+                  storeSlug={store.slug}
+                  productId={product.id}
+                  isActive={wishlistIds.has(product.id)}
+                  returnTo={`/store/${store.slug}`}
+                />
               </div>
-              <div className="mt-3">
-                <p className="text-sm font-medium text-slate-900 group-hover:text-brand-600">
-                  {product.name}
-                </p>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {currencyFormatter.format(product.price)}
-                  </span>
-                  {product.compareAtPrice && product.compareAtPrice > product.price && (
-                    <span className="text-xs text-slate-400 line-through">
-                      {currencyFormatter.format(product.compareAtPrice)}
-                    </span>
+              <Link href={`/store/${store.slug}/produits/${product.slug}`}>
+                <div className="aspect-square overflow-hidden rounded-xl bg-slate-100">
+                  {product.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={product.imageUrl}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center">
+                      <Package className="h-8 w-8 text-slate-300" strokeWidth={1.5} />
+                    </div>
                   )}
                 </div>
-                {product.stock <= 0 && (
-                  <p className="mt-1 text-xs font-medium text-red-600">Rupture de stock</p>
-                )}
-              </div>
-            </Link>
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-slate-900 group-hover:text-brand-600">
+                    {product.name}
+                  </p>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-900">
+                      {currencyFormatter.format(product.price)}
+                    </span>
+                    {product.compareAtPrice && product.compareAtPrice > product.price && (
+                      <span className="text-xs text-slate-400 line-through">
+                        {currencyFormatter.format(product.compareAtPrice)}
+                      </span>
+                    )}
+                  </div>
+                  {product.stock <= 0 && (
+                    <p className="mt-1 text-xs font-medium text-red-600">Rupture de stock</p>
+                  )}
+                </div>
+              </Link>
+            </div>
           ))}
         </div>
         )}

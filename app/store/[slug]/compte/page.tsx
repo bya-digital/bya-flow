@@ -1,4 +1,4 @@
-import { Package } from "lucide-react";
+import { Heart, Package } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutCustomer } from "@/lib/actions/customerAuth";
@@ -44,6 +44,14 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
           </button>
         </form>
       </div>
+
+      <Link
+        href={`/store/${store.slug}/compte/favoris`}
+        className="mt-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:underline"
+      >
+        <Heart className="h-4 w-4" />
+        Mes favoris
+      </Link>
 
       <h2 className="mt-8 text-sm font-semibold text-slate-900">Mes commandes</h2>
 
