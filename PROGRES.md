@@ -959,3 +959,41 @@ simuler un paiement comme s'il était réel.
   officielle de chaque fournisseur au moment de l'intégration réelle,
   jamais inventés comme s'ils étaient exacts.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+
+## 2026-08-29 — Phase 3 (nouveau plan) : Store Builder
+
+Architecture volontairement simple : un jeu de champs fixes sur la
+boutique (hero, couleur d'accent, réseaux sociaux, footer) plutôt qu'un
+système de sections/blocs entièrement libre — évite de construire un
+page builder complexe sans utilité prouvée, tout en couvrant les
+besoins réels de personnalisation d'une vitrine. Sert directement
+l'objectif "faire vendre une boutique" (une vitrine générique convertit
+moins bien qu'une vitrine à l'image du commerçant).
+
+- **`sql/phase22_store_builder.sql`** : nouveaux champs sur `stores`
+  (hero_title/subtitle/image/cta, accent_color, réseaux sociaux, footer
+  text), tables `store_testimonials` et `store_faqs` (listes dynamiques,
+  même principe que les méthodes de livraison), lecture anonyme des
+  entrées actives d'une boutique publiée.
+- **`/boutique/apparence`** : bannière (image, titre, sous-titre, texte
+  du bouton), couleur d'accent, réseaux sociaux, pied de page.
+- **`/boutique/temoignages`** et **`/boutique/faq`** : CRUD complet,
+  même structure que Promotions & coupons.
+- **Boutique publique** : bannière affichée en haut de la page d'accueil
+  (si configurée), sections témoignages et FAQ en bas, réseaux sociaux
+  et texte personnalisé dans le pied de page. La couleur d'accent
+  s'applique aux boutons de conversion clés (ajouter au panier, passer
+  commande, confirmer la commande) via une variable CSS posée une fois
+  dans le layout — pas de duplication de logique de couleur par page.
+- **Rétrocompatible** : sans configuration, la boutique publique se
+  comporte exactement comme avant cette phase (pas de bannière ni de
+  sections vides affichées, couleur BYA Flow par défaut).
+- **Bug trouvé pendant cette phase** : une chaîne `select(...)`
+  construite par concaténation (`"a, b" + "c, d"`) empêche Supabase de
+  déduire le type de la ligne retournée (`GenericStringError`), même si
+  la requête fonctionne à l'exécution — corrigé en n'écrivant plus ces
+  chaînes qu'en un seul littéral, dans `lib/data/publicStore.ts` et
+  `lib/data/store.ts`.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles à faire une fois la migration
+  exécutée.

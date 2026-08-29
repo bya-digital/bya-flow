@@ -60,3 +60,58 @@ export async function updateStore(formData: FormData) {
   revalidatePath("/boutique");
   redirect("/boutique?success=1");
 }
+
+export async function updateStoreAppearance(formData: FormData) {
+  const store = await getCurrentStore();
+  if (!store) redirect("/onboarding");
+  const storeId = store.id;
+
+  const supabase = createClient();
+
+  let heroImageUrl: string | undefined;
+  const heroImageFile = formData.get("heroImage") as File | null;
+
+  if (heroImageFile && heroImageFile.size > 0) {
+    const extension = heroImageFile.name.split(".").pop() ?? "jpg";
+    const path = `${storeId}/hero-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("store-assets")
+      .upload(path, heroImageFile, { upsert: true });
+
+    if (uploadError) {
+      redirect(`/boutique/apparence?error=${encodeURIComponent(uploadError.message)}`);
+      return;
+    }
+
+    const { data: publicUrlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+    heroImageUrl = publicUrlData.publicUrl;
+  }
+
+  const accentColorInput = ((formData.get("accentColor") as string) || "").trim();
+  const accentColor = /^#[0-9a-fA-F]{6}$/.test(accentColorInput) ? accentColorInput : null;
+
+  const { error } = await supabase
+    .from("stores")
+    .update({
+      hero_title: (formData.get("heroTitle") as string) || null,
+      hero_subtitle: (formData.get("heroSubtitle") as string) || null,
+      hero_cta_label: (formData.get("heroCtaLabel") as string) || null,
+      accent_color: accentColor,
+      social_facebook: (formData.get("socialFacebook") as string) || null,
+      social_instagram: (formData.get("socialInstagram") as string) || null,
+      social_tiktok: (formData.get("socialTiktok") as string) || null,
+      social_whatsapp: (formData.get("socialWhatsapp") as string) || null,
+      footer_text: (formData.get("footerText") as string) || null,
+      ...(heroImageUrl ? { hero_image_url: heroImageUrl } : {}),
+    })
+    .eq("id", storeId);
+
+  if (error) {
+    redirect(`/boutique/apparence?error=${encodeURIComponent(error.message)}`);
+    return;
+  }
+
+  revalidatePath("/boutique/apparence");
+  revalidatePath(`/store/${store.slug}`, "layout");
+  redirect("/boutique/apparence?success=1");
+}

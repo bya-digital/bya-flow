@@ -1,4 +1,4 @@
-import { ExternalLink, Store } from "lucide-react";
+import { ExternalLink, HelpCircle, MessageSquareQuote, Palette, Store } from "lucide-react";
 import Link from "next/link";
 import { StoreForm } from "@/components/boutique/StoreForm";
 import { Alert } from "@/components/ui/Alert";
@@ -53,6 +53,38 @@ export default async function BoutiquePage({
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Link>
               )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent>
+              <p className="mb-3 text-sm font-semibold text-slate-900">Personnalisation</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Link
+                  href="/boutique/apparence"
+                  className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <Palette className="h-4 w-4 text-brand-600" />
+                  <span className="font-medium text-slate-900">Apparence</span>
+                  <span className="text-xs text-slate-500">Bannière, couleur, réseaux sociaux</span>
+                </Link>
+                <Link
+                  href="/boutique/temoignages"
+                  className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <MessageSquareQuote className="h-4 w-4 text-brand-600" />
+                  <span className="font-medium text-slate-900">Témoignages</span>
+                  <span className="text-xs text-slate-500">Avis affichés sur la boutique</span>
+                </Link>
+                <Link
+                  href="/boutique/faq"
+                  className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <HelpCircle className="h-4 w-4 text-brand-600" />
+                  <span className="font-medium text-slate-900">FAQ</span>
+                  <span className="text-xs text-slate-500">Questions fréquentes</span>
+                </Link>
+              </div>
             </CardContent>
           </Card>
 

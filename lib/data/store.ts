@@ -10,6 +10,16 @@ export interface CurrentStore {
   currency: string;
   country: string | null;
   is_active: boolean;
+  hero_title: string | null;
+  hero_subtitle: string | null;
+  hero_image_url: string | null;
+  hero_cta_label: string | null;
+  accent_color: string | null;
+  social_facebook: string | null;
+  social_instagram: string | null;
+  social_tiktok: string | null;
+  social_whatsapp: string | null;
+  footer_text: string | null;
 }
 
 export async function getCurrentStore(): Promise<CurrentStore | null> {
@@ -32,7 +42,9 @@ export async function getCurrentStore(): Promise<CurrentStore | null> {
 
   const { data: store } = await supabase
     .from("stores")
-    .select("id, organization_id, name, description, logo_url, slug, currency, country, is_active")
+    .select(
+      "id, organization_id, name, description, logo_url, slug, currency, country, is_active, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text"
+    )
     .eq("organization_id", membership.organization_id)
     .order("created_at", { ascending: true })
     .limit(1)

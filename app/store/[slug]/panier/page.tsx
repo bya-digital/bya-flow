@@ -112,7 +112,8 @@ export default async function StoreCartPage({
 
           <Link
             href={`/store/${store.slug}/checkout`}
-            className="mt-6 flex w-full items-center justify-center rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+            className="mt-6 flex w-full items-center justify-center rounded-lg px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
+            style={{ backgroundColor: "var(--store-accent)" }}
           >
             Passer commande
           </Link>

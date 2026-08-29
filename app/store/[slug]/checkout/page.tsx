@@ -166,7 +166,8 @@ export default async function StoreCheckoutPage({
 
           <button
             type="submit"
-            className="rounded-lg bg-brand-600 px-6 py-3 text-sm font-semibold text-white hover:bg-brand-700"
+            className="rounded-lg px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
+            style={{ backgroundColor: "var(--store-accent)" }}
           >
             Confirmer la commande
           </button>

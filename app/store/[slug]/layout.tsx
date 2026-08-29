@@ -1,7 +1,7 @@
 import { ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
@@ -20,8 +20,18 @@ export default async function StoreLayout({
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const session = await getCustomerSession();
 
+  const socialLinks = [
+    { label: "Facebook", href: store.socialFacebook },
+    { label: "Instagram", href: store.socialInstagram },
+    { label: "TikTok", href: store.socialTiktok },
+    { label: "WhatsApp", href: store.socialWhatsapp },
+  ].filter((link): link is { label: string; href: string } => Boolean(link.href));
+
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div
+      className="flex min-h-screen flex-col bg-white"
+      style={{ "--store-accent": store.accentColor || "#2563eb" } as CSSProperties}
+    >
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href={`/store/${store.slug}`} className="flex items-center gap-3">
@@ -71,11 +81,31 @@ export default async function StoreLayout({
       <main className="flex-1">{children}</main>
 
       <footer className="border-t border-slate-200 py-8">
-        <div className="mx-auto max-w-6xl px-6 text-center text-xs text-slate-400">
-          Boutique propulsée par{" "}
-          <Link href="/" className="font-semibold text-brand-600">
-            BYA Flow
-          </Link>
+        <div className="mx-auto max-w-6xl px-6 text-center">
+          {socialLinks.length > 0 && (
+            <div className="mb-4 flex justify-center gap-4 text-sm font-medium text-slate-600">
+              {socialLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-slate-900"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          )}
+          {store.footerText && (
+            <p className="mb-4 text-sm text-slate-500">{store.footerText}</p>
+          )}
+          <p className="text-xs text-slate-400">
+            Boutique propulsée par{" "}
+            <Link href="/" className="font-semibold text-brand-600">
+              BYA Flow
+            </Link>
+          </p>
         </div>
       </footer>
     </div>

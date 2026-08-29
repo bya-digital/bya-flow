@@ -7,13 +7,25 @@ export interface PublicStore {
   description: string | null;
   logoUrl: string | null;
   currency: string;
+  heroTitle: string | null;
+  heroSubtitle: string | null;
+  heroImageUrl: string | null;
+  heroCtaLabel: string | null;
+  accentColor: string | null;
+  socialFacebook: string | null;
+  socialInstagram: string | null;
+  socialTiktok: string | null;
+  socialWhatsapp: string | null;
+  footerText: string | null;
 }
 
 export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | null> {
   const supabase = createClient();
   const { data } = await supabase
     .from("stores")
-    .select("id, name, slug, description, logo_url, currency")
+    .select(
+      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text"
+    )
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -27,7 +39,63 @@ export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | 
     description: data.description,
     logoUrl: data.logo_url,
     currency: data.currency,
+    heroTitle: data.hero_title,
+    heroSubtitle: data.hero_subtitle,
+    heroImageUrl: data.hero_image_url,
+    heroCtaLabel: data.hero_cta_label,
+    accentColor: data.accent_color,
+    socialFacebook: data.social_facebook,
+    socialInstagram: data.social_instagram,
+    socialTiktok: data.social_tiktok,
+    socialWhatsapp: data.social_whatsapp,
+    footerText: data.footer_text,
   };
+}
+
+export interface PublicTestimonial {
+  id: string;
+  authorName: string;
+  quote: string;
+}
+
+export async function getPublicTestimonials(storeId: string): Promise<PublicTestimonial[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("store_testimonials")
+    .select("id, author_name, quote")
+    .eq("store_id", storeId)
+    .eq("is_active", true)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    authorName: row.author_name,
+    quote: row.quote,
+  }));
+}
+
+export interface PublicFaq {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+export async function getPublicFaqs(storeId: string): Promise<PublicFaq[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("store_faqs")
+    .select("id, question, answer")
+    .eq("store_id", storeId)
+    .eq("is_active", true)
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: true });
+
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    question: row.question,
+    answer: row.answer,
+  }));
 }
 
 export interface PublicShippingMethod {
