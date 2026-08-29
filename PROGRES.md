@@ -587,3 +587,51 @@ véritable fournisseur IA (remplacer `heuristicProvider`), intégration d'un
 vrai fournisseur email/SMS/WhatsApp pour les campagnes, passerelle de
 paiement pour la facturation SaaS, `pg_cron` pour l'automatisation
 réellement planifiée du déclencheur "client inactif".
+
+## 2026-08-29 — Mise en production réelle
+
+Après la clôture des 14 phases, l'application a été réellement déployée
+sur Vercel (`https://bya-flow.vercel.app`), connectée au projet Supabase
+"BYA FLOW" — trois problèmes de configuration (pas de code) ont été
+diagnostiqués et corrigés en direct avec le porteur de projet :
+
+- **Output Directory** réglé sur `public` dans Vercel (config héritée d'un
+  import initial mal détecté), au lieu du défaut Next.js → tous les
+  déploiements échouaient depuis la Phase 7 sans que personne ne le sache.
+- **`NEXT_PUBLIC_SUPABASE_URL`** contenait une faute de frappe (`.com` au
+  lieu de `.co`) → le middleware plantait sur chaque requête
+  (`MIDDLEWARE_INVOCATION_FAILED`).
+- Une fois corrigés : inscription, email de confirmation Supabase Auth,
+  connexion et onboarding complet (6 étapes) testés de bout en bout en
+  production avec un vrai compte, tous fonctionnels.
+
+## 2026-08-29 — Phase 15 : Admin Plateforme
+
+Chantier demandé après la mise en production, en dehors du cahier des
+charges initial : le porteur de projet (BYA Digital, opérateur de la
+plateforme) n'avait aucune vue transverse sur les organisations clientes
+créées via l'onboarding — chaque organisation étant isolée par RLS, y
+compris pour lui.
+
+- **`sql/phase15_admin_plateforme.sql`** : colonne
+  `profiles.is_platform_admin` (false par défaut), fonction
+  `is_platform_admin()` (SECURITY DEFINER), et policies de lecture
+  cross-tenant sur `organizations`, `organization_members`, `stores` et
+  `subscriptions` — plus une policy d'écriture sur `subscriptions` pour
+  changer le plan d'un client en support manuel. **Volontairement limité**
+  aux données de pilotage commercial (organisations, plans, effectifs) —
+  pas d'accès aux données métier de chaque client (produits, commandes,
+  clients), pour respecter l'isolation même côté opérateur.
+- **Aucune UI n'accorde ce rôle** (décision délibérée pour qu'un client ne
+  puisse jamais se l'auto-attribuer) : accordé uniquement par une requête
+  SQL manuelle, documentée dans le README.
+- **`/admin-plateforme`** : cartes de synthèse (nombre de clients, de
+  boutiques, MRR estimé à partir des plans réellement actifs, plan le plus
+  utilisé), et liste des organisations avec date de création, nombre de
+  membres/boutiques et changement de plan en un clic. Double protection :
+  policy RLS + vérification serveur (`notFound()` si le compte n'est pas
+  admin plateforme) — le lien n'apparaît dans la barre latérale que pour un
+  compte autorisé.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification visuelle complète du parcours (page invisible/404 pour un
+  compte normal) à faire une fois le rôle accordé en production.

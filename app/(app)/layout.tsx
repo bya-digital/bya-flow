@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { isPlatformAdmin } from "@/lib/data/platformAdmin";
 import { createClient } from "@/lib/supabase/server";
 
 interface MembershipRow {
@@ -38,11 +39,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     }
   }
 
+  const showPlatformAdmin = await isPlatformAdmin();
+
   return (
     <AppShell
       userEmail={user?.email ?? ""}
       organizationName={organizationName}
       unreadNotifications={unreadNotifications}
+      showPlatformAdmin={showPlatformAdmin}
     >
       {children}
     </AppShell>

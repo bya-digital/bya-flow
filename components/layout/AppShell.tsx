@@ -9,6 +9,7 @@ interface AppShellProps {
   userEmail: string;
   organizationName: string;
   unreadNotifications: number;
+  showPlatformAdmin?: boolean;
 }
 
 export function AppShell({
@@ -16,12 +17,17 @@ export function AppShell({
   userEmail,
   organizationName,
   unreadNotifications,
+  showPlatformAdmin = false,
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <Sidebar
+        mobileOpen={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        showPlatformAdmin={showPlatformAdmin}
+      />
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Topbar
           onMenuClick={() => setMobileOpen(true)}

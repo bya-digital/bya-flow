@@ -3,16 +3,18 @@
 import { X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navSections } from "@/lib/nav";
+import { navSections, platformAdminNavSection } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
+  showPlatformAdmin?: boolean;
 }
 
-export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
+export function Sidebar({ mobileOpen, onClose, showPlatformAdmin = false }: SidebarProps) {
   const pathname = usePathname();
+  const sections = showPlatformAdmin ? [...navSections, platformAdminNavSection] : navSections;
 
   const content = (
     <div className="flex h-full flex-col">
@@ -29,7 +31,7 @@ export function Sidebar({ mobileOpen, onClose }: SidebarProps) {
         </button>
       </div>
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 pb-6">
-        {navSections.map((section) => (
+        {sections.map((section) => (
           <div key={section.title}>
             <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
               {section.title}

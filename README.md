@@ -75,10 +75,28 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 9. [sql/phase12_facturation.sql](sql/phase12_facturation.sql) —
    `subscriptions` (un plan par organisation), backfill au plan gratuit,
    `create_organization_with_owner()` étendue.
+10. [sql/phase15_admin_plateforme.sql](sql/phase15_admin_plateforme.sql) —
+    colonne `profiles.is_platform_admin`, fonction `is_platform_admin()` et
+    policies de lecture cross-tenant pour l'espace Admin Plateforme.
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
 données existantes (voir `lib/score/`, `lib/ai/`).
+
+## Admin Plateforme (réservé à BYA Digital)
+
+`/admin-plateforme` donne une vue transverse sur toutes les organisations
+clientes (nombre de clients, de boutiques, MRR estimé, répartition des
+plans) — invisible pour un client normal, et protégée à la fois par une
+policy RLS dédiée et par une vérification serveur (`notFound()` si non
+autorisé). Aucune UI ne permet d'accorder ce rôle : après avoir exécuté
+`sql/phase15_admin_plateforme.sql`, exécutez manuellement dans l'éditeur SQL
+Supabase :
+
+```sql
+update profiles set is_platform_admin = true
+where id = (select id from auth.users where email = 'votre-email@exemple.com');
+```
 
 ## Authentification & onboarding
 
@@ -123,11 +141,13 @@ components/
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
-                          automations, notifications, ai, billing)
+                          automations, notifications, ai, billing,
+                          platformAdmin)
   ai/                      architecture IA abstraite (types, fournisseur
                           heuristique par défaut, opportunités de croissance)
   billing/plans.ts        catalogue des plans SaaS (logique pure)
   data/store.ts           getCurrentStore() (organisation → boutique)
+  data/platformAdmin.ts   isPlatformAdmin(), vue d'ensemble multi-clients
   data/growthScore.ts     récupération des données du BYA Flow Score
   data/subscription.ts    récupération de l'abonnement + usage réel
   score/calculateScore.ts logique pure du score (facteurs, poids, bandes)

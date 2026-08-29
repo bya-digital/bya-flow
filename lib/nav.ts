@@ -1,6 +1,7 @@
 import {
   BarChart3,
   Bell,
+  Building2,
   CreditCard,
   LayoutDashboard,
   Megaphone,
@@ -71,3 +72,10 @@ export const navSections: NavSection[] = [
     ],
   },
 ];
+
+// Réservé à BYA Digital (l'opérateur de la plateforme), pas aux clients :
+// affiché uniquement si isPlatformAdmin() est vrai, voir app/(app)/layout.tsx.
+export const platformAdminNavSection: NavSection = {
+  title: "Plateforme",
+  items: [{ label: "Admin Plateforme", href: "/admin-plateforme", icon: Building2 }],
+};
