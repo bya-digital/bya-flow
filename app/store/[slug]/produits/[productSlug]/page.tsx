@@ -1,11 +1,14 @@
 import { Package } from "lucide-react";
 import { notFound } from "next/navigation";
+import { addToCart } from "@/lib/actions/publicCart";
 import { getPublicProductBySlug, getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 export default async function StoreProductPage({
   params,
+  searchParams,
 }: {
   params: { slug: string; productSlug: string };
+  searchParams: { error?: string };
 }) {
   const store = await getPublicStoreBySlug(params.slug);
   if (!store) return null;
@@ -91,10 +94,44 @@ export default async function StoreProductPage({
             </div>
           )}
 
-          <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
-            L&apos;achat en ligne (panier &amp; paiement) arrive dans une prochaine étape.
-            Contactez la boutique directement pour commander ce produit dès maintenant.
-          </div>
+          {searchParams.error && (
+            <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+              {searchParams.error}
+            </p>
+          )}
+
+          {product.stock > 0 ? (
+            <form action={addToCart} className="mt-6 flex items-end gap-3">
+              <input type="hidden" name="storeId" value={store.id} />
+              <input type="hidden" name="storeSlug" value={store.slug} />
+              <input type="hidden" name="productId" value={product.id} />
+              <input type="hidden" name="productSlug" value={product.slug} />
+              <div>
+                <label htmlFor="quantity" className="block text-xs font-medium text-slate-500">
+                  Quantité
+                </label>
+                <input
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min={1}
+                  max={product.stock}
+                  defaultValue={1}
+                  className="mt-1 w-20 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
+                />
+              </div>
+              <button
+                type="submit"
+                className="rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
+              >
+                Ajouter au panier
+              </button>
+            </form>
+          ) : (
+            <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+              Ce produit est actuellement en rupture de stock.
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -81,6 +81,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 11. [sql/phase16_boutique_publique.sql](sql/phase16_boutique_publique.sql) —
     corrige la génération de `stores.slug` (trigger) et ajoute les policies
     de lecture anonyme nécessaires à la boutique publique (`/store/[slug]`).
+12. [sql/phase17_panier.sql](sql/phase17_panier.sql) — panier visiteur
+    (session Supabase anonyme). ⚠️ Nécessite d'activer "Allow anonymous
+    sign-ins" dans Supabase Authentication → Settings avant exécution.
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
@@ -121,8 +124,8 @@ app/
   (app)/*/page.tsx        un dossier par module produit (dont produits/nouveau, produits/[id])
   auth/callback/route.ts échange du code Supabase (confirmation/reset)
   onboarding/page.tsx    assistant de création d'organisation
-  store/[slug]/           boutique publique (accueil + fiche produit),
-                          lecture anonyme, sans layout applicatif
+  store/[slug]/           boutique publique (accueil, fiche produit,
+                          panier), lecture anonyme, sans layout applicatif
   icon.png                favicon
 components/
   ui/                     design system (Button, Card, Badge, EmptyState,
@@ -147,12 +150,13 @@ lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
                           automations, notifications, ai, billing,
-                          platformAdmin)
+                          platformAdmin, publicCart)
   ai/                      architecture IA abstraite (types, fournisseur
                           heuristique par défaut, opportunités de croissance)
   billing/plans.ts        catalogue des plans SaaS (logique pure)
   data/store.ts           getCurrentStore() (organisation → boutique)
   data/publicStore.ts     lecture anonyme (boutique + produits publiés)
+  data/publicCart.ts      lecture du panier (session Supabase anonyme)
   data/platformAdmin.ts   isPlatformAdmin(), vue d'ensemble multi-clients
   data/growthScore.ts     récupération des données du BYA Flow Score
   data/subscription.ts    récupération de l'abonnement + usage réel

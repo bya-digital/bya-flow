@@ -1,6 +1,8 @@
+import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { getPublicCart } from "@/lib/data/publicCart";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 export default async function StoreLayout({
@@ -12,6 +14,9 @@ export default async function StoreLayout({
 }) {
   const store = await getPublicStoreBySlug(params.slug);
   if (!store) notFound();
+
+  const cart = await getPublicCart(store.id);
+  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -31,6 +36,18 @@ export default async function StoreLayout({
               </span>
             )}
             <span className="text-lg font-bold text-slate-900">{store.name}</span>
+          </Link>
+
+          <Link
+            href={`/store/${store.slug}/panier`}
+            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+          >
+            <ShoppingCart className="h-5 w-5" strokeWidth={1.75} />
+            {itemCount > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-semibold text-white">
+                {itemCount}
+              </span>
+            )}
           </Link>
         </div>
       </header>

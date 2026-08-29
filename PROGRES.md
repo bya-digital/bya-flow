@@ -748,3 +748,45 @@ commencées — pas de bouton d'achat qui ne ferait rien).
   Vérification visuelle en direct à faire une fois la migration SQL
   exécutée (le bug de slug n'était pas visible avant cette phase, aucune
   boutique existante n'avait encore été testée via son URL publique).
+
+**Vérifié en production le 2026-08-29** : migration appliquée, slug de
+boutique corrigé (`bya-flow-test-boutique-9b1eba86`), accès anonyme
+confirmé (onglet jamais connecté), état vide honnête si aucun produit,
+404 propre pour une boutique inexistante.
+
+## 2026-08-29 — Phase 6 (nouveau plan) : panier
+
+Un visiteur de la boutique publique n'a pas de compte (Phase 9, pas
+encore construite). Pour qu'il retrouve son panier d'une page à l'autre
+sans compte, le middleware ouvre désormais une **session Supabase
+anonyme** dès qu'un visiteur atteint `/store/*` sans session — un vrai
+`auth.uid()` stable (cookie), sans créer de fiche client CRM.
+
+- **`sql/phase17_panier.sql`** : colonne `carts.anon_user_id` (référence
+  `auth.users`), un panier actif au maximum par visiteur et par boutique
+  (index unique partiel), policies RLS dédiées (`is_cart_owner_anon`,
+  même schéma que `is_cart_member` de la Phase 7) limitant strictement
+  un visiteur à son propre panier. ⚠️ Nécessite d'activer "Allow
+  anonymous sign-ins" dans Supabase Authentication → Settings avant
+  exécution, sans quoi la création de session anonyme échoue.
+- **`lib/data/publicCart.ts`** / **`lib/actions/publicCart.ts`** :
+  lecture du panier + actions `addToCart`, `updateCartItemQuantity`,
+  `removeCartItem`. Le stock est revérifié côté serveur à chaque ajout
+  et modification de quantité (jamais seulement côté client).
+- **`app/store/[slug]/panier/page.tsx`** : liste des articles, quantité
+  modifiable, retrait, sous-total. Réutilise `unit_price` capturé à
+  l'ajout (le panier n'est pas affecté si le commerçant change le prix
+  du produit ensuite).
+- **Fiche produit** : le bouton "Ajouter au panier" (précédemment un
+  encart "bientôt disponible") est maintenant réellement fonctionnel,
+  avec vérification de stock.
+- **En-tête boutique** : icône panier avec compteur d'articles.
+- **Volontairement absent** : pas de bouton "Passer commande" — un
+  encart indique honnêtement que le paiement arrive dans une prochaine
+  étape (Phase 7 : checkout), plutôt que d'afficher un bouton inerte.
+  Pas de fusion panier invité/compte client non plus : elle n'a de sens
+  qu'une fois la Phase 9 (compte client) construite.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles (anonyme, ajout/modif/retrait) à
+  faire une fois la migration exécutée et l'auth anonyme activée côté
+  Supabase.

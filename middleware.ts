@@ -40,6 +40,13 @@ export async function middleware(request: NextRequest) {
   const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/store/");
 
   if (!user) {
+    if (pathname.startsWith("/store/")) {
+      // Panier anonyme (Phase 6) : donne un auth.uid() stable au visiteur
+      // sans compte, via une session Supabase anonyme (cookie), pour que
+      // son panier survive d'une page à l'autre.
+      await supabase.auth.signInAnonymously();
+      return response;
+    }
     if (isPublicPath) return response;
     const url = request.nextUrl.clone();
     url.pathname = "/login";
