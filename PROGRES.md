@@ -464,9 +464,79 @@ création aboutit immédiatement — la limite suit bien le plan en temps réel.
 Produits de test supprimés après vérification pour ne laisser que le
 catalogue réel. Aucune erreur console ni serveur.
 
-## Prochaines étapes (Phase 13)
+## 2026-08-29 — Phase 13 : tests, sécurité, optimisation
 
-- [ ] Tests, sécurité et optimisation : revue de sécurité transverse (RLS,
-      secrets, validation des entrées), vérification des performances
-      (pagination, requêtes), avant la préparation à la production
-      (Phase 14).
+Phase d'audit et de durcissement, pas de nouvelle fonctionnalité — revue
+transversale de tout ce qui a été construit depuis la Phase 1.
+
+### Sécurité
+
+- **Audit RLS complet** : relecture de toutes les tables/policies des 9
+  scripts SQL. Aucune faille trouvée ; les absences de policy (ex. pas de
+  suppression sur `orders`, pas d'écriture directe sur `organization_members`
+  hors RPC) sont toutes des choix déjà documentés, pas des oublis.
+- **Aucun secret en dur** : recherche par pattern (clés API, `service_role`)
+  et vérification de l'historique Git — rien trouvé, `SUPABASE_SERVICE_ROLE_KEY`
+  n'a jamais été utilisé nulle part dans le code applicatif (seule la clé
+  anon/publishable est utilisée, la RLS est l'unique frontière de sécurité).
+- **2 corrections défense en profondeur** : `updateStore` et
+  `uploadProductImage` faisaient confiance à un `storeId` envoyé par le
+  client (dans un champ caché) pour construire des chemins/filtres. La RLS
+  empêchait déjà toute exploitation réelle (une tentative sur la boutique
+  d'une autre organisation aurait été bloquée ou n'aurait touché aucune
+  ligne), mais l'identifiant est désormais toujours dérivé côté serveur
+  (`getCurrentStore()` / lecture du produit) plutôt que du client.
+- **Validation serveur renforcée** : prix/stock/poids de produit revalidés
+  non négatifs côté serveur (le `min="0"` HTML seul ne protège pas d'une
+  requête forgée) ; pourcentage de coupon plafonné à 100 (testé en
+  conditions réelles avec une tentative à 500 %, correctement ramenée à
+  100 % avant écriture en base).
+- **2 erreurs auparavant non vérifiées, corrigées** : l'insertion des
+  lignes de commande lors de la conversion d'un panier, et l'enregistrement
+  des destinataires avant de marquer une campagne "envoyée", ignoraient
+  silencieusement leurs erreurs — une campagne aurait pu être marquée
+  envoyée avec zéro destinataire réellement enregistré en cas d'échec.
+
+### Performance
+
+- **Pagination réelle** ajoutée sur `/produits`, `/commandes`, `/clients`
+  (25 par page, `components/ui/Pagination.tsx`, `lib/pagination.ts`) — ces
+  listes n'avaient aucune limite avant et auraient chargé un nombre illimité
+  de lignes. La page clients a aussi été corrigée pour ne plus charger
+  *toutes* les commandes de la boutique afin de calculer le montant dépensé,
+  seulement celles des clients affichés sur la page courante.
+- Non traité (accepté comme dette raisonnable, volumes attendus faibles) :
+  campagnes, promotions, paniers abandonnés, automatisations.
+
+### Tests
+
+- **Suite de tests unitaires** introduite (`vitest`, `npm test`) pour la
+  logique pure sans dépendance base de données : `lib/score/calculateScore.ts`
+  (score exact 91 puis 86 rejoué depuis les vraies valeurs vérifiées en
+  Phase 10/11, bornes 0-100, bandes), `lib/billing/plans.ts` (catalogue,
+  fallback), `lib/utils.ts` (`slugify`). 14 tests, tous verts.
+- Non couvert (dette assumée) : tests d'intégration/E2E nécessiteraient une
+  base de test dédiée et une infrastructure plus lourde, hors du périmètre
+  raisonnable de cette phase.
+
+### Dette connue, documentée volontairement plutôt que corrigée en douce
+
+- La barre de recherche de la Topbar (présente depuis la Phase 1) ne fait
+  toujours rien — jamais câblée à une fonctionnalité. Signalé ici plutôt
+  que laissé comme un détail invisible.
+- Aucune UI d'invitation d'équipe n'existe encore : `organization_members`
+  n'a pas de policy d'écriture directe hors RPC de création d'organisation,
+  ce qui est correct tant que cette fonctionnalité n'existe pas.
+
+Vérifié : `next build` (36 routes), `next lint` (aucune erreur), `npm test`
+(14/14). Testé en conditions réelles sur le projet Supabase "BYA FLOW" :
+mise à jour boutique, upload d'image produit et coupon à 500 % ramené à
+100 % — tous confirmés fonctionnels après les corrections. Aucune régression
+sur le dashboard (score et données inchangés). Aucune erreur console ni
+serveur.
+
+## Prochaines étapes (Phase 14)
+
+- [ ] Préparation production : configuration Vercel définitive, vérification
+      des variables d'environnement en production, revue finale avant mise
+      en ligne réelle.

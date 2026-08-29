@@ -11,11 +11,9 @@ interface ProductImage {
 
 export function ProductImages({
   productId,
-  storeId,
   images,
 }: {
   productId: string;
-  storeId: string;
   images: ProductImage[];
 }) {
   const uploadFormRef = useRef<HTMLFormElement>(null);
@@ -47,7 +45,6 @@ export function ProductImages({
 
       <form action={uploadProductImage} ref={uploadFormRef} className="flex items-center gap-3">
         <input type="hidden" name="productId" value={productId} />
-        <input type="hidden" name="storeId" value={storeId} />
         <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-slate-600 hover:border-brand-400 hover:text-brand-600">
           <Upload className="h-4 w-4" />
           Ajouter une image

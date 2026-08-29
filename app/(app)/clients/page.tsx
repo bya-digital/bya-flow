@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
 import { getCurrentStore } from "@/lib/data/store";
+import { PAGE_SIZE, pageRange, parsePage } from "@/lib/pagination";
 import { createClient } from "@/lib/supabase/server";
 
 interface CustomerRow {
@@ -21,41 +23,54 @@ interface OrderAgg {
   created_at: string;
 }
 
-export default async function ClientsPage() {
+export default async function ClientsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const store = await getCurrentStore();
+  const page = parsePage(searchParams.page);
 
   let customers: CustomerRow[] = [];
+  let totalCount = 0;
   const spentByCustomer = new Map<string, number>();
   const lastOrderByCustomer = new Map<string, string>();
 
   if (store) {
     const supabase = createClient();
-    const [{ data: customersData }, { data: ordersData }] = await Promise.all([
-      supabase
-        .from("customers")
-        .select("id, full_name, email, phone, status, tags")
-        .eq("organization_id", store.organization_id)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("orders")
-        .select("customer_id, total, created_at")
-        .eq("store_id", store.id),
-    ]);
+    const { data: customersData, count } = await supabase
+      .from("customers")
+      .select("id, full_name, email, phone, status, tags", { count: "exact" })
+      .eq("organization_id", store.organization_id)
+      .order("created_at", { ascending: false })
+      .range(...pageRange(page));
 
     customers = customersData ?? [];
+    totalCount = count ?? 0;
 
-    for (const order of (ordersData ?? []) as OrderAgg[]) {
-      if (!order.customer_id) continue;
-      spentByCustomer.set(
-        order.customer_id,
-        (spentByCustomer.get(order.customer_id) ?? 0) + Number(order.total)
-      );
-      const current = lastOrderByCustomer.get(order.customer_id);
-      if (!current || order.created_at > current) {
-        lastOrderByCustomer.set(order.customer_id, order.created_at);
+    const customerIds = customers.map((customer) => customer.id);
+    if (customerIds.length > 0) {
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("customer_id, total, created_at")
+        .eq("store_id", store.id)
+        .in("customer_id", customerIds);
+
+      for (const order of (ordersData ?? []) as OrderAgg[]) {
+        if (!order.customer_id) continue;
+        spentByCustomer.set(
+          order.customer_id,
+          (spentByCustomer.get(order.customer_id) ?? 0) + Number(order.total)
+        );
+        const current = lastOrderByCustomer.get(order.customer_id);
+        if (!current || order.created_at > current) {
+          lastOrderByCustomer.set(order.customer_id, order.created_at);
+        }
       }
     }
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <>
@@ -132,6 +147,7 @@ export default async function ClientsPage() {
               ))}
             </tbody>
           </table>
+          <Pagination page={page} totalPages={totalPages} basePath="/clients" />
         </div>
       )}
     </>

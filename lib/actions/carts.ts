@@ -162,7 +162,7 @@ export async function convertCartToOrder(formData: FormData) {
     return;
   }
 
-  await supabase.from("order_items").insert(
+  const { error: itemsError } = await supabase.from("order_items").insert(
     items.map((item) => ({
       order_id: order.id,
       product_id: item.product_id,
@@ -170,6 +170,10 @@ export async function convertCartToOrder(formData: FormData) {
       unit_price: item.unit_price,
     }))
   );
+
+  if (itemsError) {
+    redirect(`/commandes/${order.id}?error=${encodeURIComponent(itemsError.message)}`);
+  }
 
   for (const item of items) {
     const product = item.product_id ? stockById.get(item.product_id) : null;
@@ -180,7 +184,20 @@ export async function convertCartToOrder(formData: FormData) {
       .eq("id", product.id);
   }
 
-  await supabase.from("carts").update({ status: "converted" }).eq("id", cartId);
+  const { error: cartUpdateError } = await supabase
+    .from("carts")
+    .update({ status: "converted" })
+    .eq("id", cartId);
+
+  if (cartUpdateError) {
+    // La commande existe déjà à ce stade : on ne bloque pas l'utilisateur,
+    // mais on l'informe que le panier source n'a pas pu être marqué converti.
+    redirect(
+      `/commandes/${order.id}?error=${encodeURIComponent(
+        `Commande créée, mais le panier n'a pas pu être marqué comme converti : ${cartUpdateError.message}`
+      )}`
+    );
+  }
 
   revalidatePath("/paniers-abandonnes");
   revalidatePath("/commandes");

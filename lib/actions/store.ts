@@ -2,11 +2,19 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
 export async function updateStore(formData: FormData) {
-  const storeId = formData.get("storeId") as string;
+  // La boutique à modifier est dérivée de la session, jamais du champ caché
+  // envoyé par le client (défense en profondeur : RLS bloquerait déjà une
+  // tentative de modifier la boutique d'une autre organisation, mais autant
+  // ne pas dépendre uniquement de RLS pour cette décision).
+  const store = await getCurrentStore();
+  if (!store) redirect("/onboarding");
+  const storeId = store.id;
+
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const country = formData.get("country") as string;

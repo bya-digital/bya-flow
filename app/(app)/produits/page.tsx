@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
 import { getCurrentStore } from "@/lib/data/store";
+import { PAGE_SIZE, pageRange, parsePage } from "@/lib/pagination";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_LABELS: Record<string, { label: string; tone: "neutral" | "success" | "warning" }> = {
@@ -22,20 +24,30 @@ interface ProductRow {
   product_images: { url: string }[];
 }
 
-export default async function ProduitsPage() {
+export default async function ProduitsPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const store = await getCurrentStore();
+  const page = parsePage(searchParams.page);
 
   let products: ProductRow[] = [];
+  let totalCount = 0;
 
   if (store) {
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("products")
-      .select("id, name, sku, price, stock, status, product_images(url)")
+      .select("id, name, sku, price, stock, status, product_images(url)", { count: "exact" })
       .eq("store_id", store.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(...pageRange(page));
     products = (data ?? []) as unknown as ProductRow[];
+    totalCount = count ?? 0;
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <>
@@ -104,6 +116,7 @@ export default async function ProduitsPage() {
               })}
             </tbody>
           </table>
+          <Pagination page={page} totalPages={totalPages} basePath="/produits" />
         </div>
       )}
     </>

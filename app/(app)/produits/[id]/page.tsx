@@ -86,7 +86,7 @@ export default async function ProduitDetailPage({
               <h2 className="text-sm font-semibold text-slate-900">Images</h2>
             </CardHeader>
             <CardContent>
-              <ProductImages productId={product.id} storeId={store.id} images={images ?? []} />
+              <ProductImages productId={product.id} images={images ?? []} />
             </CardContent>
           </Card>
 

@@ -108,12 +108,17 @@ export async function sendCampaign(formData: FormData) {
   const { data: customers } = await customerQuery;
 
   if (customers && customers.length > 0) {
-    await supabase.from("campaign_recipients").insert(
+    const { error: recipientsError } = await supabase.from("campaign_recipients").insert(
       customers.map((customer) => ({
         campaign_id: campaignId,
         customer_id: customer.id,
       }))
     );
+
+    if (recipientsError) {
+      redirect(`/campagnes/${campaignId}?error=${encodeURIComponent(recipientsError.message)}`);
+      return;
+    }
   }
 
   const { error } = await supabase

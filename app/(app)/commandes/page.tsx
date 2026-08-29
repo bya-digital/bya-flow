@@ -3,7 +3,9 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Pagination } from "@/components/ui/Pagination";
 import { getCurrentStore } from "@/lib/data/store";
+import { PAGE_SIZE, pageRange, parsePage } from "@/lib/pagination";
 import { createClient } from "@/lib/supabase/server";
 
 const STATUS_LABELS: Record<string, { label: string; tone: "neutral" | "success" | "warning" | "danger" }> = {
@@ -32,20 +34,32 @@ interface OrderRow {
   customers: { full_name: string } | null;
 }
 
-export default async function CommandesPage() {
+export default async function CommandesPage({
+  searchParams,
+}: {
+  searchParams: { page?: string };
+}) {
   const store = await getCurrentStore();
+  const page = parsePage(searchParams.page);
 
   let orders: OrderRow[] = [];
+  let totalCount = 0;
 
   if (store) {
     const supabase = createClient();
-    const { data } = await supabase
+    const { data, count } = await supabase
       .from("orders")
-      .select("id, order_number, status, payment_status, total, created_at, customers(full_name)")
+      .select("id, order_number, status, payment_status, total, created_at, customers(full_name)", {
+        count: "exact",
+      })
       .eq("store_id", store.id)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(...pageRange(page));
     orders = (data ?? []) as unknown as OrderRow[];
+    totalCount = count ?? 0;
   }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   return (
     <>
@@ -114,6 +128,7 @@ export default async function CommandesPage() {
               })}
             </tbody>
           </table>
+          <Pagination page={page} totalPages={totalPages} basePath="/commandes" />
         </div>
       )}
     </>

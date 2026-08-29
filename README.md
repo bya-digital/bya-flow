@@ -20,6 +20,15 @@ npm run dev
 
 L'application démarre sur [http://localhost:3000](http://localhost:3000).
 
+## Tests
+
+```bash
+npm test
+```
+
+Tests unitaires (`vitest`) pour la logique pure sans dépendance base de
+données : score de croissance, catalogue de plans, utilitaires.
+
 ## Configuration
 
 Copiez `.env.example` en `.env.local` et renseignez vos clés du projet

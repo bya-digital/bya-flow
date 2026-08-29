@@ -14,8 +14,6 @@ export function StoreForm({ store }: { store: CurrentStore }) {
 
   return (
     <form action={updateStore} className="space-y-6">
-      <input type="hidden" name="storeId" value={store.id} />
-
       <div className="flex items-center gap-4">
         <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
           {logoPreview ? (

@@ -7,20 +7,28 @@ import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 import { slugify } from "@/lib/utils";
 
+// Le client applique déjà min="0" sur ces champs, mais une requête forgée
+// pourrait contourner cette contrainte HTML : on la revalide donc côté
+// serveur, seule limite qui compte réellement.
+function toNonNegativeNumber(value: FormDataEntryValue | null): number {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
 function readProductFields(formData: FormData) {
   const name = formData.get("name") as string;
   const slugInput = (formData.get("slug") as string) || name;
+  const compareAtPrice = formData.get("compareAtPrice");
+  const weight = formData.get("weight");
   return {
     name,
     slug: slugify(slugInput),
     description: (formData.get("description") as string) || null,
-    price: Number(formData.get("price") || 0),
-    compare_at_price: formData.get("compareAtPrice")
-      ? Number(formData.get("compareAtPrice"))
-      : null,
+    price: toNonNegativeNumber(formData.get("price")),
+    compare_at_price: compareAtPrice ? toNonNegativeNumber(compareAtPrice) : null,
     sku: (formData.get("sku") as string) || null,
-    stock: Number(formData.get("stock") || 0),
-    weight: formData.get("weight") ? Number(formData.get("weight")) : null,
+    stock: Math.round(toNonNegativeNumber(formData.get("stock"))),
+    weight: weight ? toNonNegativeNumber(weight) : null,
     status: (formData.get("status") as string) || "draft",
     category_id: (formData.get("categoryId") as string) || null,
   };
@@ -125,7 +133,6 @@ export async function createCategory(formData: FormData) {
 
 export async function uploadProductImage(formData: FormData) {
   const productId = formData.get("productId") as string;
-  const storeId = formData.get("storeId") as string;
   const file = formData.get("image") as File;
 
   if (!file || file.size === 0) {
@@ -133,8 +140,23 @@ export async function uploadProductImage(formData: FormData) {
   }
 
   const supabase = createClient();
+
+  // Le store_id du chemin de stockage est dérivé du produit lui-même,
+  // jamais d'un champ caché envoyé par le client (défense en profondeur :
+  // évite qu'un chemin de stockage forgé ne pointe vers une autre boutique).
+  const { data: product } = await supabase
+    .from("products")
+    .select("store_id")
+    .eq("id", productId)
+    .maybeSingle<{ store_id: string }>();
+
+  if (!product) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent("Produit introuvable.")}`);
+    return;
+  }
+
   const extension = file.name.split(".").pop() ?? "jpg";
-  const path = `${storeId}/${productId}/${Date.now()}.${extension}`;
+  const path = `${product.store_id}/${productId}/${Date.now()}.${extension}`;
 
   const { error: uploadError } = await supabase.storage.from("product-images").upload(path, file);
 

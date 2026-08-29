@@ -10,13 +10,20 @@ function readCouponFields(formData: FormData) {
   const endsAt = formData.get("endsAt") as string;
   const usageLimit = formData.get("usageLimit") as string;
   const minOrderAmount = formData.get("minOrderAmount") as string;
+  const type = (formData.get("type") as string) || "percentage";
+
+  // Revalidé côté serveur : un pourcentage > 100 n'a pas de sens (le total
+  // resterait positif grâce au plafonnement dans createOrder, mais autant
+  // ne pas laisser exister un coupon absurde à afficher).
+  const rawValue = Number(formData.get("value") || 0);
+  const value = type === "percentage" ? Math.min(Math.max(rawValue, 0), 100) : Math.max(rawValue, 0);
 
   return {
     code: (formData.get("code") as string).trim().toUpperCase(),
-    type: (formData.get("type") as string) || "percentage",
-    value: Number(formData.get("value") || 0),
-    min_order_amount: minOrderAmount ? Number(minOrderAmount) : null,
-    usage_limit: usageLimit ? Number(usageLimit) : null,
+    type,
+    value,
+    min_order_amount: minOrderAmount ? Math.max(Number(minOrderAmount), 0) : null,
+    usage_limit: usageLimit ? Math.max(Math.round(Number(usageLimit)), 1) : null,
     starts_at: startsAt ? new Date(startsAt).toISOString() : null,
     ends_at: endsAt ? new Date(endsAt).toISOString() : null,
     is_active: formData.get("isActive") === "on",
