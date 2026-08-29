@@ -535,8 +535,55 @@ mise à jour boutique, upload d'image produit et coupon à 500 % ramené à
 sur le dashboard (score et données inchangés). Aucune erreur console ni
 serveur.
 
-## Prochaines étapes (Phase 14)
+## 2026-08-29 — Phase 14 : préparation production
 
-- [ ] Préparation production : configuration Vercel définitive, vérification
-      des variables d'environnement en production, revue finale avant mise
-      en ligne réelle.
+Dernière phase du cahier des charges (14/14).
+
+- **En-têtes de sécurité HTTP** ajoutés (`next.config.js`) :
+  `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy: strict-origin-when-cross-origin`,
+  `Permissions-Policy` (caméra/micro/géolocalisation désactivés). Confirmés
+  présents en direct via `fetch()` sur la page réelle.
+- **Favicon** (`app/icon.svg`) : n'existait pas jusqu'ici (vérifié absent
+  depuis la Phase 1). Créé cohérent avec l'identité visuelle existante
+  (couleur `brand-600`, initiale "B", même esprit que l'avatar de la
+  Topbar). Confirmé servi correctement (`content-type: image/svg+xml`).
+- **`.env.example` nettoyé** : `SUPABASE_SERVICE_ROLE_KEY` retirée — jamais
+  utilisée nulle part dans le code (confirmé en Phase 13), la laisser
+  n'aurait fait qu'inviter à créer un secret sensible sans besoin réel.
+- **`package.json`** : `engines.node` ajouté pour des builds Vercel
+  reproductibles.
+- **README** : section "Déploiement (Vercel)" complète — étapes précises,
+  variables d'environnement à renseigner en production, et le rappel
+  important de mettre à jour les "Redirect URLs" dans Supabase Auth après
+  déploiement (sans quoi les liens de confirmation d'inscription et de
+  réinitialisation de mot de passe redirigeraient vers `localhost`).
+- Vérifié : `next build` (37 routes dont `/icon.svg`), `next lint`,
+  `npm test` (14/14). Aucune erreur console/serveur.
+
+⚠️ **Ce que je n'ai pas pu faire moi-même** : je n'ai pas d'accès au compte
+Vercel, donc je n'ai pas pu créer/connecter le projet `bya-flow` ni
+renseigner les variables d'environnement en production — ces étapes sont
+documentées dans le README mais restent à réaliser côté Vercel/Supabase par
+le porteur de projet.
+
+---
+
+**Les 14 phases du cahier des charges sont closes.** BYA Flow est un SaaS
+de croissance commerciale fonctionnel de bout en bout : authentification
+multi-tenant, boutique/produits, commandes/clients, marketing (campagnes,
+coupons, paniers abandonnés), automatisations réelles (triggers Postgres),
+analytics, BYA Flow Score, couche IA (architecture abstraite + opportunités
+de croissance basées sur des règles réelles), facturation SaaS avec limites
+réellement appliquées, et une base de code auditée (RLS, secrets,
+validation, pagination, tests). Chaque phase a été testée en conditions
+réelles sur le projet Supabase "BYA FLOW", pas seulement en local.
+
+Pistes pour la suite (hors cahier des charges initial, à prioriser avec le
+porteur de projet) : invitation d'équipe (UI manquante), recherche Topbar
+fonctionnelle, boutique publique (nécessaire pour de vrais paniers
+abandonnés et un vrai taux de conversion visiteur), intégration d'un
+véritable fournisseur IA (remplacer `heuristicProvider`), intégration d'un
+vrai fournisseur email/SMS/WhatsApp pour les campagnes, passerelle de
+paiement pour la facturation SaaS, `pg_cron` pour l'automatisation
+réellement planifiée du déclencheur "client inactif".
