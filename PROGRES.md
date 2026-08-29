@@ -319,9 +319,41 @@ Testé de bout en bout :
   l'automatisation ; juste une valeur de test invalide de ma part.
 - Aucune erreur console ni serveur (vérifié sur un onglet neuf).
 
-## Prochaines étapes (Phase 9)
+## 2026-08-29 — Phase 9 : analytics
 
-- [ ] Analytics : chiffre d'affaires, conversion, évolution temporelle,
-      meilleures ventes — poser les bases de `analytics_events` pour,
-      entre autres, activer enfin le taux de conversion du dashboard
-      (volontairement laissé de côté en Phase 3).
+- **Base de données** (`sql/phase9_analytics.sql`) : table `analytics_events`
+  créée pour préparer le terrain (IA Phase 11, future boutique publique) —
+  volontairement vide, aucun événement fictif inséré. L'essentiel des
+  indicateurs analytics se calcule directement depuis
+  `orders`/`order_items`/`customers`/`carts` déjà existants, sans nouvelle
+  table.
+- **Page `/analytics`** : sélecteur de période (7/30/90 jours, 12 mois),
+  5 KPI (CA, commandes, panier moyen, nouveaux clients, **conversion**),
+  graphique d'évolution (agrégation quotidienne ≤ 90 jours, mensuelle
+  au-delà), répartition des commandes par statut, top 10 meilleures ventes
+  (quantité + chiffre d'affaires).
+- **Taux de conversion** : calculé honnêtement en panier → commande
+  (`carts.status = 'converted'` / total paniers de la période), et non à
+  partir d'un trafic visiteur inventé — BYA Flow n'a toujours pas de
+  boutique publique pour mesurer de vraies visites. Décision cohérente avec
+  celle prise en Phase 3.
+- Vérifié : `next build` (36 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase9_analytics.sql` exécuté sur le projet Supabase "BYA FLOW". Testé
+sur les 4 commandes cumulées des phases précédentes : 102 € de CA (somme
+exacte 45+27+15+15), 4 commandes, 26 € de panier moyen, conversion 100 %
+(1/1 panier converti), répartition par statut correcte (2 Livrée, 2 En
+attente), meilleure vente "Mug BYA Flow" (7 unités, 105 € — chiffre d'affaires
+ligne à ligne avant remise, distinct du total commande après coupon).
+Sélecteurs de période 7 jours et 12 mois testés : bornes de date et
+agrégation (quotidienne / mensuelle) correctes dans les deux cas. Aucune
+erreur console ni serveur (vérifié sur un onglet neuf).
+
+## Prochaines étapes (Phase 10)
+
+- [ ] BYA Flow Score : score de santé commerciale (0-100) à partir des
+      signaux déjà disponibles (ventes, conversion, activité client, panier
+      moyen, fréquence d'achat) — l'architecture analytics de cette phase
+      fournit déjà la matière première.

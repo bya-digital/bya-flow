@@ -5,6 +5,7 @@ interface TopProduct {
   id: string;
   name: string;
   quantity: number;
+  revenue?: number;
 }
 
 export function TopProducts({ products }: { products: TopProduct[] }) {
@@ -28,7 +29,10 @@ export function TopProducts({ products }: { products: TopProduct[] }) {
             </span>
             <span className="font-medium text-slate-900">{product.name}</span>
           </div>
-          <span className="text-slate-500">{product.quantity} vendus</span>
+          <span className="text-slate-500">
+            {product.quantity} vendus
+            {product.revenue !== undefined && ` · ${product.revenue.toFixed(2)} €`}
+          </span>
         </li>
       ))}
     </ul>

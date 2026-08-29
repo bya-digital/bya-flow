@@ -61,6 +61,8 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
    `automations`, `automation_runs`, `notifications`, et les triggers
    Postgres qui les font réagir automatiquement (commande créée/livrée,
    panier abandonné).
+8. [sql/phase9_analytics.sql](sql/phase9_analytics.sql) — `analytics_events`
+   (préparation pour la Phase 11, vide pour l'instant).
 
 ## Authentification & onboarding
 
@@ -97,6 +99,7 @@ components/
   paniers/                CartCreateForm, CartActions
   automatisations/        AutomationForm, DeleteAutomationButton
   notifications/          NotificationList
+  analytics/              PeriodSelector, OrderStatusBreakdown
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
@@ -114,6 +117,7 @@ sql/
   phase5_commandes_clients.sql fiche client, paiement, expédition, écriture
   phase7_marketing.sql        campagnes, coupons, paniers abandonnés
   phase8_automatisations.sql  automations, notifications, triggers Postgres
+  phase9_analytics.sql        analytics_events (préparation)
 middleware.ts             session + protection des routes
 ```
 
