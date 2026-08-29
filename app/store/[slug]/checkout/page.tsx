@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { submitCheckout } from "@/lib/actions/checkout";
+import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 
@@ -21,6 +22,8 @@ export default async function StoreCheckoutPage({
   if (cart.items.length === 0) {
     redirect(`/store/${store.slug}/panier`);
   }
+
+  const session = await getCustomerSession();
 
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -49,13 +52,27 @@ export default async function StoreCheckoutPage({
                 <label htmlFor="fullName" className={labelClasses}>
                   Nom complet
                 </label>
-                <input id="fullName" name="fullName" required className={inputClasses} />
+                <input
+                  id="fullName"
+                  name="fullName"
+                  required
+                  defaultValue={session.fullName ?? ""}
+                  className={inputClasses}
+                />
               </div>
               <div>
                 <label htmlFor="email" className={labelClasses}>
                   Email
                 </label>
-                <input id="email" name="email" type="email" required className={inputClasses} />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  readOnly={session.isLoggedIn}
+                  defaultValue={session.email ?? ""}
+                  className={`${inputClasses} ${session.isLoggedIn ? "bg-slate-50 text-slate-500" : ""}`}
+                />
               </div>
               <div>
                 <label htmlFor="phone" className={labelClasses}>

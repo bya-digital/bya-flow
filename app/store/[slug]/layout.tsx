@@ -1,8 +1,9 @@
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, User } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getPublicCart } from "@/lib/data/publicCart";
+import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 export default async function StoreLayout({
@@ -17,6 +18,7 @@ export default async function StoreLayout({
 
   const cart = await getPublicCart(store.id);
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const session = await getCustomerSession();
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -38,17 +40,31 @@ export default async function StoreLayout({
             <span className="text-lg font-bold text-slate-900">{store.name}</span>
           </Link>
 
-          <Link
-            href={`/store/${store.slug}/panier`}
-            className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
-          >
-            <ShoppingCart className="h-5 w-5" strokeWidth={1.75} />
-            {itemCount > 0 && (
-              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-semibold text-white">
-                {itemCount}
-              </span>
-            )}
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              href={
+                session.isLoggedIn
+                  ? `/store/${store.slug}/compte`
+                  : `/store/${store.slug}/compte/connexion`
+              }
+              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+              aria-label="Mon compte"
+            >
+              <User className="h-5 w-5" strokeWidth={1.75} />
+            </Link>
+
+            <Link
+              href={`/store/${store.slug}/panier`}
+              className="relative flex h-10 w-10 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100"
+            >
+              <ShoppingCart className="h-5 w-5" strokeWidth={1.75} />
+              {itemCount > 0 && (
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-brand-600 px-1 text-xs font-semibold text-white">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+          </div>
         </div>
       </header>
 

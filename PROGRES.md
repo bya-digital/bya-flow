@@ -833,3 +833,48 @@ panier).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
   Vérification en conditions réelles à faire une fois la migration
   exécutée.
+
+**Vérifié en production le 2026-08-29** : parcours complet testé en
+visiteur anonyme réel — ajout au panier, checkout, commande n°5 créée.
+Confirmé côté commerçant : commande visible dans `/commandes` (statuts
+"En attente"/"En attente", jamais "payé"), client CRM créé
+automatiquement (email, téléphone, statut, montant dépensé), stock
+décrémenté (19 → 18).
+
+## 2026-08-29 — Phase 9 (nouveau plan) : compte client
+
+Un client peut désormais créer un vrai compte (email/mot de passe, même
+mécanisme que les comptes marchands) pour retrouver son historique de
+commandes d'une visite à l'autre — jusqu'ici chaque visite anonyme était
+indépendante.
+
+- **`sql/phase19_compte_client.sql`** : aucune nouvelle colonne. L'accès
+  "c'est à moi" se fait via `auth.email()` comparé à `customers.email` —
+  la même adresse qui sert déjà à retrouver/créer le client au moment du
+  checkout invité (Phase 18). Un visiteur anonyme n'a pas d'email, donc
+  ces policies ne lui donnent naturellement aucun accès.
+- **Fusion panier invité → panier du compte** (`merge_cart()`) : se
+  connecter change l'identité de session (l'ancien panier anonyme
+  deviendrait sinon inaccessible). Le panier d'avant connexion est lu
+  côté serveur juste avant l'appel de connexion, puis fusionné dans le
+  panier du compte (quantités additionnées si un même produit est dans
+  les deux) juste après.
+- **`app/store/[slug]/compte/`** : inscription, connexion, tableau de
+  bord ("Bonjour {prénom}" + historique de commandes), détail d'une
+  commande. Confirmation par email requise à l'inscription (même
+  parcours que les comptes marchands, déjà vérifié en production).
+- **Checkout adapté** : un client connecté voit son email pré-rempli
+  (verrouillé, pour que la commande soit bien rattachée à son compte) et
+  son nom pré-rempli mais modifiable.
+- **En-tête boutique** : icône compte à côté du panier.
+- **Volontairement limité à cette phase** : la fusion panier ne
+  fonctionne qu'à la **connexion** (session synchrone, testable
+  directement) — pas encore à l'inscription initiale, qui nécessite de
+  passer par la confirmation email avant que la session change
+  réellement ; le panier du visiteur reste intact en attendant et sera
+  repris à sa première connexion réelle. Pas d'adresses enregistrées, de
+  favoris ni de fidélité (Phases 12+, pas commencées).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles (inscription email/mot de passe
+  soumise à confirmation par email, non automatisable ici) à faire par
+  le porteur de projet.
