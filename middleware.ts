@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.includes(pathname);
+  const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/store/");
 
   if (!user) {
     if (isPublicPath) return response;

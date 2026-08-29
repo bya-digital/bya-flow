@@ -705,6 +705,46 @@ phases. Périmètre confirmé inchangé : uniquement `BYA-Flow` /
 Conclusion de l'audit : **aucune correction destructive ou corrective
 n'est nécessaire**. Le socle technique (Git, Vercel, Next.js, schéma
 Supabase, RLS) est déjà sain. Phase 1 est donc close sans changement de
-code — la prochaine étape utile est directement la Phase 2 (design
-system) ou la Phase 3/4 (Store Builder + boutique publique), à trancher
-avec le porteur de projet compte tenu de l'ampleur de chacune.
+code.
+
+## 2026-08-29 — Phases 4-5 (nouveau plan) : boutique publique + catalogue
+
+Décision du porteur de projet : sauter directement à la boutique
+publique plutôt que suivre l'ordre strict du plan (Design System d'abord).
+Construit en un seul chantier cohérent : accueil boutique + fiche produit
+publics, sans encore panier/checkout (Phases 6-7, volontairement pas
+commencées — pas de bouton d'achat qui ne ferait rien).
+
+- **`sql/phase16_boutique_publique.sql`** :
+  - **Bug réel trouvé pendant cette phase** : `lib/actions/onboarding.ts`
+    crée une boutique sans jamais renseigner `slug` — seules les
+    boutiques existant au moment du rattrapage ponctuel de la Phase 4
+    avaient un slug. Toute boutique créée depuis (dont le compte de test
+    utilisé pour vérifier cette phase) avait `/store/` cassé. Corrigé par
+    un trigger `set_store_slug` (protège tout futur point d'insertion, pas
+    seulement l'onboarding) + rattrapage des lignes existantes + contrainte
+    `not null`, sur le même modèle que `products.slug` en Phase 4.
+  - Policies RLS de lecture anonyme, volontairement limitées : une
+    boutique n'est visible que si `is_active = true`, un produit que si
+    `status = 'active'` **et** sa boutique publiée. Rien d'autre
+    (organisation, clients, commandes) n'est concerné.
+- **`lib/data/publicStore.ts`** : lecture anonyme (`getPublicStoreBySlug`,
+  `getPublicProducts`, `getPublicProductBySlug`), séparée de
+  `lib/data/store.ts` qui reste réservé aux membres authentifiés.
+- **`app/store/[slug]/`** : layout dédié (header/footer boutique, sans la
+  barre latérale de l'app), page d'accueil (grille produits, prix barré,
+  rupture de stock) et fiche produit (galerie, description, variantes).
+  404 propre si la boutique ou le produit n'est pas publié.
+- **`middleware.ts`** : `/store/*` ajouté aux chemins publics (accès
+  anonyme, pas de garde onboarding).
+- **`/boutique`** : nouveau badge de statut ("Boutique publiée" /
+  "Boutique non publiée") + lien direct "Voir ma boutique publique" ; le
+  champ existant "Boutique active" reclarifié pour indiquer qu'il contrôle
+  cette visibilité publique.
+- **Volontairement absent** : aucun bouton "Ajouter au panier" — un
+  encart explique que l'achat en ligne arrive dans une prochaine étape,
+  plutôt que d'afficher un bouton qui ne ferait rien.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
+  Vérification visuelle en direct à faire une fois la migration SQL
+  exécutée (le bug de slug n'était pas visible avant cette phase, aucune
+  boutique existante n'avait encore été testée via son URL publique).

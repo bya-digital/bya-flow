@@ -78,6 +78,9 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 10. [sql/phase15_admin_plateforme.sql](sql/phase15_admin_plateforme.sql) —
     colonne `profiles.is_platform_admin`, fonction `is_platform_admin()` et
     policies de lecture cross-tenant pour l'espace Admin Plateforme.
+11. [sql/phase16_boutique_publique.sql](sql/phase16_boutique_publique.sql) —
+    corrige la génération de `stores.slug` (trigger) et ajoute les policies
+    de lecture anonyme nécessaires à la boutique publique (`/store/[slug]`).
 
 Les Phases 10 (BYA Flow Score), 11 (couche IA), 13 (sécurité/tests) et 14
 (production) n'ajoutent aucune table : tout se calcule à la volée depuis les
@@ -118,7 +121,9 @@ app/
   (app)/*/page.tsx        un dossier par module produit (dont produits/nouveau, produits/[id])
   auth/callback/route.ts échange du code Supabase (confirmation/reset)
   onboarding/page.tsx    assistant de création d'organisation
-  icon.svg                favicon
+  store/[slug]/           boutique publique (accueil + fiche produit),
+                          lecture anonyme, sans layout applicatif
+  icon.png                favicon
 components/
   ui/                     design system (Button, Card, Badge, EmptyState,
                           Pagination, ...)
@@ -147,6 +152,7 @@ lib/
                           heuristique par défaut, opportunités de croissance)
   billing/plans.ts        catalogue des plans SaaS (logique pure)
   data/store.ts           getCurrentStore() (organisation → boutique)
+  data/publicStore.ts     lecture anonyme (boutique + produits publiés)
   data/platformAdmin.ts   isPlatformAdmin(), vue d'ensemble multi-clients
   data/growthScore.ts     récupération des données du BYA Flow Score
   data/subscription.ts    récupération de l'abonnement + usage réel

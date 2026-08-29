@@ -99,7 +99,7 @@ export function StoreForm({ store }: { store: CurrentStore }) {
           defaultChecked={store.is_active}
           className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
         />
-        Boutique active
+        Boutique active (visible publiquement sur <code>/store/{store.slug}</code>)
       </label>
 
       <Button type="submit">Enregistrer</Button>
