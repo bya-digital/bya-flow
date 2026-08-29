@@ -635,3 +635,26 @@ compris pour lui.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
   Vérification visuelle complète du parcours (page invisible/404 pour un
   compte normal) à faire une fois le rôle accordé en production.
+
+## 2026-08-29 — Intégration du logo officiel
+
+Le logo officiel BYA Flow (fourni par le porteur de projet) n'était utilisé
+nulle part dans l'application — seule sa palette de couleurs avait été
+reprise. Trois exports générés à partir du fichier source (monogramme
+recadré, badge carré arrondi, lockup complet) :
+
+- **Favicon** (`app/icon.png`) : remplace le favicon dessiné à la main de
+  la Phase 14.
+- **`public/logo-mark.png`** : badge utilisé dans la barre latérale, le
+  header de la page publique et l'en-tête des pages d'authentification.
+- **`public/logo-full.png`** : lockup complet (icône + "BYA FLOW" +
+  tagline), utilisé en visuel de la page d'accueil publique.
+
+**Bug réel trouvé et corrigé en marge** : le `matcher` du middleware
+protégeait toutes les routes non explicitement publiques, y compris les
+fichiers statiques comme `/logo-mark.png` — un visiteur non connecté qui
+chargeait la page de connexion se faisait rediriger vers `/login` en
+tentant de charger l'image (boucle silencieuse, image cassée). Corrigé en
+excluant les fichiers statiques (`png`, `jpg`, `svg`, etc.) du matcher,
+plutôt que d'énumérer chaque asset un par un dans `PUBLIC_PATHS`. Vérifié
+en navigateur, déconnecté, sur `/`, `/login` et `/signup`.

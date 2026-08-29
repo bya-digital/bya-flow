@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { navSections, platformAdminNavSection } from "@/lib/nav";
@@ -19,7 +20,15 @@ export function Sidebar({ mobileOpen, onClose, showPlatformAdmin = false }: Side
   const content = (
     <div className="flex h-full flex-col">
       <div className="flex h-16 shrink-0 items-center justify-between px-6">
-        <Link href="/dashboard" className="text-lg font-bold text-brand-600">
+        <Link href="/dashboard" className="flex items-center gap-2 text-lg font-bold text-brand-600">
+          <Image
+            src="/logo-mark.png"
+            alt=""
+            width={28}
+            height={28}
+            unoptimized
+            className="rounded-lg"
+          />
           BYA Flow
         </Link>
         <button
