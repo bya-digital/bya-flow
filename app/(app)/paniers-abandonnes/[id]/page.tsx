@@ -1,46 +1,50 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { OrderStatusForm } from "@/components/commandes/OrderStatusForm";
+import { CartActions } from "@/components/paniers/CartActions";
 import { Alert } from "@/components/ui/Alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 
-interface OrderItemRow {
+interface CartItemRow {
   id: string;
   quantity: number;
   unit_price: number;
   products: { name: string } | null;
 }
 
-export default async function CommandeDetailPage({
+export default async function PanierDetailPage({
   params,
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { error?: string; success?: string };
+  searchParams: { error?: string; success?: string; reminded?: string };
 }) {
   const store = await getCurrentStore();
   if (!store) notFound();
 
   const supabase = createClient();
 
-  const [{ data: order }, { data: items }] = await Promise.all([
-    supabase.from("orders").select("*, customers(id, full_name)").eq("id", params.id).maybeSingle(),
+  const [{ data: cart }, { data: items }] = await Promise.all([
+    supabase.from("carts").select("*, customers(id, full_name)").eq("id", params.id).maybeSingle(),
     supabase
-      .from("order_items")
+      .from("cart_items")
       .select("id, quantity, unit_price, products(name)")
-      .eq("order_id", params.id),
+      .eq("cart_id", params.id),
   ]);
 
-  if (!order) notFound();
+  if (!cart) notFound();
 
-  const customer = order.customers as { id: string; full_name: string } | null;
+  const customer = cart.customers as { id: string; full_name: string } | null;
+  const total = (items ?? []).reduce(
+    (sum, item) => sum + Number(item.unit_price) * item.quantity,
+    0
+  );
 
   return (
     <>
-      <PageHeader title={`Commande #${order.order_number}`} description="Détail de la commande." />
+      <PageHeader title="Panier" description="Détail du panier." />
 
       {searchParams.error && (
         <div className="mb-4">
@@ -52,12 +56,17 @@ export default async function CommandeDetailPage({
           <Alert tone="success" title="Modifications enregistrées" />
         </div>
       )}
+      {searchParams.reminded && (
+        <div className="mb-4">
+          <Alert tone="success" title="Relance enregistrée" />
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold text-slate-900">Produits commandés</h2>
+              <h2 className="text-sm font-semibold text-slate-900">Produits</h2>
             </CardHeader>
             <CardContent>
               <table className="w-full text-sm">
@@ -70,7 +79,7 @@ export default async function CommandeDetailPage({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {((items ?? []) as unknown as OrderItemRow[]).map((item) => (
+                  {((items ?? []) as unknown as CartItemRow[]).map((item) => (
                     <tr key={item.id}>
                       <td className="py-2">{item.products?.name ?? "Produit supprimé"}</td>
                       <td className="py-2">{item.quantity}</td>
@@ -82,29 +91,18 @@ export default async function CommandeDetailPage({
                   ))}
                 </tbody>
               </table>
-              {Number(order.discount_amount) > 0 && (
-                <p className="mt-4 text-right text-sm text-emerald-600">
-                  Remise appliquée : -{Number(order.discount_amount).toFixed(2)} €
-                </p>
-              )}
-              <p className="mt-1 text-right text-base font-semibold text-slate-900">
-                Total : {Number(order.total).toFixed(2)} €
+              <p className="mt-4 text-right text-base font-semibold text-slate-900">
+                Total : {total.toFixed(2)} €
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <h2 className="text-sm font-semibold text-slate-900">Statut & livraison</h2>
+              <h2 className="text-sm font-semibold text-slate-900">Statut & suivi</h2>
             </CardHeader>
             <CardContent>
-              <OrderStatusForm
-                orderId={order.id}
-                status={order.status}
-                paymentStatus={order.payment_status}
-                notes={order.notes}
-                shippingAddress={order.shipping_address}
-              />
+              <CartActions cartId={cart.id} status={cart.status} notes={cart.notes} />
             </CardContent>
           </Card>
         </div>

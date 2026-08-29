@@ -232,10 +232,53 @@ sans aucune modification, comme prévu par l'architecture en phases. Fiche
 client : montant dépensé et historique corrects. Aucune erreur console ni
 serveur (vérifié sur un onglet neuf).
 
-## Prochaines étapes (Phase 6)
+## 2026-08-29 — Phase 7 : marketing (campagnes, promotions, paniers)
 
-- [ ] CRM approfondi : segments, prospects vs clients plus travaillés,
-      éventuellement notes horodatées / activité détaillée — à cadrer selon
-      les retours d'usage des Phases 5.
-- [ ] Ou enchaîner directement sur la Phase 7 (Marketing) selon la priorité
-      du porteur de projet.
+Décision prise avec le porteur de projet : la Phase 6 (CRM approfondi)
+chevauchait largement le CRM déjà livré en Phase 5 ; priorité donnée
+directement à la Phase 7, qui apporte de la valeur nouvelle.
+
+- **Nettoyage** : suppression de `contacts`, `campaigns` (v1) et
+  `campaign_events` — orphelines depuis la Phase 1 (RLS activée sans
+  policy, donc jamais accessibles). `campaigns` recréée proprement,
+  rattachée à `organizations`.
+- **Campagnes** (`/campagnes`) : nom, canal (email/SMS/WhatsApp — champ prêt,
+  aucun fournisseur connecté), contenu, audience ciblée par tags ou statut
+  client/prospect. Envoi **simulé** : les destinataires correspondants sont
+  calculés et enregistrés (`campaign_recipients`) pour l'historique, mais
+  **aucun message réel n'est envoyé** — avertissement explicite affiché
+  avant et après l'envoi pour ne jamais laisser croire le contraire.
+- **Promotions & coupons** (`/promotions`) : coupons pourcentage/montant
+  fixe, montant minimum, limite d'usage, dates de validité. Intégrés
+  directement à la création de commande (`createOrder`) : validation
+  complète côté serveur (existence, active, dates, limite, montant
+  minimum), calcul de la remise, incrément du compteur d'usage.
+- **Paniers abandonnés** (`/paniers-abandonnes`) : BYA Flow n'ayant pas de
+  boutique publique, un panier se crée manuellement (devis, intérêt
+  exprimé...). Statut actif/abandonné/converti, marquage de relance
+  (`last_reminder_at` — l'automatisation réelle des relances est prévue en
+  Phase 8), et **conversion en commande réelle** (crée la commande, décrémente
+  le stock, marque le panier converti).
+- Vérifié : `next build` (34 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+`sql/phase7_marketing.sql` exécuté sur le projet Supabase "BYA FLOW". Testé
+de bout en bout : coupon `BIENVENUE10` (10 %) créé puis appliqué à une
+commande de 30 € → 27 € (remise de 3 € correcte, compteur d'usage passé à
+1/∞) ; code promo invalide correctement rejeté avec message clair ; campagne
+ciblant le tag `vip` envoyée (simulation) → 1 destinataire correctement
+identifié (Claire Dubois) et enregistré, statut passé à "Envoyée" ; panier
+créé pour Claire Dubois, relance marquée, puis converti en commande réelle
+(#3) avec décrément de stock (5 → 4). Dashboard revérifié après ces trois
+commandes cumulées : 87 € de chiffre d'affaires, 3 commandes, 29 € de panier
+moyen, 6 unités vendues — tous les montants correspondent exactement à la
+somme des commandes créées. Aucune erreur console ni serveur (vérifié sur un
+onglet neuf).
+
+## Prochaines étapes (Phase 8)
+
+- [ ] Automatisations : moteur déclencheur → condition → action.
+      Cas d'usage déjà préparés par les phases précédentes : relance
+      automatique des paniers abandonnés (`last_reminder_at`), réactivation
+      client inactif, notification à la livraison d'une commande.

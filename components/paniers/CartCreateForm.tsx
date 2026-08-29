@@ -4,7 +4,7 @@ import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CustomerQuickCreate } from "@/components/commandes/CustomerQuickCreate";
 import { Button } from "@/components/ui/Button";
-import { createOrder } from "@/lib/actions/orders";
+import { createCart } from "@/lib/actions/carts";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -30,7 +30,7 @@ interface LineItemRow {
   unitPrice: string;
 }
 
-export function OrderCreateForm({
+export function CartCreateForm({
   products,
   customers,
   preSelectedCustomerId,
@@ -76,7 +76,7 @@ export function OrderCreateForm({
   );
 
   return (
-    <form action={createOrder} className="space-y-6">
+    <form action={createCart} className="space-y-6">
       <input type="hidden" name="lineItems" value={JSON.stringify(lineItems)} />
 
       <div>
@@ -96,7 +96,7 @@ export function OrderCreateForm({
             </option>
           ))}
         </select>
-        <CustomerQuickCreate redirectTo="/commandes/nouvelle" />
+        <CustomerQuickCreate redirectTo="/paniers-abandonnes/nouveau" />
       </div>
 
       <div>
@@ -115,7 +115,6 @@ export function OrderCreateForm({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {lineItems.map((row, index) => {
-                  const product = products.find((p) => p.id === row.productId);
                   const subtotal = Number(row.unitPrice || 0) * Number(row.quantity || 0);
                   return (
                     <tr key={index}>
@@ -127,7 +126,7 @@ export function OrderCreateForm({
                         >
                           {products.map((p) => (
                             <option key={p.id} value={p.id}>
-                              {p.name} ({p.stock} en stock)
+                              {p.name}
                             </option>
                           ))}
                         </select>
@@ -136,7 +135,6 @@ export function OrderCreateForm({
                         <input
                           type="number"
                           min="1"
-                          max={product?.stock}
                           value={row.quantity}
                           onChange={(e) => updateLineItem(index, "quantity", e.target.value)}
                           className={cellInputClasses}
@@ -179,67 +177,9 @@ export function OrderCreateForm({
           <Plus className="h-4 w-4" />
           Ajouter un produit
         </button>
-        {products.length === 0 && (
-          <p className="mt-1 text-xs text-slate-400">
-            Créez d&apos;abord un produit actif pour pouvoir composer une commande.
-          </p>
-        )}
         <p className="mt-3 text-right text-sm font-semibold text-slate-900">
           Total : {total.toFixed(2)} €
         </p>
-      </div>
-
-      <div>
-        <label htmlFor="couponCode" className={labelClasses}>
-          Code promo (facultatif)
-        </label>
-        <input
-          id="couponCode"
-          name="couponCode"
-          placeholder="Ex. BIENVENUE10"
-          className={inputClasses}
-        />
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div>
-          <label htmlFor="status" className={labelClasses}>
-            Statut
-          </label>
-          <select id="status" name="status" defaultValue="pending" className={inputClasses}>
-            <option value="pending">En attente</option>
-            <option value="confirmed">Confirmée</option>
-            <option value="processing">En préparation</option>
-            <option value="shipped">Expédiée</option>
-            <option value="delivered">Livrée</option>
-          </select>
-        </div>
-        <div>
-          <label htmlFor="paymentStatus" className={labelClasses}>
-            Paiement
-          </label>
-          <select
-            id="paymentStatus"
-            name="paymentStatus"
-            defaultValue="pending"
-            className={inputClasses}
-          >
-            <option value="pending">En attente</option>
-            <option value="paid">Payé</option>
-            <option value="refunded">Remboursé</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <p className={labelClasses}>Adresse de livraison</p>
-        <div className="mt-1 grid gap-3 sm:grid-cols-2">
-          <input name="shippingName" placeholder="Nom" className={inputClasses} />
-          <input name="shippingAddressLine" placeholder="Adresse" className={inputClasses} />
-          <input name="shippingCity" placeholder="Ville" className={inputClasses} />
-          <input name="shippingPostalCode" placeholder="Code postal" className={inputClasses} />
-          <input name="shippingCountry" placeholder="Pays" className={inputClasses} />
-        </div>
       </div>
 
       <div>
@@ -249,7 +189,7 @@ export function OrderCreateForm({
         <textarea id="notes" name="notes" rows={3} className={inputClasses} />
       </div>
 
-      <Button type="submit">Créer la commande</Button>
+      <Button type="submit">Enregistrer le panier</Button>
     </form>
   );
 }

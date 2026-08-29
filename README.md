@@ -53,6 +53,10 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 5. [sql/phase5_commandes_clients.sql](sql/phase5_commandes_clients.sql) —
    fiche client complète (tags, statut, notes), numérotation des commandes,
    paiement, adresse de livraison, policies d'écriture.
+6. [sql/phase7_marketing.sql](sql/phase7_marketing.sql) — supprime les tables
+   orphelines de la Phase 1 (`contacts`, `campaigns` v1, `campaign_events`),
+   recrée `campaigns`/`campaign_recipients`, ajoute `coupons`, `carts`,
+   `cart_items`.
 
 ## Authentification & onboarding
 
@@ -84,9 +88,12 @@ components/
                           CategoryQuickCreate, DeleteProductButton
   clients/                ClientForm, DeleteCustomerButton
   commandes/              OrderCreateForm, OrderStatusForm, CustomerQuickCreate
+  campagnes/              CampaignForm, SendCampaignButton, DeleteCampaignButton
+  promotions/             CouponForm, DeleteCouponButton
+  paniers/                CartCreateForm, CartActions
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
-                          customers, orders)
+                          customers, orders, campaigns, coupons, carts)
   data/store.ts           getCurrentStore() (organisation → boutique)
   nav.ts                  définition de la navigation
   supabase/client.ts      client Supabase (navigateur)
@@ -98,6 +105,7 @@ sql/
   phase3_dashboard_data.sql    customers, products, orders, order_items
   phase4_boutique_produits.sql boutique, catégories, produits complets, Storage
   phase5_commandes_clients.sql fiche client, paiement, expédition, écriture
+  phase7_marketing.sql        campagnes, coupons, paniers abandonnés
 middleware.ts             session + protection des routes
 ```
 

@@ -63,10 +63,56 @@ export async function createOrder(formData: FormData) {
     }
   }
 
-  const total = lineItems.reduce(
+  const subtotal = lineItems.reduce(
     (sum, item) => sum + Number(item.unitPrice) * Number(item.quantity),
     0
   );
+
+  const couponCode = ((formData.get("couponCode") as string) || "").trim().toUpperCase();
+  let discountAmount = 0;
+  let couponId: string | null = null;
+
+  if (couponCode) {
+    const { data: coupon } = await supabase
+      .from("coupons")
+      .select("*")
+      .eq("store_id", store.id)
+      .eq("code", couponCode)
+      .maybeSingle();
+
+    const now = new Date();
+    if (!coupon || !coupon.is_active) {
+      redirect(`/commandes/nouvelle?error=${encodeURIComponent("Code promo invalide.")}`);
+      return;
+    }
+    if (coupon.starts_at && new Date(coupon.starts_at) > now) {
+      redirect(`/commandes/nouvelle?error=${encodeURIComponent("Ce code promo n'est pas encore actif.")}`);
+      return;
+    }
+    if (coupon.ends_at && new Date(coupon.ends_at) < now) {
+      redirect(`/commandes/nouvelle?error=${encodeURIComponent("Ce code promo a expiré.")}`);
+      return;
+    }
+    if (coupon.usage_limit !== null && coupon.usage_count >= coupon.usage_limit) {
+      redirect(`/commandes/nouvelle?error=${encodeURIComponent("Ce code promo a atteint sa limite d'utilisation.")}`);
+      return;
+    }
+    if (coupon.min_order_amount !== null && subtotal < coupon.min_order_amount) {
+      redirect(
+        `/commandes/nouvelle?error=${encodeURIComponent(
+          `Ce code promo nécessite un montant minimum de ${coupon.min_order_amount} €.`
+        )}`
+      );
+      return;
+    }
+
+    discountAmount =
+      coupon.type === "percentage" ? (subtotal * Number(coupon.value)) / 100 : Number(coupon.value);
+    discountAmount = Math.min(discountAmount, subtotal);
+    couponId = coupon.id;
+  }
+
+  const total = subtotal - discountAmount;
 
   const { data: order, error: orderError } = await supabase
     .from("orders")
@@ -78,6 +124,8 @@ export async function createOrder(formData: FormData) {
       shipping_address: shippingAddress,
       notes,
       total,
+      coupon_id: couponId,
+      discount_amount: discountAmount,
     })
     .select("id")
     .single<{ id: string }>();
@@ -111,6 +159,20 @@ export async function createOrder(formData: FormData) {
       .from("products")
       .update({ stock: product.stock - Number(item.quantity) })
       .eq("id", item.productId);
+  }
+
+  if (couponId) {
+    const { data: coupon } = await supabase
+      .from("coupons")
+      .select("usage_count")
+      .eq("id", couponId)
+      .maybeSingle<{ usage_count: number }>();
+    if (coupon) {
+      await supabase
+        .from("coupons")
+        .update({ usage_count: coupon.usage_count + 1 })
+        .eq("id", couponId);
+    }
   }
 
   revalidatePath("/commandes");
