@@ -7,6 +7,7 @@ import { TopProducts } from "@/components/dashboard/TopProducts";
 import { GrowthScoreGauge } from "@/components/score/GrowthScoreGauge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { getGrowthOpportunities } from "@/lib/ai/opportunities";
 import { getGrowthScore } from "@/lib/data/growthScore";
 import { createClient } from "@/lib/supabase/server";
 
@@ -128,6 +129,7 @@ export default async function DashboardPage() {
     .slice(0, 5);
 
   const growthScore = await getGrowthScore();
+  const opportunities = await getGrowthOpportunities();
 
   return (
     <>
@@ -201,7 +203,7 @@ export default async function DashboardPage() {
           </Card>
         )}
         <div className="lg:col-span-2">
-          <RecommendationsPanel recommendations={[]} />
+          <RecommendationsPanel recommendations={opportunities} />
         </div>
       </div>
     </>

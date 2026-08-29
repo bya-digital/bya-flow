@@ -1,6 +1,9 @@
 "use client";
 
+import { Sparkles } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
+import { generateCampaignContent } from "@/lib/actions/ai";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -24,6 +27,24 @@ export function CampaignForm({
   action: (formData: FormData) => void;
   campaign?: CampaignFormValues;
 }) {
+  const [subject, setSubject] = useState(campaign?.subject ?? "");
+  const [content, setContent] = useState(campaign?.content ?? "");
+  const [isGenerating, startGenerating] = useTransition();
+  const nameRef = useRef<HTMLInputElement>(null);
+  const channelRef = useRef<HTMLSelectElement>(null);
+
+  const handleGenerate = () => {
+    const name = nameRef.current?.value ?? "";
+    const channel = channelRef.current?.value ?? "email";
+    if (!name.trim()) return;
+
+    startGenerating(async () => {
+      const generated = await generateCampaignContent({ name, channel });
+      setSubject(generated.subject);
+      setContent(generated.content);
+    });
+  };
+
   return (
     <form action={action} className="space-y-5">
       {campaign?.id && <input type="hidden" name="campaignId" value={campaign.id} />}
@@ -35,6 +56,7 @@ export function CampaignForm({
         <input
           id="name"
           name="name"
+          ref={nameRef}
           defaultValue={campaign?.name ?? ""}
           required
           className={inputClasses}
@@ -49,6 +71,7 @@ export function CampaignForm({
           <select
             id="channel"
             name="channel"
+            ref={channelRef}
             defaultValue={campaign?.channel ?? "email"}
             className={inputClasses}
           >
@@ -72,13 +95,25 @@ export function CampaignForm({
       </div>
 
       <div>
-        <label htmlFor="subject" className={labelClasses}>
-          Objet / titre du message
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="subject" className={labelClasses}>
+            Objet / titre du message
+          </label>
+          <button
+            type="button"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+            className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
+          >
+            <Sparkles className="h-3 w-3" />
+            {isGenerating ? "Génération..." : "Générer avec l'IA"}
+          </button>
+        </div>
         <input
           id="subject"
           name="subject"
-          defaultValue={campaign?.subject ?? ""}
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
           className={inputClasses}
         />
       </div>
@@ -90,7 +125,8 @@ export function CampaignForm({
         <textarea
           id="content"
           name="content"
-          defaultValue={campaign?.content ?? ""}
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
           rows={5}
           className={inputClasses}
         />

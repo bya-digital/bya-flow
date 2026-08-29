@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { CategoryQuickCreate } from "@/components/produits/CategoryQuickCreate";
+import { generateProductDescription } from "@/lib/actions/ai";
 import { slugify } from "@/lib/utils";
 
 const inputClasses =
@@ -38,6 +40,21 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [isGenerating, startGenerating] = useTransition();
+  const priceRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+
+  const handleGenerateDescription = () => {
+    const price = priceRef.current ? Number(priceRef.current.value) : undefined;
+    const categoryId = categoryRef.current?.value;
+    const category = categories.find((c) => c.id === categoryId)?.name ?? null;
+
+    startGenerating(async () => {
+      const generated = await generateProductDescription({ name, category, price });
+      if (generated) setDescription(generated);
+    });
+  };
 
   return (
     <form action={action} className="space-y-6">
@@ -77,13 +94,25 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
       </div>
 
       <div>
-        <label htmlFor="description" className={labelClasses}>
-          Description
-        </label>
+        <div className="flex items-center justify-between">
+          <label htmlFor="description" className={labelClasses}>
+            Description
+          </label>
+          <button
+            type="button"
+            onClick={handleGenerateDescription}
+            disabled={isGenerating || !name.trim()}
+            className="flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline disabled:opacity-50"
+          >
+            <Sparkles className="h-3 w-3" />
+            {isGenerating ? "Génération..." : "Générer avec l'IA"}
+          </button>
+        </div>
         <textarea
           id="description"
           name="description"
-          defaultValue={product?.description ?? ""}
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
           rows={4}
           className={inputClasses}
         />
@@ -97,6 +126,7 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
           <input
             id="price"
             name="price"
+            ref={priceRef}
             type="number"
             step="0.01"
             min="0"
@@ -180,6 +210,7 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
           <select
             id="categoryId"
             name="categoryId"
+            ref={categoryRef}
             defaultValue={product?.category_id ?? ""}
             className={inputClasses}
           >

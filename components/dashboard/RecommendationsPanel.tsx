@@ -1,9 +1,12 @@
 import { Sparkles } from "lucide-react";
+import Link from "next/link";
 
 interface Recommendation {
   id: string;
+  category?: string;
   title: string;
   description: string;
+  href?: string;
 }
 
 export function RecommendationsPanel({
@@ -27,7 +30,21 @@ export function RecommendationsPanel({
         <ul className="mt-3 space-y-3">
           {recommendations.map((recommendation) => (
             <li key={recommendation.id} className="text-sm">
-              <p className="font-medium text-slate-900">{recommendation.title}</p>
+              {recommendation.category && (
+                <p className="text-xs font-semibold uppercase tracking-wide text-brand-600">
+                  {recommendation.category}
+                </p>
+              )}
+              {recommendation.href ? (
+                <Link
+                  href={recommendation.href}
+                  className="font-medium text-slate-900 hover:text-brand-600 hover:underline"
+                >
+                  {recommendation.title}
+                </Link>
+              ) : (
+                <p className="font-medium text-slate-900">{recommendation.title}</p>
+              )}
               <p className="text-slate-600">{recommendation.description}</p>
             </li>
           ))}

@@ -66,6 +66,7 @@ Exécutez, dans l'ordre, dans l'éditeur SQL du projet Supabase **BYA FLOW** :
 
 La Phase 10 (BYA Flow Score) n'ajoute aucune table : le score se calcule à
 la volée depuis les données existantes (voir `lib/score/calculateScore.ts`).
+La Phase 11 (couche IA) non plus : voir `lib/ai/`.
 
 ## Authentification & onboarding
 
@@ -107,7 +108,9 @@ components/
 lib/
   actions/                Server Actions (auth, onboarding, store, products,
                           customers, orders, campaigns, coupons, carts,
-                          automations, notifications)
+                          automations, notifications, ai)
+  ai/                      architecture IA abstraite (types, fournisseur
+                          heuristique par défaut, opportunités de croissance)
   data/store.ts           getCurrentStore() (organisation → boutique)
   data/growthScore.ts     récupération des données du BYA Flow Score
   score/calculateScore.ts logique pure du score (facteurs, poids, bandes)

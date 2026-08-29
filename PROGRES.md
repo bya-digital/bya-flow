@@ -384,10 +384,50 @@ formule — 70×20 % + 100×15 % + 100×15 % + 70×10 % + 100×15 % + 100×10 % 
 verte de la bande "excellent". Cohérence dashboard ↔ page `/ia` confirmée
 (même score affiché aux deux endroits). Aucune erreur console ni serveur.
 
-## Prochaines étapes (Phase 11)
+## 2026-08-29 — Phase 11 : couche IA
 
-- [ ] Couche IA : interfaces/services abstraits pour un futur fournisseur
-      IA (pas de connexion à une API payante sans nécessité), génération de
-      contenus (descriptions produits, emails, textes publicitaires),
-      recommandations concrètes dans "Opportunités de croissance" à partir
-      des facteurs du BYA Flow Score.
+- **Architecture IA abstraite** (`lib/ai/`) : interface `AIProvider`
+  (`lib/ai/types.ts`), fournisseur par défaut `heuristicProvider` — texte
+  généré par modèles, **aucun appel externe, aucune clé API requise**,
+  conformément au cahier des charges ("ne pas connecter une API IA payante
+  sans nécessité"). `lib/ai/index.ts` centralise le fournisseur actif : en
+  connecter un vrai (OpenAI, Anthropic...) plus tard ne demande de changer
+  qu'un seul fichier.
+- **Génération de descriptions produits** : bouton "Générer avec l'IA" dans
+  `ProductForm`, à partir du nom/catégorie/prix déjà saisis — texte
+  modifiable avant enregistrement, jamais imposé.
+- **Génération de contenu de campagne** : même principe dans `CampaignForm`
+  (objet + corps du message), adapté au canal choisi (email/SMS/WhatsApp).
+- **Opportunités de croissance** (`lib/ai/opportunities.ts`) : moteur de
+  recommandations **basé sur des règles réelles**, pas sur un modèle IA —
+  3 catégories câblées sur des données existantes : client à réactiver
+  (aucune commande depuis 60 jours), panier à récupérer (actif ou
+  abandonné, non converti), produit à promouvoir (en stock, actif, aucune
+  vente sur 30 jours). Branché à la fois sur le dashboard (panneau "BYA Flow
+  recommande", jusqu'ici vide) et sur la page `/ia` (liste complète).
+- Volontairement non couvert (extensions futures de la même architecture,
+  cf. cahier des charges section IA) : segmentation intelligente, détection
+  d'anomalies, prévisions — demandent plus d'historique de données que ce
+  qui existe aujourd'hui pour être pertinents.
+- Aucune nouvelle table SQL.
+- Vérifié : `next build` (36 routes), `next lint` (aucune erreur).
+
+### Validation en conditions réelles
+
+Testé sur le projet Supabase "BYA FLOW" : génération de description produit
+("Casquette BYA Flow", 19,90 €) → texte cohérent intégrant nom et prix,
+modifiable, enregistré correctement. Génération de contenu de campagne
+adaptée au canal SMS → texte différent de celui pour email, vérifié.
+Création du produit sans vente → apparaît immédiatement comme "Produit à
+promouvoir" sur le dashboard **et** sur `/ia`, cohérence confirmée entre les
+deux pages. Effet de bord vérifié et exact : le BYA Flow Score est repassé
+de 91 à 86 (recalculé : 70×20 %+100×15 %+100×15 %+70×10 %+100×15 %+100×10 %
++**50**×10 %+100×5 % = 86) car le facteur "Performance produits" reflète
+désormais qu'un seul produit sur deux a généré une vente — la cascade entre
+opportunités et score fonctionne comme prévu, aucune donnée inventée.
+Aucune erreur console ni serveur.
+
+## Prochaines étapes (Phase 12)
+
+- [ ] Facturation SaaS : plans d'abonnement, moyens de paiement, période
+      d'essai — première brique visible de la monétisation de BYA Flow.
