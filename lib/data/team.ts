@@ -76,6 +76,7 @@ export interface PendingInvitation {
   id: string;
   email: string;
   role: "admin" | "member";
+  token: string;
   createdAt: string;
 }
 
@@ -83,7 +84,7 @@ export async function getPendingInvitations(organizationId: string): Promise<Pen
   const supabase = createClient();
   const { data } = await supabase
     .from("organization_invitations")
-    .select("id, email, role, created_at")
+    .select("id, email, role, token, created_at")
     .eq("organization_id", organizationId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -92,6 +93,7 @@ export async function getPendingInvitations(organizationId: string): Promise<Pen
     id: row.id,
     email: row.email,
     role: row.role as "admin" | "member",
+    token: row.token,
     createdAt: row.created_at,
   }));
 }

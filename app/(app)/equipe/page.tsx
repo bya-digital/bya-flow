@@ -1,5 +1,6 @@
 import { Mail, Users } from "lucide-react";
 import { notFound } from "next/navigation";
+import { CopyInviteLink } from "@/components/equipe/CopyInviteLink";
 import { InviteMemberForm } from "@/components/equipe/InviteMemberForm";
 import { MemberRow } from "@/components/equipe/MemberRow";
 import { RevokeInvitationButton } from "@/components/equipe/RevokeInvitationButton";
@@ -71,15 +72,16 @@ export default async function EquipePage({
             <h2 className="text-sm font-semibold text-slate-900">Invitations en attente</h2>
             <div className="mt-4 divide-y divide-slate-100">
               {invitations.map((invitation) => (
-                <div key={invitation.id} className="flex items-center justify-between py-3">
-                  <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-slate-400" />
-                    <div>
+                <div key={invitation.id} className="flex items-start justify-between gap-3 py-3">
+                  <div className="flex items-start gap-3">
+                    <Mail className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-slate-900">{invitation.email}</p>
                       <p className="text-xs text-slate-500">
                         {roleLabels[invitation.role]} · invité le{" "}
                         {dateFormatter.format(new Date(invitation.createdAt))}
                       </p>
+                      <CopyInviteLink token={invitation.token} />
                     </div>
                   </div>
                   <RevokeInvitationButton invitationId={invitation.id} />
