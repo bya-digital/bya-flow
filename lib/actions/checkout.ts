@@ -16,6 +16,7 @@ export async function submitCheckout(formData: FormData) {
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
   const notes = (formData.get("notes") as string) || null;
+  const redeemPoints = Math.max(Number(formData.get("redeemPoints") || 0), 0);
   const checkoutUrl = `/store/${storeSlug}/checkout`;
 
   const shipping = {
@@ -36,6 +37,7 @@ export async function submitCheckout(formData: FormData) {
       p_shipping: shipping,
       p_notes: notes,
       p_shipping_method_id: shippingMethodId,
+      p_redeem_points: redeemPoints,
     })
     .single<CheckoutOrderResult>();
 

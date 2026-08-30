@@ -17,6 +17,9 @@ export interface PublicStore {
   socialTiktok: string | null;
   socialWhatsapp: string | null;
   footerText: string | null;
+  loyaltyEnabled: boolean;
+  loyaltyEarnRate: number;
+  loyaltyRedeemValue: number;
 }
 
 export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | null> {
@@ -24,7 +27,7 @@ export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | 
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text"
+      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value"
     )
     .eq("slug", slug)
     .eq("is_active", true)
@@ -49,6 +52,9 @@ export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | 
     socialTiktok: data.social_tiktok,
     socialWhatsapp: data.social_whatsapp,
     footerText: data.footer_text,
+    loyaltyEnabled: data.loyalty_enabled,
+    loyaltyEarnRate: Number(data.loyalty_earn_rate),
+    loyaltyRedeemValue: Number(data.loyalty_redeem_value),
   };
 }
 

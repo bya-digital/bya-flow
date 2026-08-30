@@ -94,6 +94,12 @@ export default async function StoreAccountOrderPage({
               </span>
             </div>
           )}
+          {order.loyaltyPointsRedeemed > 0 && (
+            <div className="flex items-center justify-between text-sm text-emerald-600">
+              <span>Points utilisés ({order.loyaltyPointsRedeemed})</span>
+              <span>-{currencyFormatter.format(order.loyaltyDiscount)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between pt-1">
             <span className="text-sm font-semibold text-slate-900">Total</span>
             <span className="text-lg font-bold text-slate-900">
@@ -102,6 +108,13 @@ export default async function StoreAccountOrderPage({
           </div>
         </div>
       </div>
+
+      {order.loyaltyPointsEarned > 0 && (
+        <p className="mt-4 text-sm text-slate-500">
+          Vous avez gagné <strong>{order.loyaltyPointsEarned} points</strong> de fidélité avec
+          cette commande.
+        </p>
+      )}
 
       {order.shippingAddress && (
         <div className="mt-6 rounded-xl border border-slate-200 p-4 text-sm text-slate-600">

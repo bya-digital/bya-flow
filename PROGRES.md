@@ -1159,3 +1159,39 @@ phase par phase, plutôt que tout instrumenter d'un coup.
   membre retiré) s'enregistrent tous correctement, dans le bon ordre,
   avec un libellé lisible et le bon rôle en clair. Accès `/audit`
   bien bloqué (404) pour un compte membre.
+
+## 2026-08-30 — Phase 27 : fidélité (points)
+
+Programme de points volontairement simple — pas de parrainage cette
+phase (prévu plus tard, réutilisera ce même registre).
+
+- **`sql/phase27_fidelite.sql`** : `stores.loyalty_enabled` +
+  `loyalty_earn_rate` (points gagnés par unité de devise dépensée) +
+  `loyalty_redeem_value` (valeur d'un point à la dépense). Table
+  `loyalty_ledger` (mouvements signés, aucune policy client — ni
+  lecture ni écriture directe) alimentée exclusivement par
+  `checkout_cart()` étendue : gain automatique à chaque commande si
+  le programme est actif, et utilisation optionnelle de points
+  existants en réduction. **Sécurité de l'utilisation** : impossible
+  d'utiliser des points via un panier invité — `checkout_cart()`
+  exige que `auth.email()` corresponde exactement à l'email de la
+  commande, sinon un visiteur aurait pu dépenser les points de
+  n'importe quel email simplement en le tapant au checkout. Le nombre
+  de points utilisables est systématiquement recalculé et plafonné
+  côté serveur (solde réel, et jamais plus que la valeur du
+  sous-total), jamais fait confiance à la valeur envoyée par le
+  client. Solde consultable via `get_customer_loyalty_balance()`
+  (retourne 0 pour toute personne non connectée avec cet email exact,
+  sans lever d'erreur — même logique que l'éligibilité aux avis).
+- **`/fidelite`** (nouvelle page marchand) : activer le programme,
+  régler les deux taux.
+- **Checkout boutique publique** : solde affiché si le client est
+  connecté et le programme actif, champ pour utiliser tout ou partie
+  de ses points (plafonné côté client par confort, revalidé côté
+  serveur par sécurité).
+- Confirmation de commande, détail commande client et détail
+  commande marchand : réduction points affichée, points gagnés
+  affichés. Compte client : badge solde de points.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire une fois la
+  migration exécutée.

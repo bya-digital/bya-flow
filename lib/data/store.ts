@@ -20,6 +20,9 @@ export interface CurrentStore {
   social_tiktok: string | null;
   social_whatsapp: string | null;
   footer_text: string | null;
+  loyalty_enabled: boolean;
+  loyalty_earn_rate: number;
+  loyalty_redeem_value: number;
 }
 
 export async function getCurrentStore(): Promise<CurrentStore | null> {
@@ -43,7 +46,7 @@ export async function getCurrentStore(): Promise<CurrentStore | null> {
   const { data: store } = await supabase
     .from("stores")
     .select(
-      "id, organization_id, name, description, logo_url, slug, currency, country, is_active, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text"
+      "id, organization_id, name, description, logo_url, slug, currency, country, is_active, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value"
     )
     .eq("organization_id", membership.organization_id)
     .order("created_at", { ascending: true })

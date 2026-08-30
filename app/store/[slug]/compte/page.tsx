@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { logoutCustomer } from "@/lib/actions/customerAuth";
 import { getCustomerOrders, getCustomerSession } from "@/lib/data/customerAccount";
+import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -25,6 +26,9 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
   }
 
   const orders = await getCustomerOrders(store.id);
+  const loyaltyBalance = store.loyaltyEnabled
+    ? await getCustomerLoyaltyBalance(store.id, session.email)
+    : 0;
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: store.currency,
@@ -45,13 +49,20 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
         </form>
       </div>
 
-      <Link
-        href={`/store/${store.slug}/compte/favoris`}
-        className="mt-6 flex items-center gap-2 text-sm font-medium text-brand-600 hover:underline"
-      >
-        <Heart className="h-4 w-4" />
-        Mes favoris
-      </Link>
+      <div className="mt-6 flex flex-wrap items-center gap-4">
+        <Link
+          href={`/store/${store.slug}/compte/favoris`}
+          className="flex items-center gap-2 text-sm font-medium text-brand-600 hover:underline"
+        >
+          <Heart className="h-4 w-4" />
+          Mes favoris
+        </Link>
+        {store.loyaltyEnabled && (
+          <span className="rounded-full bg-brand-50 px-3 py-1 text-sm font-medium text-brand-700">
+            {loyaltyBalance} points de fidélité
+          </span>
+        )}
+      </div>
 
       <h2 className="mt-8 text-sm font-semibold text-slate-900">Mes commandes</h2>
 

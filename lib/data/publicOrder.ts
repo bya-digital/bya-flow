@@ -24,6 +24,9 @@ export interface PublicOrder {
   shippingMethodName: string | null;
   shippingCost: number;
   total: number;
+  loyaltyPointsEarned: number;
+  loyaltyPointsRedeemed: number;
+  loyaltyDiscount: number;
   shippingAddress: ShippingAddress | null;
   notes: string | null;
   createdAt: string;
@@ -36,7 +39,7 @@ export async function getPublicOrder(orderId: string): Promise<PublicOrder | nul
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, status, payment_status, subtotal, shipping_method_name, shipping_cost, total, shipping_address, notes, created_at"
+      "id, order_number, status, payment_status, subtotal, shipping_method_name, shipping_cost, total, loyalty_points_earned, loyalty_points_redeemed, loyalty_discount, shipping_address, notes, created_at"
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -57,6 +60,9 @@ export async function getPublicOrder(orderId: string): Promise<PublicOrder | nul
     shippingMethodName: order.shipping_method_name,
     shippingCost: Number(order.shipping_cost),
     total: Number(order.total),
+    loyaltyPointsEarned: order.loyalty_points_earned,
+    loyaltyPointsRedeemed: order.loyalty_points_redeemed,
+    loyaltyDiscount: Number(order.loyalty_discount),
     shippingAddress: order.shipping_address as ShippingAddress | null,
     notes: order.notes,
     createdAt: order.created_at,

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { submitCheckout } from "@/lib/actions/checkout";
 import { getCustomerSession } from "@/lib/data/customerAccount";
+import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getPublicShippingMethods, getPublicStoreBySlug } from "@/lib/data/publicStore";
 
@@ -30,6 +31,17 @@ export default async function StoreCheckoutPage({
     style: "currency",
     currency: store.currency,
   });
+
+  const loyaltyBalance =
+    store.loyaltyEnabled && session.isLoggedIn
+      ? await getCustomerLoyaltyBalance(store.id, session.email)
+      : 0;
+  const maxRedeemablePoints = Math.min(
+    loyaltyBalance,
+    store.loyaltyRedeemValue > 0
+      ? Math.floor(cart.subtotal / store.loyaltyRedeemValue)
+      : 0
+  );
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
@@ -147,6 +159,31 @@ export default async function StoreCheckoutPage({
                     </label>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          {maxRedeemablePoints > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Points de fidélité</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                Vous avez {loyaltyBalance} points (jusqu&apos;à{" "}
+                {currencyFormatter.format(maxRedeemablePoints * store.loyaltyRedeemValue)} de
+                réduction).
+              </p>
+              <div className="mt-2 max-w-xs">
+                <label htmlFor="redeemPoints" className={labelClasses}>
+                  Points à utiliser
+                </label>
+                <input
+                  id="redeemPoints"
+                  name="redeemPoints"
+                  type="number"
+                  min={0}
+                  max={maxRedeemablePoints}
+                  defaultValue={0}
+                  className={inputClasses}
+                />
               </div>
             </div>
           )}

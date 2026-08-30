@@ -101,9 +101,20 @@ export default async function CommandeDetailPage({
                     Remise appliquée : -{Number(order.discount_amount).toFixed(2)} €
                   </p>
                 )}
+                {Number(order.loyalty_discount) > 0 && (
+                  <p className="text-emerald-600">
+                    Points utilisés ({order.loyalty_points_redeemed}) : -
+                    {Number(order.loyalty_discount).toFixed(2)} €
+                  </p>
+                )}
                 <p className="text-base font-semibold text-slate-900">
                   Total : {Number(order.total).toFixed(2)} €
                 </p>
+                {order.loyalty_points_earned > 0 && (
+                  <p className="text-xs text-slate-400">
+                    {order.loyalty_points_earned} points gagnés par le client
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
