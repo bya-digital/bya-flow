@@ -1126,3 +1126,31 @@ hors scope cette phase — traitement séparé prévu plus tard).
   organisation vide) → lien « Équipe » absent du menu pour ce compte
   membre → `/equipe` renvoie un vrai 404 en accès direct (contrôle
   serveur, pas seulement un lien caché).
+
+## 2026-08-30 — Phase 26 : journal d'activité (équipe)
+
+Remplit la seconde moitié du module Sécurité & audit. Première
+tranche volontairement limitée aux actions sur l'équipe (invitations,
+rôles, retraits) — les autres modules (commandes, paiements,
+produits...) ne sont pas couverts, extension prévue plus tard,
+phase par phase, plutôt que tout instrumenter d'un coup.
+
+- **`sql/phase26_journal_activite.sql`** : table `activity_logs`
+  (acteur, action, cible, métadonnées). Écriture exclusivement via
+  des déclencheurs (`log_invitation_activity()`,
+  `log_member_activity()`, tous deux SECURITY DEFINER) posés
+  directement sur `organization_invitations` et
+  `organization_members` — le journal ne peut pas être oublié par un
+  point d'entrée applicatif qui écrirait directement sur ces tables,
+  ni falsifié depuis le client (aucune policy d'insertion directe).
+  La création du premier membre (propriétaire, à la création de
+  l'organisation) n'est volontairement pas journalisée.
+- **`/audit`** (remplace le placeholder) : liste des 50 dernières
+  actions, lisible en français (« X a invité Y », « X a changé le
+  rôle de Y en Administrateur »...). Accès réservé admin/propriétaire
+  comme `/equipe`, avec le même contrôle réel côté serveur — les deux
+  liens de menu partagent maintenant la même condition de visibilité
+  (`showAdminNav`, ex-`showTeamNav` généralisé).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire une fois la
+  migration exécutée.

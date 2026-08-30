@@ -17,7 +17,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   let organizationName = "Mon organisation";
   let unreadNotifications = 0;
-  let showTeamNav = true;
+  let showAdminNav = true;
 
   if (user) {
     const { data: membership } = await supabase
@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       organizationName = membership.organizations.name;
     }
 
-    showTeamNav = membership?.role !== "member";
+    showAdminNav = membership?.role !== "member";
 
     if (membership?.organization_id) {
       const { count } = await supabase
@@ -51,7 +51,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       organizationName={organizationName}
       unreadNotifications={unreadNotifications}
       showPlatformAdmin={showPlatformAdmin}
-      showTeamNav={showTeamNav}
+      showAdminNav={showAdminNav}
     >
       {children}
     </AppShell>

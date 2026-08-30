@@ -7,25 +7,27 @@ import { usePathname } from "next/navigation";
 import { navSections, platformAdminNavSection } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
+const ADMIN_ONLY_HREFS = ["/equipe", "/audit"];
+
 interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
   showPlatformAdmin?: boolean;
-  showTeamNav?: boolean;
+  showAdminNav?: boolean;
 }
 
 export function Sidebar({
   mobileOpen,
   onClose,
   showPlatformAdmin = false,
-  showTeamNav = true,
+  showAdminNav = true,
 }: SidebarProps) {
   const pathname = usePathname();
-  const baseSections = showTeamNav
+  const baseSections = showAdminNav
     ? navSections
     : navSections.map((section) => ({
         ...section,
-        items: section.items.filter((item) => item.href !== "/equipe"),
+        items: section.items.filter((item) => !ADMIN_ONLY_HREFS.includes(item.href)),
       }));
   const sections = showPlatformAdmin
     ? [...baseSections, platformAdminNavSection]
