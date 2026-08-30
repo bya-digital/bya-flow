@@ -1231,5 +1231,13 @@ système de récompense.
   et copiable (`?ref=` + code dérivé), généré à la demande — pas
   besoin d'avoir déjà acheté pour le partager.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire une fois la
-  migration exécutée.
+  propres.
+- **Vérifié en direct** avec deux comptes de test dédiés : parrainage
+  activé (50 points parrain / 30 points bienvenue) → lien copié
+  depuis le compte A (parrain, solde 20) → ouvert déconnecté (cookie
+  `bya_ref` confirmé posé) → inscription du compte B via ce lien →
+  1ère commande de B → gagné 50 points (20 de la commande + 30 de
+  bienvenue, affiché sur la confirmation) → solde de A passé de 20 à
+  70 (exactement +50). **Garde-fou premier achat** : 2ème commande de
+  B → seulement 20 points gagnés (aucun bonus de bienvenue répété),
+  solde de A resté à 70 (aucun bonus parrain supplémentaire).
