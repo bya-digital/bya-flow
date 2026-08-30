@@ -1193,5 +1193,14 @@ phase (prévu plus tard, réutilisera ce même registre).
   commande marchand : réduction points affichée, points gagnés
   affichés. Compte client : badge solde de points.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire une fois la
-  migration exécutée.
+  propres.
+- **Vérifié en direct** avec un compte de test dédié : programme
+  activé, produit créé, compte client inscrit → 1ère commande de
+  20 € → 20 points gagnés (affiché sur la confirmation et le compte)
+  → 2ème commande, 20 points utilisés → réduction de 0,20 € appliquée
+  correctement, total 19,80 €, solde après coup exact (20 − 20 + 20
+  gagnés sur la 2ème commande = 20). **Test de sécurité** : tentative
+  d'utiliser ces mêmes points depuis un panier invité (email de la
+  victime tapé manuellement, `redeemPoints` forcé dans le formulaire)
+  → bloquée avec le message d'erreur attendu, aucune commande créée,
+  solde du vrai client inchangé.
