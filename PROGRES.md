@@ -1108,5 +1108,21 @@ hors scope cette phase — traitement séparé prévu plus tard).
   propriété et bascule multi-organisation non traités cette phase.
   Pas d'expiration des invitations (annulation manuelle uniquement).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire une fois la
-  migration exécutée.
+  propres.
+- **Deux bugs trouvés et corrigés en conditions réelles** : (1) le
+  lien `/rejoindre/[jeton]` n'était affiché nulle part sur `/equipe`
+  après création d'une invitation — désormais copiable directement
+  sous chaque invitation en attente ; (2) la liste des membres était
+  toujours vide — `organization_members` et `profiles` référencent
+  tous deux `auth.users` (jamais l'un l'autre), donc l'embed
+  PostgREST `profiles(...)` ne pouvait pas être déduit automatiquement
+  (pas de clé étrangère directe) et échouait silencieusement ;
+  remplacé par deux requêtes jointes côté code.
+- **Vérifié en direct de bout en bout** : invitation créée depuis
+  `/equipe` (propriétaire) → lien copié → ouvert déconnecté → aperçu
+  correct (organisation, rôle) → création de compte avec le paramètre
+  `redirect` préservé → acceptation → arrivée sur `/dashboard` avec
+  les vraies données de l'organisation rejointe (pas une nouvelle
+  organisation vide) → lien « Équipe » absent du menu pour ce compte
+  membre → `/equipe` renvoie un vrai 404 en accès direct (contrôle
+  serveur, pas seulement un lien caché).
