@@ -25,17 +25,17 @@ export async function getCurrentMembership(): Promise<CurrentMembership | null> 
   return { organizationId: data.organization_id, role: data.role };
 }
 
-interface MemberProfile {
-  full_name: string | null;
-  email: string | null;
-}
-
 interface MemberRow {
   id: string;
   user_id: string;
   role: TeamRole;
   created_at: string;
-  profiles: MemberProfile | null;
+}
+
+interface MemberProfileRow {
+  id: string;
+  full_name: string | null;
+  email: string | null;
 }
 
 export interface TeamMember {
@@ -48,25 +48,43 @@ export interface TeamMember {
   isSelf: boolean;
 }
 
+// organization_members et profiles référencent tous les deux auth.users
+// (jamais l'un l'autre) : PostgREST ne peut donc pas inférer d'embed
+// profiles(...) sur organization_members (pas de FK directe). Deux
+// requêtes séparées, jointes ici côté code.
 export async function getTeamMembers(organizationId: string): Promise<TeamMember[]> {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { data } = await supabase
+  const { data: members } = await supabase
     .from("organization_members")
-    .select("id, user_id, role, created_at, profiles(full_name, email)")
+    .select("id, user_id, role, created_at")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: true })
     .returns<MemberRow[]>();
 
-  return (data ?? []).map((row) => ({
+  const rows = members ?? [];
+  if (rows.length === 0) return [];
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, full_name, email")
+    .in(
+      "id",
+      rows.map((row) => row.user_id)
+    )
+    .returns<MemberProfileRow[]>();
+
+  const profileById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+
+  return rows.map((row) => ({
     id: row.id,
     userId: row.user_id,
     role: row.role,
-    fullName: row.profiles?.full_name ?? null,
-    email: row.profiles?.email ?? null,
+    fullName: profileById.get(row.user_id)?.full_name ?? null,
+    email: profileById.get(row.user_id)?.email ?? null,
     createdAt: row.created_at,
     isSelf: row.user_id === user?.id,
   }));
