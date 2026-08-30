@@ -8,6 +8,8 @@ const PUBLIC_PATHS = [
   "/forgot-password",
   "/reset-password",
   "/auth/callback",
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 export async function middleware(request: NextRequest) {
