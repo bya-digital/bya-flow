@@ -11,11 +11,25 @@ interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
   showPlatformAdmin?: boolean;
+  showTeamNav?: boolean;
 }
 
-export function Sidebar({ mobileOpen, onClose, showPlatformAdmin = false }: SidebarProps) {
+export function Sidebar({
+  mobileOpen,
+  onClose,
+  showPlatformAdmin = false,
+  showTeamNav = true,
+}: SidebarProps) {
   const pathname = usePathname();
-  const sections = showPlatformAdmin ? [...navSections, platformAdminNavSection] : navSections;
+  const baseSections = showTeamNav
+    ? navSections
+    : navSections.map((section) => ({
+        ...section,
+        items: section.items.filter((item) => item.href !== "/equipe"),
+      }));
+  const sections = showPlatformAdmin
+    ? [...baseSections, platformAdminNavSection]
+    : baseSections;
 
   const content = (
     <div className="flex h-full flex-col">

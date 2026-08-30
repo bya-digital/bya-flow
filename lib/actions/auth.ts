@@ -26,9 +26,13 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
+  const redirectTo = (formData.get("redirect") as string) || "/onboarding";
+  const redirectParam = redirectTo !== "/onboarding" ? `&redirect=${encodeURIComponent(redirectTo)}` : "";
 
   if (password !== confirmPassword) {
-    redirect(`/signup?error=${encodeURIComponent("Les mots de passe ne correspondent pas.")}`);
+    redirect(
+      `/signup?error=${encodeURIComponent("Les mots de passe ne correspondent pas.")}${redirectParam}`
+    );
   }
 
   const supabase = createClient();
@@ -39,18 +43,18 @@ export async function signUp(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/signup?error=${encodeURIComponent(error.message)}`);
+    redirect(`/signup?error=${encodeURIComponent(error.message)}${redirectParam}`);
   }
 
   if (!data.session) {
     redirect(
       `/signup?message=${encodeURIComponent(
         "Vérifiez votre boîte mail pour confirmer votre compte."
-      )}`
+      )}${redirectParam}`
     );
   }
 
-  redirect("/onboarding");
+  redirect(redirectTo);
 }
 
 export async function signOut() {

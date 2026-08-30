@@ -1058,3 +1058,55 @@ les données nécessaires.
   générés), `next lint`, `npm test` (14/14) tous propres. Vérification
   en conditions réelles à faire une fois le déploiement effectué
   (aucune migration à exécuter au préalable pour cette phase).
+- **Bug trouvé en conditions réelles** : `/robots.txt` et `/sitemap.xml`
+  n'étaient pas dans `PUBLIC_PATHS` du middleware d'authentification,
+  qui les redirigeait donc vers `/login` (307) — invisibles pour tout
+  moteur de recherche malgré leur ajout. Corrigé en les ajoutant à la
+  liste des chemins publics ; revérifié en direct, 200 sur les deux.
+
+## 2026-08-30 — Phase 25 : équipe & permissions
+
+Remplit la moitié « contrôle des accès » du module Sécurité & audit
+(`/audit` reste un placeholder pour la moitié « journal d'activité »,
+hors scope cette phase — traitement séparé prévu plus tard).
+
+- **`sql/phase25_equipe_permissions.sql`** : `profiles.email` ajouté
+  (synchronisé automatiquement à l'inscription, backfillé pour les
+  comptes existants) — nécessaire pour afficher l'équipe puisque
+  `auth.users` n'est jamais lisible côté client. Nouvelle table
+  `organization_invitations` (email, rôle `admin`/`member`, jeton
+  unique, statut). Un admin/propriétaire crée une invitation par une
+  policy d'insertion directe (`is_org_admin()`) ; **aucun envoi
+  d'email réel** — le principe déjà retenu pour SMS/paiements
+  s'applique ici aussi : l'invitation produit un lien
+  `/rejoindre/[jeton]` que le commerçant partage lui-même par le
+  canal de son choix, jamais une fausse confirmation d'email envoyé.
+  Acceptation via `accept_organization_invitation()` (SECURITY
+  DEFINER) : vérifie que l'email du compte connecté correspond
+  exactement à l'email invité avant d'ajouter la personne à
+  `organization_members` — même principe de vérification serveur que
+  `submit_review()`. Nouvelles policies sur `organization_members`
+  (modification de rôle / retrait, jamais sur la ligne du
+  propriétaire) et fonction `shares_organization_with()` pour que les
+  coéquipiers puissent voir le nom/email les uns des autres sans
+  ouvrir `profiles` à tout le monde.
+- **`/equipe`** (nouvelle page, section Paramètres) : formulaire
+  d'invitation, liste des invitations en attente (annulables), liste
+  des membres avec changement de rôle et retrait. Accès réellement
+  contrôlé côté serveur (`notFound()` pour un simple membre, pas
+  seulement un lien caché dans le menu) — lien du menu lui-même
+  masqué pour les membres.
+- **`/rejoindre/[jeton]`** (nouvelle page publique) : aperçu de
+  l'invitation (organisation, rôle proposé), connexion ou création de
+  compte si nécessaire (le paramètre `redirect` a été ajouté à
+  l'inscription, sur le même principe que la connexion), puis
+  acceptation en un clic.
+- **Limite assumée** : un compte qui accepte une invitation alors
+  qu'il appartient déjà à une autre organisation se retrouve membre
+  des deux, mais l'espace marchand n'en affiche qu'une seule (limite
+  actuelle du modèle à une organisation par session) — transfert de
+  propriété et bascule multi-organisation non traités cette phase.
+  Pas d'expiration des invitations (annulation manuelle uniquement).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire une fois la
+  migration exécutée.

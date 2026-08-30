@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 export default function SignupPage({
   searchParams,
 }: {
-  searchParams: { error?: string; message?: string };
+  searchParams: { error?: string; message?: string; redirect?: string };
 }) {
   return (
     <Card>
@@ -27,6 +27,9 @@ export default function SignupPage({
         )}
 
         <form action={signUp} className="space-y-4">
+          {searchParams.redirect && (
+            <input type="hidden" name="redirect" value={searchParams.redirect} />
+          )}
           <div>
             <label htmlFor="fullName" className="text-sm font-medium text-slate-700">
               Nom complet

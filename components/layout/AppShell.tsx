@@ -10,6 +10,7 @@ interface AppShellProps {
   organizationName: string;
   unreadNotifications: number;
   showPlatformAdmin?: boolean;
+  showTeamNav?: boolean;
 }
 
 export function AppShell({
@@ -18,6 +19,7 @@ export function AppShell({
   organizationName,
   unreadNotifications,
   showPlatformAdmin = false,
+  showTeamNav = true,
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -27,6 +29,7 @@ export function AppShell({
         mobileOpen={mobileOpen}
         onClose={() => setMobileOpen(false)}
         showPlatformAdmin={showPlatformAdmin}
+        showTeamNav={showTeamNav}
       />
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Topbar

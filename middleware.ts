@@ -45,7 +45,10 @@ export async function middleware(request: NextRequest) {
   const isRealUser = Boolean(user?.email);
 
   const { pathname } = request.nextUrl;
-  const isPublicPath = PUBLIC_PATHS.includes(pathname) || pathname.startsWith("/store/");
+  const isPublicPath =
+    PUBLIC_PATHS.includes(pathname) ||
+    pathname.startsWith("/store/") ||
+    pathname.startsWith("/rejoindre/");
 
   if (!user) {
     if (pathname.startsWith("/store/")) {

@@ -16,6 +16,7 @@ import {
   Store,
   Ticket,
   Truck,
+  UserPlus,
   Users,
   Workflow,
   type LucideIcon,
@@ -72,6 +73,7 @@ export const navSections: NavSection[] = [
     title: "Paramètres",
     items: [
       { label: "Général", href: "/parametres", icon: Settings },
+      { label: "Équipe", href: "/equipe", icon: UserPlus },
       { label: "Facturation", href: "/facturation", icon: CreditCard },
       { label: "Notifications", href: "/notifications", icon: Bell },
       { label: "Sécurité & audit", href: "/audit", icon: ShieldCheck },

@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 
 interface MembershipRow {
   organizations: { name: string } | null;
+  role: string;
 }
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -16,11 +17,12 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   let organizationName = "Mon organisation";
   let unreadNotifications = 0;
+  let showTeamNav = true;
 
   if (user) {
     const { data: membership } = await supabase
       .from("organization_members")
-      .select("organization_id, organizations(name)")
+      .select("organization_id, role, organizations(name)")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle<MembershipRow & { organization_id: string }>();
@@ -28,6 +30,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     if (membership?.organizations) {
       organizationName = membership.organizations.name;
     }
+
+    showTeamNav = membership?.role !== "member";
 
     if (membership?.organization_id) {
       const { count } = await supabase
@@ -47,6 +51,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       organizationName={organizationName}
       unreadNotifications={unreadNotifications}
       showPlatformAdmin={showPlatformAdmin}
+      showTeamNav={showTeamNav}
     >
       {children}
     </AppShell>
