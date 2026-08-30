@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -29,9 +30,27 @@ async function ensureCart(storeId: string): Promise<string | null> {
 
   if (existing) return existing.id;
 
+  // Parrainage (Phase 28) : attribué une seule fois, à la création du
+  // panier — jamais recalculé plus tard, jamais fourni par le client au
+  // moment du paiement (voir checkout_cart()).
+  let referredByCustomerId: string | null = null;
+  const refCode = cookies().get("bya_ref")?.value;
+  if (refCode) {
+    const { data: referrerId } = await supabase.rpc("resolve_referral_code", {
+      p_store_id: storeId,
+      p_code: refCode,
+    });
+    referredByCustomerId = typeof referrerId === "string" ? referrerId : null;
+  }
+
   const { data: created } = await supabase
     .from("carts")
-    .insert({ store_id: storeId, anon_user_id: user.id, status: "active" })
+    .insert({
+      store_id: storeId,
+      anon_user_id: user.id,
+      status: "active",
+      referred_by_customer_id: referredByCustomerId,
+    })
     .select("id")
     .single<{ id: string }>();
 

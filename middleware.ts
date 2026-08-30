@@ -50,6 +50,22 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith("/store/") ||
     pathname.startsWith("/rejoindre/");
 
+  // Parrainage (Phase 28) : mémorise le code de parrainage dans un cookie
+  // dès la visite du lien ?ref=, pour l'attribuer plus tard au panier
+  // (potentiellement créé sur une tout autre page). Jamais résolu ici —
+  // juste stocké ; la résolution en id client se fait côté serveur au
+  // moment de la création du panier.
+  if (pathname.startsWith("/store/")) {
+    const ref = request.nextUrl.searchParams.get("ref");
+    if (ref) {
+      response.cookies.set("bya_ref", ref, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    }
+  }
+
   if (!user) {
     if (pathname.startsWith("/store/")) {
       // Panier anonyme (Phase 6) : donne un auth.uid() stable au visiteur

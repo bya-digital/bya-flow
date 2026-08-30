@@ -1204,3 +1204,32 @@ phase (prévu plus tard, réutilisera ce même registre).
   victime tapé manuellement, `redeemPoints` forcé dans le formulaire)
   → bloquée avec le message d'erreur attendu, aucune commande créée,
   solde du vrai client inchangé.
+
+## 2026-08-30 — Phase 28 : parrainage
+
+Réutilise le registre de points de la Phase 27 plutôt qu'un second
+système de récompense.
+
+- **`sql/phase28_parrainage.sql`** : `stores.referral_enabled` +
+  `referral_bonus_points` (parrain) + `referral_welcome_points`
+  (filleul). **Pas de colonne dédiée pour le code de parrainage** :
+  dérivé de l'id client (8 caractères hex d'un md5, déterministe,
+  déjà unique — aucune gestion de collision à écrire). Nouvelle
+  colonne `carts.referred_by_customer_id`, posée une seule fois à la
+  création du panier (jamais recalculée, jamais un champ du
+  formulaire de paiement) : un visiteur qui arrive avec `?ref=CODE`
+  reçoit un cookie (posé par `middleware.ts`), résolu en id client
+  uniquement au moment où son panier est réellement créé
+  (`ensureCart()`). `checkout_cart()` étendue une nouvelle fois :
+  au premier achat réel d'un client parrainé (jamais à
+  l'auto-parrainage, jamais au-delà du premier achat, jamais sans
+  fidélité + parrainage tous deux activés), verse les points au
+  parrain et le bonus de bienvenue au filleul.
+- **`/fidelite`** : section Parrainage ajoutée (activer, régler les
+  deux montants).
+- **Compte client boutique** : lien de parrainage personnel affiché
+  et copiable (`?ref=` + code dérivé), généré à la demande — pas
+  besoin d'avoir déjà acheté pour le partager.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire une fois la
+  migration exécutée.

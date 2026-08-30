@@ -91,10 +91,62 @@ export default async function FidelitePage({
               </div>
             </div>
 
-            <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
+            <p className="text-xs text-slate-500">
               Les points sont attribués automatiquement à la commande et utilisables par vos
-              clients connectés à leur compte, directement au moment du paiement. Le parrainage
-              n&apos;est pas encore disponible.
+              clients connectés à leur compte, directement au moment du paiement.
+            </p>
+
+            <div className="border-t border-slate-100 pt-5">
+              <label className="flex items-center gap-2 text-sm text-slate-700">
+                <input
+                  type="checkbox"
+                  name="referralEnabled"
+                  defaultChecked={store.referral_enabled}
+                  className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                />
+                Activer le parrainage
+              </label>
+              <p className="mt-1 text-xs text-slate-500">
+                Nécessite le programme de fidélité activé ci-dessus : la récompense est versée
+                en points.
+              </p>
+
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="referralBonusPoints" className={labelClasses}>
+                    Points offerts au parrain
+                  </label>
+                  <input
+                    id="referralBonusPoints"
+                    name="referralBonusPoints"
+                    type="number"
+                    min={0}
+                    step="1"
+                    defaultValue={store.referral_bonus_points}
+                    className={inputClasses}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Versés quand la personne parrainée passe sa première commande.
+                  </p>
+                </div>
+                <div>
+                  <label htmlFor="referralWelcomePoints" className={labelClasses}>
+                    Points de bienvenue pour le filleul
+                  </label>
+                  <input
+                    id="referralWelcomePoints"
+                    name="referralWelcomePoints"
+                    type="number"
+                    min={0}
+                    step="1"
+                    defaultValue={store.referral_welcome_points}
+                    className={inputClasses}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    Ajoutés aux points gagnés sur sa première commande. 0 pour désactiver.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <Button type="submit">Enregistrer</Button>

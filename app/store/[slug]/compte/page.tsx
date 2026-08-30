@@ -1,10 +1,12 @@
 import { Heart, Package } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { CopyReferralLink } from "@/components/store/CopyReferralLink";
 import { logoutCustomer } from "@/lib/actions/customerAuth";
 import { getCustomerOrders, getCustomerSession } from "@/lib/data/customerAccount";
 import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
+import { getMyReferralCode } from "@/lib/data/referral";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
@@ -29,6 +31,9 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
   const loyaltyBalance = store.loyaltyEnabled
     ? await getCustomerLoyaltyBalance(store.id, session.email)
     : 0;
+  const referralCode = store.referralEnabled
+    ? await getMyReferralCode(store.id, session.email)
+    : null;
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency: store.currency,
@@ -63,6 +68,17 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
           </span>
         )}
       </div>
+
+      {referralCode && (
+        <div className="mt-4 rounded-xl border border-slate-200 p-4">
+          <p className="text-sm font-medium text-slate-900">Parrainez vos proches</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Partagez votre lien : vous et la personne parrainée gagnez des points à sa première
+            commande.
+          </p>
+          <CopyReferralLink storeSlug={store.slug} code={referralCode} />
+        </div>
+      )}
 
       <h2 className="mt-8 text-sm font-semibold text-slate-900">Mes commandes</h2>
 
