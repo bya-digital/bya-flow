@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { RegisterServiceWorker } from "@/components/RegisterServiceWorker";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bya-flow.vercel.app";
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
     "BYA Flow réunit boutique, produits, commandes, clients, marketing et analytics dans un seul espace pour piloter et accélérer votre activité commerciale.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -20,7 +25,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr">
-      <body>{children}</body>
+      <body>
+        {children}
+        <RegisterServiceWorker />
+      </body>
     </html>
   );
 }

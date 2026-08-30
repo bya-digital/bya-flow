@@ -1,10 +1,19 @@
 import { ShoppingCart, User } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties, ReactNode } from "react";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  return { manifest: `/store/${params.slug}/manifest.webmanifest` };
+}
 
 export default async function StoreLayout({
   children,

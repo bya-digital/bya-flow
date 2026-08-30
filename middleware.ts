@@ -10,6 +10,8 @@ const PUBLIC_PATHS = [
   "/auth/callback",
   "/robots.txt",
   "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/sw.js",
 ];
 
 export async function middleware(request: NextRequest) {

@@ -1241,3 +1241,38 @@ système de récompense.
   70 (exactement +50). **Garde-fou premier achat** : 2ème commande de
   B → seulement 20 points gagnés (aucun bonus de bienvenue répété),
   solde de A resté à 70 (aucun bonus parrain supplémentaire).
+
+## 2026-08-30 — Phase 29 : PWA (installable)
+
+- **Icônes** générées depuis `public/logo-mark.png` (déjà 512×512) via
+  `sharp` : `public/icon-192.png`, `public/icon-512.png`.
+- **`app/manifest.ts`** : manifeste racine « BYA Flow » (espace
+  marchand installable, `start_url: /dashboard`).
+- **Manifeste par boutique**, avec le nom/logo/couleur du marchand
+  (chaque boutique s'installe indépendamment, avec sa propre
+  identité) : `app/store/[slug]/manifest.webmanifest/route.ts`,
+  référencé depuis `generateMetadata()` dans
+  `app/store/[slug]/layout.tsx`. **Bug trouvé en cours de route** : le
+  fichier spécial `manifest.ts` de Next.js n'est reconnu qu'à la
+  racine de l'app, jamais par segment de route dynamique — confirmé
+  par le build qui ne générait aucune route pour un premier essai en
+  `app/store/[slug]/manifest.ts` (contrairement à `icon.tsx` ou
+  `opengraph-image.tsx`, qui eux supportent l'imbrication). Remplacé
+  par un Route Handler classique (`route.ts`), qui fonctionne
+  normalement sous un segment dynamique.
+- **`public/sw.js`** : service worker minimal (réseau d'abord, cache
+  de secours hors-ligne pour les pages déjà visitées), uniquement sur
+  les requêtes GET du même site — jamais les server actions (POST) ni
+  les appels Supabase, pour ne jamais servir une réponse périmée à la
+  place d'une écriture ou d'une vérification de session. Enregistré
+  via `components/RegisterServiceWorker.tsx` dans `app/layout.tsx`.
+- **Bug trouvé en vérifiant le middleware** (même catégorie que le
+  bug `/robots.txt` de la Phase 24) : `/manifest.webmanifest` et
+  `/sw.js` n'étaient pas dans `PUBLIC_PATHS`, donc auraient été
+  redirigés vers `/login` pour un visiteur non connecté sur une page
+  hors `/store/*`. Corrigé avant même la vérification en direct.
+- Vérifié : `next build` (confirmé `/manifest.webmanifest` et
+  `/store/[slug]/manifest.webmanifest` bien générés en tant que
+  routes distinctes), `next lint`, `npm test` (14/14) tous propres.
+  Vérification en conditions réelles à faire (installation réelle
+  d'une boutique sur mobile/desktop).
