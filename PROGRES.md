@@ -1274,5 +1274,10 @@ système de récompense.
 - Vérifié : `next build` (confirmé `/manifest.webmanifest` et
   `/store/[slug]/manifest.webmanifest` bien générés en tant que
   routes distinctes), `next lint`, `npm test` (14/14) tous propres.
-  Vérification en conditions réelles à faire (installation réelle
-  d'une boutique sur mobile/desktop).
+- **Vérifié en direct** : `/manifest.webmanifest` (racine) et
+  `/store/[slug]/manifest.webmanifest` répondent 200 avec le bon
+  contenu (nom, couleur, icônes propres à chaque boutique) ;
+  `/sw.js` servi avec le bon `Content-Type` ; `<link rel="manifest">`
+  correctement injecté — celui de la boutique sur les pages
+  boutique, celui de BYA Flow sur l'espace marchand ; service worker
+  effectivement enregistré et actif dans le navigateur.
