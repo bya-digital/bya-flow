@@ -1152,5 +1152,10 @@ phase par phase, plutôt que tout instrumenter d'un coup.
   liens de menu partagent maintenant la même condition de visibilité
   (`showAdminNav`, ex-`showTeamNav` généralisé).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire une fois la
-  migration exécutée.
+  propres.
+- **Vérifié en direct** avec un compte de test dédié (créé pour
+  l'occasion, cf. leçon retenue lors de la Phase 25) : les 5 types
+  d'événements (invitation créée/acceptée/annulée, rôle changé,
+  membre retiré) s'enregistrent tous correctement, dans le bon ordre,
+  avec un libellé lisible et le bon rôle en clair. Accès `/audit`
+  bien bloqué (404) pour un compte membre.
