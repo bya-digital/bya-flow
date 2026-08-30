@@ -1,4 +1,5 @@
 import { Package } from "lucide-react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StarRating } from "@/components/store/StarRating";
 import { WishlistButton } from "@/components/store/WishlistButton";
@@ -8,6 +9,44 @@ import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getMyReviewEligibility, getPublicReviews } from "@/lib/data/publicReviews";
 import { getPublicProductBySlug, getPublicStoreBySlug } from "@/lib/data/publicStore";
 import { getWishlistProductIds } from "@/lib/data/wishlist";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string; productSlug: string };
+}): Promise<Metadata> {
+  const store = await getPublicStoreBySlug(params.slug);
+  if (!store) return {};
+
+  const product = await getPublicProductBySlug(store.id, params.productSlug);
+  if (!product) return {};
+
+  const title = product.name;
+  const description =
+    product.description || `Découvrez ${product.name} sur ${store.name}.`;
+  const image = product.imageUrl || undefined;
+  const url = `/store/${store.slug}/produits/${product.slug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: "BYA Flow",
+      type: "website",
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function StoreProductPage({
   params,
@@ -35,8 +74,42 @@ export default async function StoreProductPage({
   const eligibility = await getMyReviewEligibility(product.id, session.email);
   const productUrl = `/store/${store.slug}/produits/${product.slug}`;
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bya-flow.vercel.app";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description ?? undefined,
+    image: product.imageUrl ?? undefined,
+    sku: product.id,
+    offers: {
+      "@type": "Offer",
+      url: `${siteUrl}${productUrl}`,
+      priceCurrency: store.currency,
+      price: product.price,
+      availability:
+        product.stock > 0
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+    },
+    ...(reviewSummary.count > 0
+      ? {
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: reviewSummary.average,
+            reviewCount: reviewSummary.count,
+          },
+        }
+      : {}),
+  };
+
   return (
     <div className="mx-auto max-w-5xl px-6 py-12">
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
           <div className="aspect-square overflow-hidden rounded-xl bg-slate-100">

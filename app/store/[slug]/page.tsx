@@ -1,4 +1,5 @@
 import { Package } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { WishlistButton } from "@/components/store/WishlistButton";
 import {
@@ -8,6 +9,40 @@ import {
   getPublicTestimonials,
 } from "@/lib/data/publicStore";
 import { getWishlistProductIds } from "@/lib/data/wishlist";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
+  const store = await getPublicStoreBySlug(params.slug);
+  if (!store) return {};
+
+  const title = store.name;
+  const description =
+    store.description || store.heroSubtitle || `Découvrez les produits de ${store.name}.`;
+  const image = store.heroImageUrl || store.logoUrl || undefined;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/store/${store.slug}` },
+    openGraph: {
+      title,
+      description,
+      url: `/store/${store.slug}`,
+      siteName: "BYA Flow",
+      type: "website",
+      images: image ? [{ url: image }] : undefined,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: image ? [image] : undefined,
+    },
+  };
+}
 
 export default async function StoreHomePage({ params }: { params: { slug: string } }) {
   const store = await getPublicStoreBySlug(params.slug);
@@ -24,8 +59,24 @@ export default async function StoreHomePage({ params }: { params: { slug: string
     currency: store.currency,
   });
 
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bya-flow.vercel.app";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Store",
+    name: store.name,
+    description: store.description ?? undefined,
+    url: `${siteUrl}/store/${store.slug}`,
+    logo: store.logoUrl ?? undefined,
+    image: store.heroImageUrl ?? store.logoUrl ?? undefined,
+  };
+
   return (
     <div>
+      {/* eslint-disable-next-line react/no-danger */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {store.heroTitle && (
         <div className="border-b border-slate-200 bg-slate-50">
           <div className="mx-auto grid max-w-6xl items-center gap-8 px-6 py-16 lg:grid-cols-2">

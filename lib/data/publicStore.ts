@@ -178,6 +178,36 @@ export interface PublicProductDetail extends PublicProductSummary {
   variants: ProductVariantRow[];
 }
 
+export interface SitemapStore {
+  slug: string;
+}
+
+export async function getAllActiveStoreSlugs(): Promise<SitemapStore[]> {
+  const supabase = createClient();
+  const { data } = await supabase.from("stores").select("slug").eq("is_active", true);
+
+  return (data ?? []).map((s) => ({ slug: s.slug }));
+}
+
+export interface SitemapProduct {
+  storeSlug: string;
+  productSlug: string;
+}
+
+export async function getAllActiveProductSlugs(): Promise<SitemapProduct[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("products")
+    .select("slug, stores!inner(slug, is_active)")
+    .eq("status", "active")
+    .eq("stores.is_active", true);
+
+  return (data ?? []).map((p) => ({
+    storeSlug: (p.stores as unknown as { slug: string }).slug,
+    productSlug: p.slug,
+  }));
+}
+
 export async function getPublicProductBySlug(
   storeId: string,
   productSlug: string

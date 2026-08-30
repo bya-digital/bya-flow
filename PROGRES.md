@@ -1027,3 +1027,34 @@ commerçant, les avis sont désormais écrits par de vrais clients.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous propres.
   Vérification en conditions réelles à faire une fois la migration
   exécutée.
+
+## 2026-08-29 — Phase 24 : référencement (SEO) de la boutique publique
+
+Aucune migration SQL pour cette phase — uniquement des métadonnées et du
+code, la boutique publique existante (Phases 4-12) fournit déjà toutes
+les données nécessaires.
+
+- **`app/layout.tsx`** : métadonnées racine corrigées (elles décrivaient
+  encore l'ancien positionnement « plateforme de marketing » avant le
+  repositionnement AI Commerce Growth OS), `metadataBase` ajouté (via
+  `NEXT_PUBLIC_SITE_URL`, repli sur `https://bya-flow.vercel.app`),
+  gabarit de titre `%s — BYA Flow`.
+- **`app/store/[slug]/page.tsx`** : `generateMetadata()` (titre,
+  description, canonical, Open Graph, Twitter Card) à partir des
+  champs de la boutique ; JSON-LD `Store`.
+- **`app/store/[slug]/produits/[productSlug]/page.tsx`** :
+  `generateMetadata()` par produit ; JSON-LD `Product` avec `Offer`
+  (prix, devise, disponibilité selon le stock) et `AggregateRating`
+  quand le produit a des avis (réutilise directement les données de la
+  fonctionnalité Avis clients de la phase précédente).
+- **`app/robots.ts`** : autorise l'exploration de `/store/*` (vitrine
+  publique), bloque tout le reste (espace commerçant, compte client,
+  panier, checkout).
+- **`app/sitemap.ts`** : liste dynamiquement toutes les boutiques actives
+  et leurs produits actifs (nouvelles fonctions
+  `getAllActiveStoreSlugs()` / `getAllActiveProductSlugs()` dans
+  `lib/data/publicStore.ts`).
+- Vérifié : `next build` (confirmé `/robots.txt` et `/sitemap.xml`
+  générés), `next lint`, `npm test` (14/14) tous propres. Vérification
+  en conditions réelles à faire une fois le déploiement effectué
+  (aucune migration à exécuter au préalable pour cette phase).
