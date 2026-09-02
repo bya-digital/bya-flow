@@ -83,3 +83,29 @@ export async function logoutCustomer(formData: FormData) {
   await supabase.auth.signOut();
   redirect(`/store/${storeSlug}`);
 }
+
+export async function requestCustomerPasswordReset(formData: FormData) {
+  const storeSlug = formData.get("storeSlug") as string;
+  const email = formData.get("email") as string;
+  const forgotUrl = `/store/${storeSlug}/compte/mot-de-passe-oublie`;
+
+  const origin =
+    headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const supabase = createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
+      `/store/${storeSlug}/compte/reinitialiser-mot-de-passe`
+    )}`,
+  });
+
+  if (error) {
+    redirect(`${forgotUrl}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  // Message générique volontaire : ne pas révéler si l'email existe ou non.
+  redirect(
+    `${forgotUrl}?message=${encodeURIComponent(
+      "Si un compte existe pour cet email, un lien de réinitialisation vient d'être envoyé."
+    )}`
+  );
+}

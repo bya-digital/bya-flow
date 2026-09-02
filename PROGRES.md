@@ -1281,3 +1281,54 @@ système de récompense.
   correctement injecté — celui de la boutique sur les pages
   boutique, celui de BYA Flow sur l'espace marchand ; service worker
   effectivement enregistré et actif dans le navigateur.
+
+## 2026-08-30 — Phase 30 : robustesse des connexions
+
+Demande utilisateur : tous les moyens de connexion (mot de passe
+oublié, changer de mot de passe, changer d'email, confirmation à
+l'inscription, œil pour afficher le mot de passe), plus un signalement
+« la connexion bloque toujours ».
+
+- **Diagnostic du blocage** : reproduction en direct impossible avec
+  deux comptes de test (connexion marchand et boutique instantanées,
+  clics réels). L'utilisateur a précisé : les deux connexions, et
+  « rien ne se passe du tout ». Cause la plus probable trouvée en
+  lisant le code : **aucun bouton de l'app n'avait d'état de
+  chargement** — sur un aller-retour lent (cold start Vercel/Supabase),
+  le bouton reste identique pendant 1 à 3 s, donnant exactement
+  l'impression que rien ne s'est passé.
+- **`components/ui/SubmitButton.tsx`** (`useFormStatus`) : affiche un
+  texte de chargement et se désactive pendant l'envoi. Appliqué à
+  tous les formulaires d'authentification, marchand et boutique.
+- **`components/ui/PasswordInput.tsx`** : champ mot de passe avec
+  bouton œil (afficher/masquer), appliqué partout où un mot de passe
+  est saisi.
+- **Parcours manquant côté boutique, ajouté** : mot de passe oublié
+  (`/store/[slug]/compte/mot-de-passe-oublie` +
+  `requestCustomerPasswordReset()`) et sa page de réinitialisation
+  (`/store/[slug]/compte/reinitialiser-mot-de-passe`) — le compte
+  client n'avait que connexion/inscription, aucun moyen de récupérer
+  un mot de passe oublié.
+- **Changer le mot de passe une fois connecté** : `updatePassword()`
+  (déjà utilisée par le lien de récupération) généralisée avec deux
+  champs cachés `redirect`/`errorRedirect`, réutilisée telle quelle
+  sur `/parametres` (marchand) et `/store/[slug]/compte` (client) —
+  pas de logique dupliquée.
+- **Changer d'email** : nouvelle action `updateEmail()`
+  (`supabase.auth.updateUser({ email })`), même principe de
+  réutilisation entre `/parametres` et le compte client. Supabase
+  envoie la confirmation à la nouvelle adresse (et à l'ancienne selon
+  le réglage "Secure email change" du projet) avant que le
+  changement ne prenne effet — géré automatiquement par
+  `/auth/callback`, déjà générique.
+- **Fiabilité des emails (Resend)** : pas un changement de code —
+  configuration à faire par l'utilisateur dans le tableau de bord
+  Supabase (Authentication → Emails → SMTP Settings), avec les
+  identifiants SMTP de son compte Resend existant. Nécessaire pour
+  que confirmation d'inscription / réinitialisation / changement
+  d'email arrivent réellement (le SMTP intégré de Supabase avait déjà
+  échoué une fois cette session sur un domaine factice).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire (bouton de
+  chargement visible, œil fonctionnel, parcours mot de passe
+  oublié/changer email côté boutique).

@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { signUp } from "@/lib/actions/auth";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function SignupPage({
   searchParams,
@@ -58,10 +59,9 @@ export default function SignupPage({
             <label htmlFor="password" className="text-sm font-medium text-slate-700">
               Mot de passe
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               minLength={6}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
@@ -71,18 +71,17 @@ export default function SignupPage({
             <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
               Confirmer le mot de passe
             </label>
-            <input
+            <PasswordInput
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
               required
               minLength={6}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
             />
           </div>
-          <Button type="submit" className="w-full">
+          <SubmitButton pendingText="Création du compte..." className="w-full">
             Créer mon compte
-          </Button>
+          </SubmitButton>
         </form>
 
         <p className="text-center text-sm text-slate-500">

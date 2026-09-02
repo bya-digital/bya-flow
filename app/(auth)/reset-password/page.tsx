@@ -1,7 +1,8 @@
 import { updatePassword } from "@/lib/actions/auth";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function ResetPasswordPage({
   searchParams,
@@ -25,10 +26,9 @@ export default function ResetPasswordPage({
             <label htmlFor="password" className="text-sm font-medium text-slate-700">
               Nouveau mot de passe
             </label>
-            <input
+            <PasswordInput
               id="password"
               name="password"
-              type="password"
               required
               minLength={6}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
@@ -38,18 +38,17 @@ export default function ResetPasswordPage({
             <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-700">
               Confirmer le mot de passe
             </label>
-            <input
+            <PasswordInput
               id="confirmPassword"
               name="confirmPassword"
-              type="password"
               required
               minLength={6}
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
             />
           </div>
-          <Button type="submit" className="w-full">
+          <SubmitButton pendingText="Mise à jour..." className="w-full">
             Mettre à jour le mot de passe
-          </Button>
+          </SubmitButton>
         </form>
       </CardContent>
     </Card>

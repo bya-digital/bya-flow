@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { loginCustomer } from "@/lib/actions/customerAuth";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
@@ -45,24 +47,23 @@ export default async function StoreLoginPage({
           <input id="email" name="email" type="email" required className={inputClasses} />
         </div>
         <div>
-          <label htmlFor="password" className={labelClasses}>
-            Mot de passe
-          </label>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            required
-            className={inputClasses}
-          />
+          <div className="flex items-center justify-between">
+            <label htmlFor="password" className={labelClasses}>
+              Mot de passe
+            </label>
+            <Link
+              href={`/store/${store.slug}/compte/mot-de-passe-oublie`}
+              className="text-xs font-medium text-brand-600 hover:underline"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+          <PasswordInput id="password" name="password" required className={inputClasses} />
         </div>
 
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-brand-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-700"
-        >
+        <SubmitButton pendingText="Connexion..." className="w-full">
           Se connecter
-        </button>
+        </SubmitButton>
       </form>
 
       <p className="mt-4 text-center text-sm text-slate-500">

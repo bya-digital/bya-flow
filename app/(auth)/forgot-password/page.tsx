@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requestPasswordReset } from "@/lib/actions/auth";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 export default function ForgotPasswordPage({
   searchParams,
@@ -39,9 +39,9 @@ export default function ForgotPasswordPage({
               className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
             />
           </div>
-          <Button type="submit" className="w-full">
+          <SubmitButton pendingText="Envoi..." className="w-full">
             Envoyer le lien
-          </Button>
+          </SubmitButton>
         </form>
 
         <p className="text-center text-sm text-slate-500">

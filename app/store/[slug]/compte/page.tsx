@@ -2,11 +2,18 @@ import { Heart, Package } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopyReferralLink } from "@/components/store/CopyReferralLink";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { SubmitButton } from "@/components/ui/SubmitButton";
+import { updateEmail, updatePassword } from "@/lib/actions/auth";
 import { logoutCustomer } from "@/lib/actions/customerAuth";
 import { getCustomerOrders, getCustomerSession } from "@/lib/data/customerAccount";
 import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 import { getMyReferralCode } from "@/lib/data/referral";
+
+const inputClasses =
+  "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
+const labelClasses = "text-sm font-medium text-slate-700";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "En attente",
@@ -18,7 +25,13 @@ const STATUS_LABELS: Record<string, string> = {
   refunded: "Remboursée",
 };
 
-export default async function StoreAccountPage({ params }: { params: { slug: string } }) {
+export default async function StoreAccountPage({
+  params,
+  searchParams,
+}: {
+  params: { slug: string };
+  searchParams: { error?: string; message?: string; success?: string };
+}) {
   const store = await getPublicStoreBySlug(params.slug);
   if (!store) return null;
 
@@ -53,6 +66,22 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
           </button>
         </form>
       </div>
+
+      {searchParams.error && (
+        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
+          {searchParams.error}
+        </p>
+      )}
+      {searchParams.message && (
+        <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          {searchParams.message}
+        </p>
+      )}
+      {searchParams.success === "password" && (
+        <p className="mt-4 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-700">
+          Mot de passe mis à jour.
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <Link
@@ -130,6 +159,63 @@ export default async function StoreAccountPage({ params }: { params: { slug: str
           </table>
         </div>
       )}
+
+      <div className="mt-10 grid gap-6 border-t border-slate-200 pt-8 sm:grid-cols-2">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Changer d&apos;email</h2>
+          <form action={updateEmail} className="mt-3 space-y-3">
+            <input type="hidden" name="redirect" value={`/store/${store.slug}/compte`} />
+            <div>
+              <label htmlFor="email" className={labelClasses}>
+                Nouvelle adresse email
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                required
+                defaultValue={session.email ?? ""}
+                className={inputClasses}
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              Un email de confirmation sera envoyé à la nouvelle adresse.
+            </p>
+            <SubmitButton pendingText="Envoi..." size="sm">
+              Mettre à jour l&apos;email
+            </SubmitButton>
+          </form>
+        </div>
+
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">Changer de mot de passe</h2>
+          <form action={updatePassword} className="mt-3 space-y-3">
+            <input type="hidden" name="redirect" value={`/store/${store.slug}/compte`} />
+            <input type="hidden" name="errorRedirect" value={`/store/${store.slug}/compte`} />
+            <div>
+              <label htmlFor="password" className={labelClasses}>
+                Nouveau mot de passe
+              </label>
+              <PasswordInput id="password" name="password" required minLength={6} className={inputClasses} />
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className={labelClasses}>
+                Confirmer le mot de passe
+              </label>
+              <PasswordInput
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+                minLength={6}
+                className={inputClasses}
+              />
+            </div>
+            <SubmitButton pendingText="Mise à jour..." size="sm">
+              Mettre à jour le mot de passe
+            </SubmitButton>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

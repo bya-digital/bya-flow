@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { PasswordInput } from "@/components/ui/PasswordInput";
+import { notFound } from "next/navigation";
 import { SubmitButton } from "@/components/ui/SubmitButton";
-import { signupCustomer } from "@/lib/actions/customerAuth";
+import { requestCustomerPasswordReset } from "@/lib/actions/customerAuth";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
 const labelClasses = "text-sm font-medium text-slate-700";
 
-export default async function StoreSignupPage({
+export default async function StoreForgotPasswordPage({
   params,
   searchParams,
 }: {
@@ -16,12 +16,14 @@ export default async function StoreSignupPage({
   searchParams: { error?: string; message?: string };
 }) {
   const store = await getPublicStoreBySlug(params.slug);
-  if (!store) return null;
+  if (!store) notFound();
 
   return (
     <div className="mx-auto max-w-sm px-6 py-16">
-      <h1 className="text-2xl font-bold text-slate-900">Créer un compte</h1>
-      <p className="mt-1 text-sm text-slate-500">Suivez vos commandes chez {store.name}.</p>
+      <h1 className="text-2xl font-bold text-slate-900">Mot de passe oublié</h1>
+      <p className="mt-1 text-sm text-slate-500">
+        Recevez un lien pour réinitialiser votre mot de passe {store.name}.
+      </p>
 
       {searchParams.error && (
         <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -34,52 +36,25 @@ export default async function StoreSignupPage({
         </p>
       )}
 
-      <form action={signupCustomer} className="mt-6 space-y-4">
+      <form action={requestCustomerPasswordReset} className="mt-6 space-y-4">
         <input type="hidden" name="storeSlug" value={store.slug} />
-
-        <div>
-          <label htmlFor="fullName" className={labelClasses}>
-            Nom complet
-          </label>
-          <input id="fullName" name="fullName" required className={inputClasses} />
-        </div>
         <div>
           <label htmlFor="email" className={labelClasses}>
             Email
           </label>
           <input id="email" name="email" type="email" required className={inputClasses} />
         </div>
-        <div>
-          <label htmlFor="password" className={labelClasses}>
-            Mot de passe
-          </label>
-          <PasswordInput id="password" name="password" required minLength={6} className={inputClasses} />
-        </div>
-        <div>
-          <label htmlFor="confirmPassword" className={labelClasses}>
-            Confirmer le mot de passe
-          </label>
-          <PasswordInput
-            id="confirmPassword"
-            name="confirmPassword"
-            required
-            minLength={6}
-            className={inputClasses}
-          />
-        </div>
-
-        <SubmitButton pendingText="Création du compte..." className="w-full">
-          Créer mon compte
+        <SubmitButton pendingText="Envoi..." className="w-full">
+          Envoyer le lien
         </SubmitButton>
       </form>
 
       <p className="mt-4 text-center text-sm text-slate-500">
-        Déjà un compte ?{" "}
         <Link
           href={`/store/${store.slug}/compte/connexion`}
           className="font-medium text-brand-600 hover:underline"
         >
-          Se connecter
+          Retour à la connexion
         </Link>
       </p>
     </div>

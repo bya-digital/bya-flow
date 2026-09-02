@@ -88,10 +88,15 @@ export async function requestPasswordReset(formData: FormData) {
 export async function updatePassword(formData: FormData) {
   const password = formData.get("password") as string;
   const confirmPassword = formData.get("confirmPassword") as string;
+  // Réutilisée par /reset-password (lien reçu par email) ET par le
+  // formulaire "changer mon mot de passe" de /parametres et du compte
+  // client — chacun indique où revenir via ces deux champs cachés.
+  const redirectTo = (formData.get("redirect") as string) || "/dashboard";
+  const errorRedirect = (formData.get("errorRedirect") as string) || "/reset-password";
 
   if (password !== confirmPassword) {
     redirect(
-      `/reset-password?error=${encodeURIComponent("Les mots de passe ne correspondent pas.")}`
+      `${errorRedirect}?error=${encodeURIComponent("Les mots de passe ne correspondent pas.")}`
     );
   }
 
@@ -99,8 +104,36 @@ export async function updatePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password });
 
   if (error) {
-    redirect(`/reset-password?error=${encodeURIComponent(error.message)}`);
+    redirect(`${errorRedirect}?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect("/dashboard");
+  redirect(`${redirectTo}${redirectTo.includes("?") ? "&" : "?"}success=password`);
+}
+
+export async function updateEmail(formData: FormData) {
+  const email = formData.get("email") as string;
+  const redirectTo = (formData.get("redirect") as string) || "/parametres";
+  const errorRedirect = (formData.get("errorRedirect") as string) || redirectTo;
+  const origin =
+    headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+
+  const supabase = createClient();
+  // Supabase envoie une confirmation à la nouvelle adresse (et, selon le
+  // réglage "Secure email change" du projet, aussi à l'ancienne) avant que
+  // le changement ne prenne effet — rien à faire de plus ici, /auth/callback
+  // gère déjà l'échange du lien de confirmation, quel que soit son type.
+  const { error } = await supabase.auth.updateUser(
+    { email },
+    { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}` }
+  );
+
+  if (error) {
+    redirect(`${errorRedirect}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  redirect(
+    `${errorRedirect}?message=${encodeURIComponent(
+      "Vérifiez votre nouvelle adresse email pour confirmer le changement."
+    )}`
+  );
 }
