@@ -1329,6 +1329,14 @@ l'inscription, œil pour afficher le mot de passe), plus un signalement
   d'email arrivent réellement (le SMTP intégré de Supabase avait déjà
   échoué une fois cette session sur un domaine factice).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire (bouton de
-  chargement visible, œil fonctionnel, parcours mot de passe
-  oublié/changer email côté boutique).
+  propres.
+- **Vérifié en direct** : œil du mot de passe change bien le `type`
+  du champ ; bouton « Connexion... » désactivé et visible pendant
+  l'envoi (confirmé à l'instant T, avant redirection) ; changer de
+  mot de passe sur `/parametres` → ancien mot de passe rejeté à la
+  reconnexion, nouveau accepté ; changer d'email → message de
+  confirmation affiché, email affiché resté inchangé tant que le lien
+  envoyé à la nouvelle adresse n'est pas cliqué (comportement Supabase
+  attendu) ; mot de passe oublié côté boutique (parcours qui
+  n'existait pas) → lien visible sur la page de connexion, formulaire
+  fonctionnel, message générique renvoyé.
