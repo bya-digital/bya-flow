@@ -1486,5 +1486,13 @@ domaine personnalisé), traités un par un comme convenu.
   ligne / Caisse) et mode de paiement affichés, pour qu'un marchand
   qui vend sur les deux canaux distingue facilement.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire une fois la
-  migration exécutée.
+  propres.
+- **Vérifié en direct** : vente de 2 × Produit Fidelite Test (94 en
+  stock) en espèces → ticket #15 correct (produit, quantité, total,
+  mode de paiement) → stock passé à 92 (exactement -2) → commande
+  #15 apparaît dans `/commandes` avec le badge Caisse, statut Livrée,
+  paiement Payé, pendant que les commandes en ligne restent
+  distinctes (En ligne / En attente) → tableau de bord mis à jour
+  correctement (chiffre d'affaires 120 € → 160 €, 6 → 7 commandes,
+  6 → 8 unités vendues) : la vente en caisse s'intègre exactement
+  comme une vente en ligne dans les statistiques.
