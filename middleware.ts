@@ -15,6 +15,14 @@ const PUBLIC_PATHS = [
 ];
 
 export async function middleware(request: NextRequest) {
+  // API publique (Phase 31) : authentifiée par clé API dans l'en-tête
+  // Authorization, jamais par la session marchand — un appelant externe
+  // n'a aucun cookie, donc jamais aucune des vérifications ci-dessous à
+  // faire ici.
+  if (request.nextUrl.pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(

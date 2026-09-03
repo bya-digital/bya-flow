@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { navSections, platformAdminNavSection } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
-const ADMIN_ONLY_HREFS = ["/equipe", "/audit"];
+const ADMIN_ONLY_HREFS = ["/equipe", "/audit", "/developpeurs"];
 
 interface SidebarProps {
   mobileOpen: boolean;

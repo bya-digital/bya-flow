@@ -15,6 +15,7 @@ import {
   ShoppingCart,
   Sparkles,
   Store,
+  Terminal,
   Ticket,
   Truck,
   UserPlus,
@@ -79,6 +80,7 @@ export const navSections: NavSection[] = [
       { label: "Facturation", href: "/facturation", icon: CreditCard },
       { label: "Notifications", href: "/notifications", icon: Bell },
       { label: "Sécurité & audit", href: "/audit", icon: ShieldCheck },
+      { label: "Développeurs", href: "/developpeurs", icon: Terminal },
     ],
   },
 ];

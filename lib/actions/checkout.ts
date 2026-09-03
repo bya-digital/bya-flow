@@ -2,10 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { dispatchOrderCreatedWebhooks } from "@/lib/webhooks";
 
 interface CheckoutOrderResult {
   id: string;
+  store_id: string;
   order_number: number;
+  total: number;
+  subtotal: number;
+  status: string;
+  payment_status: string;
 }
 
 export async function submitCheckout(formData: FormData) {
@@ -49,6 +55,15 @@ export async function submitCheckout(formData: FormData) {
     );
     return;
   }
+
+  await dispatchOrderCreatedWebhooks(order.store_id, {
+    id: order.id,
+    order_number: order.order_number,
+    status: order.status,
+    payment_status: order.payment_status,
+    subtotal: order.subtotal,
+    total: order.total,
+  });
 
   redirect(`/store/${storeSlug}/commande/${order.id}`);
 }

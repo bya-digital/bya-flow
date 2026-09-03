@@ -1340,3 +1340,50 @@ l'inscription, œil pour afficher le mot de passe), plus un signalement
   attendu) ; mot de passe oublié côté boutique (parcours qui
   n'existait pas) → lien visible sur la page de connexion, formulaire
   fonctionnel, message générique renvoyé.
+
+## 2026-08-31 — Phase 31 : API & webhooks (v1)
+
+Première tranche volontairement limitée : API en lecture seule
+(produits, commandes), un seul événement de webhook (order.created).
+Pas d'écriture via API, pas de file de relance en cas d'échec de
+livraison d'un webhook — prévu plus tard si le besoin se confirme.
+
+- **Aucune clé service_role introduite** : ce projet ne l'a jamais
+  utilisée nulle part (retirée de `.env.example` en Phase 13, RLS
+  seule frontière de sécurité — cf. plus haut dans ce fichier).
+  L'authentification par clé API et l'accès aux données passent donc
+  par des fonctions SECURITY DEFINER (`api_authenticate()`,
+  `api_list_products()`, `api_get_product()`, `api_list_orders()`,
+  `api_get_order()`, `api_get_order_items()`,
+  `get_active_order_webhooks()`), même principe que partout ailleurs
+  dans ce projet — jamais un rôle qui contournerait globalement la
+  RLS.
+- **`sql/phase31_api_webhooks.sql`** : tables `api_keys` (hash
+  SHA-256 calculé côté Node, jamais la clé en clair stockée ni
+  transmise à Postgres) et `webhook_endpoints` (secret HMAC en clair
+  cette fois — nécessaire, on doit le réutiliser à chaque envoi pour
+  signer, contrairement à une clé API qui est un jeton présenté par
+  autrui).
+- **`app/api/v1/{products,orders}[/[id]]`** : Route Handlers,
+  authentification par `Authorization: Bearer <clé>`, scopes
+  `products:read` / `orders:read`. `middleware.ts` étendu pour
+  laisser `/api/*` totalement en dehors des vérifications de session
+  marchand (un appelant externe n'a aucun cookie).
+- **`/developpeurs`** (nouvelle page, réservée admin/propriétaire
+  comme `/equipe` et `/audit`) : création/révocation de clés API
+  (la clé en clair n'est affichée qu'une seule fois, à la création —
+  jamais via un paramètre d'URL, `useFormState` pour la retourner
+  directement en mémoire ; toute clé ne stocke que son hash ensuite),
+  gestion des webhooks (créer/activer/désactiver/supprimer, secret de
+  signature affiché pour vérification côté récepteur).
+- **Déclenchement webhook** : `submitCheckout()` appelle
+  `dispatchOrderCreatedWebhooks()` juste après la création réussie
+  d'une commande — attendu (avec un délai plafonné à 5 s par appel),
+  pas un vrai "fire and forget", car rien ne garantit qu'une requête
+  non attendue survive à la fin de l'invocation serverless après le
+  `redirect()`.
+- Vérifié : `next build` (bug de build trouvé et corrigé avant tout
+  autre test : une constante exportée depuis un fichier `"use server"`
+  fait échouer le build Next — déplacée dans un fichier séparé),
+  `next lint`, `npm test` (14/14) tous propres. Vérification en
+  conditions réelles à faire une fois la migration exécutée.
