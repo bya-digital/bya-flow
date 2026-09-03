@@ -1532,8 +1532,20 @@ les domaines wildcard).
   instructions DNS (CNAME vers `cname.vercel-dns.com`), statut en
   attente/actif.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles limitée : aucun domaine
-  externe disponible pour un vrai test DNS de bout en bout — prévu de
-  vérifier la logique de réécriture via un en-tête `Host` forgé
-  (contourne le besoin d'un vrai domaine), migration à exécuter
-  d'abord.
+  propres.
+- **Vérifié en direct, dans la limite du possible sans domaine réel** :
+  soumission d'un domaine de test → statut « En attente de
+  rattachement » et instructions DNS affichées correctement →
+  vérification manuelle (SQL, faute d'accès admin plateforme sur le
+  compte de test) → statut « Actif », instructions masquées comme
+  prévu → retrait → retour propre au formulaire de soumission.
+  **Le routage lui-même (le cœur technique de cette phase) n'a pas pu
+  être vérifié de bout en bout** : une requête avec un en-tête `Host`
+  forgé vers un domaine non enregistré est rejetée par Vercel avant
+  même d'atteindre le code de l'app (« DEPLOYMENT_NOT_FOUND ») —
+  Vercel valide lui-même le nom d'hôte au niveau de son edge, donc
+  aucun moyen de simuler ça sans un vrai domaine réellement ajouté au
+  projet Vercel. Attendu et déjà annoncé à l'utilisateur avant de
+  commencer cette phase. Aucune régression détectée par ailleurs :
+  toute la session a continué à naviguer normalement sur
+  bya-flow.vercel.app via ce même middleware modifié.
