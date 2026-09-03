@@ -1442,7 +1442,15 @@ discipline phase par phase que tout ce projet depuis le début.
 - **`/boutique`** : section « Vos boutiques » (bascule) et « Ajouter
   une boutique » (nom + devise) ajoutées.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
-  propres. Vérification en conditions réelles à faire (créer une
-  deuxième boutique, confirmer que produits/commandes/tableau de bord
-  changent bien de contexte en basculant, et qu'une organisation
-  mono-boutique ne voit aucun changement).
+  propres.
+- **Vérifié en direct** : compte mono-boutique existant → aucun
+  changement visuel, sélecteur absent, données du tableau de bord
+  identiques à avant la phase. Création d'une deuxième boutique
+  (devise XOF) → bascule automatique dessus, tableau de bord
+  correctement vide (0 F CFA, aucune vente), « Nouveaux clients »
+  resté à 4 (CRM bien partagé au niveau organisation, comme prévu).
+  Bascule vers la première boutique → données exactes retrouvées
+  (120 €, 6 commandes). Bascule testée aussi depuis `/produits` :
+  reste bien sur `/produits` après bascule (pas de redirection forcée
+  vers le tableau de bord) ; catalogue de la boutique 1 affiche son
+  produit, catalogue de la boutique 2 vide — isolation confirmée.
