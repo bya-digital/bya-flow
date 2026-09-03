@@ -29,6 +29,7 @@ interface OrderRow {
   order_number: number;
   status: string;
   payment_status: string;
+  channel: string;
   total: number;
   created_at: string;
   customers: { full_name: string } | null;
@@ -49,9 +50,10 @@ export default async function CommandesPage({
     const supabase = createClient();
     const { data, count } = await supabase
       .from("orders")
-      .select("id, order_number, status, payment_status, total, created_at, customers(full_name)", {
-        count: "exact",
-      })
+      .select(
+        "id, order_number, status, payment_status, channel, total, created_at, customers(full_name)",
+        { count: "exact" }
+      )
       .eq("store_id", store.id)
       .order("created_at", { ascending: false })
       .range(...pageRange(page));
@@ -90,6 +92,7 @@ export default async function CommandesPage({
               <tr>
                 <th className="px-4 py-3">Commande</th>
                 <th className="px-4 py-3">Client</th>
+                <th className="px-4 py-3">Canal</th>
                 <th className="px-4 py-3">Montant</th>
                 <th className="px-4 py-3">Statut</th>
                 <th className="px-4 py-3">Paiement</th>
@@ -112,6 +115,11 @@ export default async function CommandesPage({
                     </td>
                     <td className="px-4 py-3 text-slate-500">
                       {order.customers?.full_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge tone={order.channel === "pos" ? "neutral" : "brand"}>
+                        {order.channel === "pos" ? "Caisse" : "En ligne"}
+                      </Badge>
                     </td>
                     <td className="px-4 py-3 text-slate-500">{Number(order.total).toFixed(2)} €</td>
                     <td className="px-4 py-3">

@@ -1454,3 +1454,37 @@ discipline phase par phase que tout ce projet depuis le début.
   reste bien sur `/produits` après bascule (pas de redirection forcée
   vers le tableau de bord) ; catalogue de la boutique 1 affiche son
   produit, catalogue de la boutique 2 vide — isolation confirmée.
+
+## 2026-09-03 — Phase 33 : point de vente (caisse)
+
+Deuxième des trois chantiers demandés ensemble (multi-boutiques, POS,
+domaine personnalisé), traités un par un comme convenu.
+
+- **Aucune simulation de paiement** : contrairement au checkout en
+  ligne (`payment_status` reste `pending` faute de vrai prestataire),
+  une vente en caisse est marquée `paid` directement — ce n'est pas
+  l'app qui invente un résultat, c'est le vendeur qui constate
+  lui-même avoir reçu le paiement en personne (espèces ou carte via
+  son propre terminal), exactement comme une caisse enregistreuse
+  classique. Statut de commande `delivered` d'emblée (le client
+  repart avec l'article immédiatement).
+- **`sql/phase33_pos.sql`** : `orders.channel` (`online`/`pos`) et
+  `orders.payment_method` (`cash`/`card`/`other`) ; fonction
+  `create_pos_order()` (SECURITY DEFINER, même principe que
+  `checkout_cart()`) — revalide systématiquement stock et prix
+  courant des produits, jamais un montant envoyé par le client ;
+  client optionnel (retrouvé/créé par email, même logique que
+  `checkout_cart()`, sinon vente anonyme comme un vrai commerce de
+  détail).
+- **`/caisse`** : recherche produit, panier en cours (React côté
+  client, quantités ajustées en direct dans la limite du stock
+  affiché — revalidé de toute façon côté serveur à l'encaissement),
+  client optionnel, choix du mode de paiement. **`/caisse/[id]`** :
+  ticket récapitulatif, imprimable (`window.print()`, mise en page
+  masquée via les classes `print:hidden` de Tailwind).
+- **`/commandes`** (liste et détail) : badge Canal (Boutique en
+  ligne / Caisse) et mode de paiement affichés, pour qu'un marchand
+  qui vend sur les deux canaux distingue facilement.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire une fois la
+  migration exécutée.

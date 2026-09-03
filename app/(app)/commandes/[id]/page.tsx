@@ -2,10 +2,17 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrderStatusForm } from "@/components/commandes/OrderStatusForm";
 import { Alert } from "@/components/ui/Alert";
+import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: "Espèces",
+  card: "Carte",
+  other: "Autre",
+};
 
 interface OrderItemRow {
   id: string;
@@ -40,7 +47,22 @@ export default async function CommandeDetailPage({
 
   return (
     <>
-      <PageHeader title={`Commande #${order.order_number}`} description="Détail de la commande." />
+      <PageHeader
+        title={`Commande #${order.order_number}`}
+        description="Détail de la commande."
+        action={
+          <div className="flex items-center gap-2">
+            <Badge tone={order.channel === "pos" ? "neutral" : "brand"}>
+              {order.channel === "pos" ? "Vente en caisse" : "Commande en ligne"}
+            </Badge>
+            {order.payment_method && (
+              <Badge tone="success">
+                {PAYMENT_METHOD_LABELS[order.payment_method] ?? order.payment_method}
+              </Badge>
+            )}
+          </div>
+        }
+      />
 
       {searchParams.error && (
         <div className="mb-4">
