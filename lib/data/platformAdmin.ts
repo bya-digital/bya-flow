@@ -89,3 +89,24 @@ export async function getPlatformOverview(): Promise<PlatformOverview> {
     planBreakdown,
   };
 }
+
+export interface PendingCustomDomain {
+  storeId: string;
+  storeName: string;
+  domain: string;
+}
+
+export async function getPendingCustomDomains(): Promise<PendingCustomDomain[]> {
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("stores")
+    .select("id, name, custom_domain")
+    .not("custom_domain", "is", null)
+    .is("custom_domain_verified_at", null);
+
+  return (data ?? []).map((row) => ({
+    storeId: row.id,
+    storeName: row.name,
+    domain: row.custom_domain as string,
+  }));
+}

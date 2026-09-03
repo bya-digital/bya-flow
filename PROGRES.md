@@ -1496,3 +1496,44 @@ domaine personnalisé), traités un par un comme convenu.
   correctement (chiffre d'affaires 120 € → 160 €, 6 → 7 commandes,
   6 → 8 unités vendues) : la vente en caisse s'intègre exactement
   comme une vente en ligne dans les statistiques.
+
+## 2026-09-03 — Phase 34 : domaine personnalisé (v1)
+
+Troisième et dernier des trois chantiers demandés ensemble. Modèle
+retenu : **domaine propre du marchand**, pas de sous-domaine
+`xxx.bya-flow.com` (aucun domaine racine BYA Digital disponible pour
+l'instant, et ça demanderait de toute façon le plan Vercel Pro pour
+les domaines wildcard).
+
+- **Pas d'appel à l'API Domaines de Vercel dans cette première
+  tranche** — nécessiterait un jeton Vercel non encore fourni. À la
+  place : le marchand soumet son domaine dans l'app
+  (`/boutique/domaine`), BYA Digital l'ajoute manuellement au projet
+  Vercel (Settings → Domains) puis le marque vérifié depuis
+  `/admin-plateforme` (nouveau panneau « Domaines personnalisés en
+  attente »). L'app fait déjà tout le travail de routage ; seul le
+  rattachement Vercel reste un geste manuel.
+- **`sql/phase34_domaine_personnalise.sql`** : `stores.custom_domain`
+  (unique) + `custom_domain_verified_at`. Nouvelle policy
+  `stores_update_platform_admin` (même principe que
+  `subscriptions_update_platform_admin`, Phase 15) pour que BYA
+  Digital puisse marquer un domaine vérifié — aucune policy de
+  lecture supplémentaire nécessaire, `stores_select_public` (Phase 16)
+  couvre déjà la lecture par nom d'hôte dont le middleware a besoin.
+- **`middleware.ts`** : toute requête dont l'en-tête `Host` ne
+  correspond ni au domaine du site ni à un `*.vercel.app` est résolue
+  contre `stores.custom_domain` (lecture publique, sans session) ; si
+  trouvée et vérifiée, réécrite vers `/store/[slug]/...` avant même la
+  logique d'authentification marchand — un domaine personnalisé sert
+  toujours la boutique publique, jamais l'espace de gestion. Le reste
+  du middleware raisonne ensuite sur le chemin réécrit, pas l'original.
+- **`/boutique/domaine`** : soumission du domaine (normalisation —
+  accepte une URL collée par erreur, n'en garde que le nom d'hôte),
+  instructions DNS (CNAME vers `cname.vercel-dns.com`), statut en
+  attente/actif.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles limitée : aucun domaine
+  externe disponible pour un vrai test DNS de bout en bout — prévu de
+  vérifier la logique de réécriture via un en-tête `Host` forgé
+  (contourne le besoin d'un vrai domaine), migration à exécuter
+  d'abord.

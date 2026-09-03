@@ -1,13 +1,19 @@
-import { Building2, CreditCard, Store, Users } from "lucide-react";
+import { Building2, CreditCard, Globe, Store, Users } from "lucide-react";
 import { notFound } from "next/navigation";
 import { PlanChangeForm } from "@/components/admin-plateforme/PlanChangeForm";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
+import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { verifyCustomDomain } from "@/lib/actions/platformAdmin";
 import { getPlan } from "@/lib/billing/plans";
-import { getPlatformOverview, isPlatformAdmin } from "@/lib/data/platformAdmin";
+import {
+  getPendingCustomDomains,
+  getPlatformOverview,
+  isPlatformAdmin,
+} from "@/lib/data/platformAdmin";
 
 const dateFormatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric" });
 const currencyFormatter = new Intl.NumberFormat("fr-FR", {
@@ -32,6 +38,7 @@ export default async function AdminPlateformePage({
   if (!authorized) notFound();
 
   const overview = await getPlatformOverview();
+  const pendingDomains = await getPendingCustomDomains();
 
   return (
     <>
@@ -43,7 +50,10 @@ export default async function AdminPlateformePage({
       {searchParams.error && (
         <Alert tone="danger" title="Erreur" description={searchParams.error} className="mb-6" />
       )}
-      {searchParams.success && (
+      {searchParams.success === "domain" && (
+        <Alert tone="success" title="Domaine marqué vérifié" className="mb-6" />
+      )}
+      {searchParams.success && searchParams.success !== "domain" && (
         <Alert tone="success" title="Plan mis à jour" className="mb-6" />
       )}
 
@@ -116,6 +126,39 @@ export default async function AdminPlateformePage({
           </div>
         )}
       </div>
+
+      {pendingDomains.length > 0 && (
+        <Card className="mt-6">
+          <CardContent>
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <Globe className="h-4 w-4" /> Domaines personnalisés en attente
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Ajoutez chaque domaine ci-dessous dans Vercel (Projet bya-flow → Settings → Domains)
+              avant de le marquer vérifié.
+            </p>
+            <ul className="mt-3 divide-y divide-slate-100">
+              {pendingDomains.map((pending) => (
+                <li key={pending.storeId} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <div>
+                    <p className="font-medium text-slate-900">{pending.domain}</p>
+                    <p className="text-xs text-slate-500">{pending.storeName}</p>
+                  </div>
+                  <form action={verifyCustomDomain}>
+                    <input type="hidden" name="storeId" value={pending.storeId} />
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      Marquer comme vérifié
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 }

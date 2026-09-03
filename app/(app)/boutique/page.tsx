@@ -1,4 +1,12 @@
-import { Check, ExternalLink, HelpCircle, MessageSquareQuote, Palette, Store } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Globe,
+  HelpCircle,
+  MessageSquareQuote,
+  Palette,
+  Store,
+} from "lucide-react";
 import Link from "next/link";
 import { StoreForm } from "@/components/boutique/StoreForm";
 import { Alert } from "@/components/ui/Alert";
@@ -132,7 +140,7 @@ export default async function BoutiquePage({
           <Card>
             <CardContent>
               <p className="mb-3 text-sm font-semibold text-slate-900">Personnalisation</p>
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
                   href="/boutique/apparence"
                   className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
@@ -156,6 +164,14 @@ export default async function BoutiquePage({
                   <HelpCircle className="h-4 w-4 text-brand-600" />
                   <span className="font-medium text-slate-900">FAQ</span>
                   <span className="text-xs text-slate-500">Questions fréquentes</span>
+                </Link>
+                <Link
+                  href="/boutique/domaine"
+                  className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <Globe className="h-4 w-4 text-brand-600" />
+                  <span className="font-medium text-slate-900">Domaine</span>
+                  <span className="text-xs text-slate-500">Utiliser votre propre domaine</span>
                 </Link>
               </div>
             </CardContent>
