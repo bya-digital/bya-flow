@@ -1399,3 +1399,50 @@ livraison d'un webhook — prévu plus tard si le besoin se confirme.
   Webhook désactivé → commande suivante → aucune requête reçue.
   Éléments de test nettoyés après vérification (clé révoquée, webhook
   supprimé).
+
+## 2026-09-03 — Phase 32 : multi-boutiques
+
+Demandé avec POS et domaine personnalisé « à la fois » ; traité en
+premier et seul, les deux autres restant à faire ensuite — même
+discipline phase par phase que tout ce projet depuis le début.
+
+- **Audit avant tout code** (agent dédié) : la quasi-totalité de
+  l'app (51 fichiers) résout déjà « la boutique courante » via
+  `getCurrentStore()`, une seule fonction centrale — bien plus
+  centralisé que redouté. Un seul contournement trouvé :
+  `app/(app)/dashboard/page.tsx` dupliquait la même requête
+  « première boutique de l'organisation » en inline. Aucun verrou
+  SQL n'empêche une deuxième boutique par organisation (RLS
+  `stores_insert_member` l'autorise déjà à tout membre, le trigger
+  de slug gère déjà les collisions) — **aucune migration nécessaire
+  pour cette phase**. La boutique publique (`/store/[slug]`) n'a
+  jamais eu ce problème : elle est déjà scopée par slug à chaque
+  requête, par construction.
+- **`getCurrentStore()`** (`lib/data/store.ts`) : respecte désormais
+  un cookie `bya_current_store` (boutique sélectionnée), toujours
+  re-vérifié contre l'organisation du membre connecté avant d'être
+  utilisé — un cookie forgé vers la boutique d'une autre organisation
+  ne peut rien renvoyer d'autre que le repli normal (première
+  boutique créée), même comportement qu'avant pour toute organisation
+  qui n'a encore qu'une seule boutique. `getOrgStores()` ajoutée pour
+  lister toutes les boutiques d'une organisation.
+- **`switchStore()` / `createStore()`** (`lib/actions/store.ts`) :
+  bascule (pose le cookie) et création d'une nouvelle boutique
+  (réutilise directement la policy RLS et le trigger de slug déjà en
+  place, aucune fonction SECURITY DEFINER nécessaire) — bascule
+  automatiquement dessus après création.
+- **`app/(app)/dashboard/page.tsx`** : contournement corrigé,
+  utilise maintenant `getCurrentStore()` comme tout le reste de
+  l'app.
+- **Sélecteur de boutique** (`components/layout/StoreSwitcher.tsx`) :
+  affiché dans la Topbar uniquement si l'organisation a plus d'une
+  boutique (rien ne change visuellement pour l'immense majorité des
+  organisations mono-boutique) ; redirige vers la page courante après
+  bascule, pas systématiquement vers le tableau de bord.
+- **`/boutique`** : section « Vos boutiques » (bascule) et « Ajouter
+  une boutique » (nom + devise) ajoutées.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire (créer une
+  deuxième boutique, confirmer que produits/commandes/tableau de bord
+  changent bien de contexte en basculant, et qu'une organisation
+  mono-boutique ne voit aucun changement).

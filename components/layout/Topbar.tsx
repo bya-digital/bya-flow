@@ -4,12 +4,15 @@ import { Bell, LogOut, Menu, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { signOut } from "@/lib/actions/auth";
+import { StoreSwitcher } from "./StoreSwitcher";
 
 interface TopbarProps {
   onMenuClick: () => void;
   userEmail: string;
   organizationName: string;
   unreadNotifications: number;
+  stores: { id: string; name: string }[];
+  currentStoreId: string | null;
 }
 
 export function Topbar({
@@ -17,6 +20,8 @@ export function Topbar({
   userEmail,
   organizationName,
   unreadNotifications,
+  stores,
+  currentStoreId,
 }: TopbarProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,6 +45,8 @@ export function Topbar({
       </div>
 
       <div className="relative ml-auto flex items-center gap-4">
+        <StoreSwitcher stores={stores} currentStoreId={currentStoreId} />
+
         <Link
           href="/notifications"
           className="relative text-slate-500 hover:text-slate-700"

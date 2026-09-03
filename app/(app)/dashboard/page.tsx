@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getGrowthOpportunities } from "@/lib/ai/opportunities";
 import { getGrowthScore } from "@/lib/data/growthScore";
+import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 
 const dayLabelFormatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" });
@@ -39,22 +40,11 @@ export default async function DashboardPage() {
     return null;
   }
 
-  const { data: membership } = await supabase
-    .from("organization_members")
-    .select("organization_id")
-    .eq("user_id", user.id)
-    .limit(1)
-    .maybeSingle<{ organization_id: string }>();
-
-  const { data: store } = membership
-    ? await supabase
-        .from("stores")
-        .select("id, currency")
-        .eq("organization_id", membership.organization_id)
-        .order("created_at", { ascending: true })
-        .limit(1)
-        .maybeSingle<{ id: string; currency: string }>()
-    : { data: null };
+  // getCurrentStore() respecte la boutique sélectionnée via le switcheur
+  // (Phase 32, multi-boutiques) — ce tableau de bord dupliquait avant sa
+  // propre logique "première boutique de l'organisation", ce qui l'aurait
+  // laissé bloqué sur la boutique #1 quelle que soit la sélection.
+  const store = await getCurrentStore();
 
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -70,7 +60,7 @@ export default async function DashboardPage() {
   let newCustomersCount = 0;
   let orderItemRows: OrderItemRow[] = [];
 
-  if (store && membership) {
+  if (store) {
     const [ordersRes, customersRes, itemsRes] = await Promise.all([
       supabase
         .from("orders")
@@ -80,7 +70,7 @@ export default async function DashboardPage() {
       supabase
         .from("customers")
         .select("*", { count: "exact", head: true })
-        .eq("organization_id", membership.organization_id)
+        .eq("organization_id", store.organization_id)
         .gte("created_at", sinceIso),
       supabase
         .from("order_items")

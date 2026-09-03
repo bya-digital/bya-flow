@@ -11,6 +11,8 @@ interface AppShellProps {
   unreadNotifications: number;
   showPlatformAdmin?: boolean;
   showAdminNav?: boolean;
+  stores: { id: string; name: string }[];
+  currentStoreId: string | null;
 }
 
 export function AppShell({
@@ -20,6 +22,8 @@ export function AppShell({
   unreadNotifications,
   showPlatformAdmin = false,
   showAdminNav = true,
+  stores,
+  currentStoreId,
 }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -37,6 +41,8 @@ export function AppShell({
           userEmail={userEmail}
           organizationName={organizationName}
           unreadNotifications={unreadNotifications}
+          stores={stores}
+          currentStoreId={currentStoreId}
         />
         <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
       </div>
