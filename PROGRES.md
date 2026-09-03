@@ -1385,5 +1385,17 @@ livraison d'un webhook — prévu plus tard si le besoin se confirme.
 - Vérifié : `next build` (bug de build trouvé et corrigé avant tout
   autre test : une constante exportée depuis un fichier `"use server"`
   fait échouer le build Next — déplacée dans un fichier séparé),
-  `next lint`, `npm test` (14/14) tous propres. Vérification en
-  conditions réelles à faire une fois la migration exécutée.
+  `next lint`, `npm test` (14/14) tous propres.
+- **Vérifié en direct**, de bout en bout : clé créée (affichée une
+  seule fois) → `GET /api/v1/products` avec la clé → 200 ; sans clé →
+  401 ; clé invalide → 401 ; clé révoquée → 401 immédiatement après
+  révocation ; clé limitée à `products:read` → 403 sur `/orders`, 200
+  sur `/products` (scope bien vérifié) ; `GET /api/v1/orders/[id]`
+  retourne bien les articles de la commande. Webhook créé avec une
+  URL de test (webhook.site) → commande réelle passée → requête
+  effectivement reçue avec le bon payload JSON et la bonne signature
+  (recalculée localement en Node avec le secret affiché, identique
+  au header `X-BYA-Signature` reçu — signature vérifiable confirmée).
+  Webhook désactivé → commande suivante → aucune requête reçue.
+  Éléments de test nettoyés après vérification (clé révoquée, webhook
+  supprimé).
