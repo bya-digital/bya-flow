@@ -1549,3 +1549,54 @@ les domaines wildcard).
   commencer cette phase. Aucune régression détectée par ailleurs :
   toute la session a continué à naviguer normalement sur
   bya-flow.vercel.app via ce même middleware modifié.
+
+## 2026-09-08 — Phase 35 : premier vrai paiement (Kkiapay)
+
+Audit technique complet redemandé après plusieurs jours d'absence
+(rapport donné, rien de cassé, dépôt synchronisé) — puis premier
+fournisseur de paiement réellement connecté, à la demande explicite de
+l'utilisateur (« Maketou et Kkiapay », traités un à la fois : Kkiapay
+d'abord).
+
+- **Détails d'API vérifiés avant tout code** (jamais inventés, cf.
+  règle « ne pas inventer ») : documentation officielle Kkiapay +
+  lecture directe du SDK PHP officiel
+  (github.com/kkiapay/php-sdk/src/Kkiapay.php) pour confirmer l'URL de
+  base réelle (`api.kkiapay.me` / `api-sandbox.kkiapay.me`),
+  l'endpoint de vérification (`POST /api/v1/transactions/status`), les
+  en-têtes exacts (`X-API-KEY`, `X-PRIVATE-KEY`, `X-SECRET-KEY`), et le
+  widget JS (`cdn.kkiapay.me/k.js`, `openKkiapayWidget()`,
+  `addSuccessListener()`).
+- **`lib/payments/providers/kkiapayProvider.ts`** remplace le stub :
+  `checkStatus()` appelle réellement l'API Kkiapay et ne fait jamais
+  confiance à un montant/statut fourni par le client — c'est la seule
+  source de vérité pour marquer une commande payée, utilisée à la fois
+  par la confirmation côté client et par le webhook entrant.
+- **`sql/phase35_paiement_kkiapay.sql`** : `get_payment_provider_config()`
+  (lecture ciblée, sans session — le secret ne sert qu'à l'appel
+  serveur→Kkiapay, jamais renvoyé au navigateur) et
+  `confirm_order_payment()` (idempotente : webhook + confirmation
+  client peuvent arriver deux fois sans double effet ; refuse tout
+  montant vérifié inférieur au total de la commande). Toujours aucune
+  clé `service_role` — même principe SECURITY DEFINER ciblé que
+  partout ailleurs dans ce projet.
+- **Parcours client** : après une commande, si Kkiapay est actif pour
+  la boutique, redirection vers `/store/[slug]/commande/[id]/payer`
+  (nouveau) qui ouvre le widget Kkiapay ; sinon comportement inchangé
+  (commande en attente, comme avant). Widget → succès → confirmation
+  serveur → `payment_status = paid`, `status` passe de `pending` à
+  `confirmed`.
+- **`app/api/webhooks/kkiapay/route.ts`** (webhook entrant, à ne pas
+  confondre avec les webhooks marchands sortants de la Phase 31) :
+  chemin de confirmation de secours si le navigateur se ferme avant le
+  retour du widget. En-tête `x-kkiapay-secret` vérifié en filtre
+  souple (l'algorithme exact n'est pas documenté précisément par
+  Kkiapay) — jamais bloquant en cas de doute, la confirmation réelle
+  vient toujours de `checkStatus()`.
+- **`/paiements`** : case à cocher « Mode test (sandbox) » ajoutée aux
+  réglages Kkiapay (nouveau type de champ non sensible dans
+  `PaymentProviderField`, jamais envoyé au navigateur pour les vrais
+  secrets).
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire avec le compte
+  sandbox Kkiapay de l'utilisateur, migration à exécuter d'abord.

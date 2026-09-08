@@ -17,6 +17,11 @@ export type PaymentProviderId =
 export interface PaymentProviderField {
   key: string;
   label: string;
+  // "secret" (défaut) : jamais renvoyé au navigateur une fois enregistré,
+  // un champ vide au ré-enregistrement conserve la valeur existante.
+  // "checkbox" : réglage non sensible (ex. mode test) — toujours
+  // explicitement true/false à chaque enregistrement, jamais "conservé".
+  type?: "secret" | "checkbox";
 }
 
 export interface PaymentConfig {
@@ -42,6 +47,10 @@ export interface PaymentInitiationResult {
 export interface PaymentStatusResult {
   status: "pending" | "succeeded" | "failed" | "cancelled";
   providerReference?: string;
+  // Montant confirmé par le fournisseur (jamais celui envoyé par le
+  // client) — permet de vérifier qu'il couvre bien le total de la
+  // commande avant de la marquer payée.
+  amount?: number;
 }
 
 export interface PaymentProvider {

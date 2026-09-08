@@ -11,10 +11,15 @@ export function PaymentProviderCard({
   provider,
   isConfigured,
   isActive,
+  // Uniquement les champs non sensibles (ex. "sandbox") — jamais un
+  // secret : ce composant est rendu côté client, tout ce qui arrive ici
+  // finit dans le bundle envoyé au navigateur.
+  nonSecretConfig = {},
 }: {
   provider: PaymentProvider;
   isConfigured: boolean;
   isActive: boolean;
+  nonSecretConfig?: Record<string, string>;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -31,20 +36,32 @@ export function PaymentProviderCard({
       <form action={savePaymentProvider} className="mt-4 space-y-3">
         <input type="hidden" name="providerId" value={provider.id} />
 
-        {provider.fields.map((field) => (
-          <div key={field.key}>
-            <label htmlFor={`${provider.id}-${field.key}`} className={labelClasses}>
+        {provider.fields.map((field) =>
+          field.type === "checkbox" ? (
+            <label key={field.key} className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                name={field.key}
+                defaultChecked={nonSecretConfig[field.key] === "true"}
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+              />
               {field.label}
             </label>
-            <input
-              id={`${provider.id}-${field.key}`}
-              name={field.key}
-              type="password"
-              placeholder={isConfigured ? "••••••••" : ""}
-              className={inputClasses}
-            />
-          </div>
-        ))}
+          ) : (
+            <div key={field.key}>
+              <label htmlFor={`${provider.id}-${field.key}`} className={labelClasses}>
+                {field.label}
+              </label>
+              <input
+                id={`${provider.id}-${field.key}`}
+                name={field.key}
+                type="password"
+                placeholder={isConfigured ? "••••••••" : ""}
+                className={inputClasses}
+              />
+            </div>
+          )
+        )}
 
         <label className="flex items-center gap-2 text-sm text-slate-700">
           <input

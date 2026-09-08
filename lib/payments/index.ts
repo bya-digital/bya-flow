@@ -1,3 +1,4 @@
+import { createKkiapayProvider } from "@/lib/payments/providers/kkiapayProvider";
 import { createStubProvider } from "@/lib/payments/providers/stubProvider";
 import type { PaymentProvider, PaymentProviderId } from "@/lib/payments/types";
 
@@ -29,11 +30,7 @@ export const paymentProviders: Record<PaymentProviderId, PaymentProvider> = {
     { key: "public_key", label: "Clé publique" },
     { key: "private_key", label: "Clé privée" },
   ]),
-  kkiapay: createStubProvider("kkiapay", "Kkiapay", [
-    { key: "public_key", label: "Clé publique" },
-    { key: "private_key", label: "Clé privée" },
-    { key: "secret", label: "Clé secrète" },
-  ]),
+  kkiapay: createKkiapayProvider(),
 };
 
 export function getPaymentProvider(id: PaymentProviderId): PaymentProvider {

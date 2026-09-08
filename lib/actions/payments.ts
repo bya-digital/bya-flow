@@ -34,6 +34,12 @@ export async function savePaymentProvider(formData: FormData) {
   // un secret déjà configuré.
   const mergedConfig: PaymentConfig = { ...(existing?.config ?? {}) };
   for (const field of provider.fields) {
+    if (field.type === "checkbox") {
+      // Pas un secret : toujours réglé explicitement à chaque
+      // enregistrement (jamais "conservé" comme un champ vide).
+      mergedConfig[field.key] = formData.get(field.key) === "on" ? "true" : "false";
+      continue;
+    }
     const value = (formData.get(field.key) as string) || "";
     if (value.trim()) {
       mergedConfig[field.key] = value.trim();

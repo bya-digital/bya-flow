@@ -62,20 +62,26 @@ export default async function PaiementsPage({
         <>
           <Alert
             tone="info"
-            title="Aucun paiement en ligne n'est encore traité"
-            description="Cet espace prépare la connexion à un vrai fournisseur (identifiants, activation). Tant qu'aucune intégration réelle n'est branchée, les commandes restent enregistrées en attente de paiement — jamais marquées payées automatiquement."
+            title="Kkiapay est réellement connecté"
+            description="Une fois activé ci-dessous, vos clients paient réellement via Kkiapay au checkout et la commande passe à « Payé » automatiquement après vérification serveur. Les 7 autres fournisseurs restent une architecture prête, pas encore branchée : leurs commandes continuent d'être enregistrées en attente de paiement."
             className="mb-6"
           />
 
           <div className="grid gap-4 sm:grid-cols-2">
             {providers.map((provider) => {
               const row = rowByProvider.get(provider.id);
+              const nonSecretConfig = Object.fromEntries(
+                provider.fields
+                  .filter((field) => field.type === "checkbox")
+                  .map((field) => [field.key, row?.config[field.key] ?? "false"])
+              );
               return (
                 <PaymentProviderCard
                   key={provider.id}
                   provider={provider}
                   isConfigured={row ? provider.isConfigured(row.config) : false}
                   isActive={row?.is_active ?? false}
+                  nonSecretConfig={nonSecretConfig}
                 />
               );
             })}
