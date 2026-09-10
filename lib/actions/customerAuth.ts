@@ -28,9 +28,7 @@ export async function signupCustomer(formData: FormData) {
     password,
     options: {
       data: { full_name: fullName },
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
-        `/store/${storeSlug}/compte`
-      )}`,
+      emailRedirectTo: `${origin}/store/${storeSlug}/compte`,
     },
   });
 
@@ -93,9 +91,7 @@ export async function requestCustomerPasswordReset(formData: FormData) {
     headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const supabase = createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(
-      `/store/${storeSlug}/compte/reinitialiser-mot-de-passe`
-    )}`,
+    redirectTo: `${origin}/store/${storeSlug}/compte/reinitialiser-mot-de-passe`,
   });
 
   if (error) {

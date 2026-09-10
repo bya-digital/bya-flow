@@ -34,7 +34,7 @@ const PUBLIC_PATHS = [
   "/signup",
   "/forgot-password",
   "/reset-password",
-  "/auth/callback",
+  "/auth/confirm",
   "/robots.txt",
   "/sitemap.xml",
   "/manifest.webmanifest",

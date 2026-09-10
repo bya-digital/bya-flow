@@ -1666,3 +1666,53 @@ d'abord).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
   propres. Comparaison de latence avant/après et vérification
   fonctionnelle du panier/checkout à faire en conditions réelles.
+
+## 2026-09-10 — Correctif critique : confirmation email / mot de passe oublié cassés
+
+- **Signalé** : après une inscription, impossible de se reconnecter
+  avec les mêmes identifiants ; « mot de passe oublié » ne fonctionne
+  pas non plus. Deux bugs réels trouvés en lisant le code, aucun des
+  deux lié à l'envoi d'email lui-même.
+- **Bug 1 (inscription marchand, `signUp()` dans `lib/actions/auth.ts`)** :
+  l'appel `supabase.auth.signUp()` ne passait aucun `emailRedirectTo`.
+  Sans lui, Supabase renvoie le lien de confirmation vers la Site URL
+  brute du projet, qui ne sait échanger aucun lien — le compte reste
+  non confirmé pour toujours et `signInWithPassword()` échoue
+  indéfiniment ensuite avec « Email not confirmed ». L'inscription
+  boutique cliente (`signupCustomer`) n'avait pas ce bug précis (elle
+  passait déjà un `emailRedirectTo`).
+- **Bug 2 (tous les flux par email, marchand ET boutique)** : le flux
+  PKCE (`/auth/callback` + `exchangeCodeForSession(code)`) exige que le
+  lien reçu par email soit ouvert dans le **même navigateur** que celui
+  qui a fait la demande, à cause d'un cookie `code_verifier` propre à
+  ce navigateur — ce qui échoue quasi systématiquement dès que
+  l'utilisateur ouvre son email depuis son téléphone ou une autre
+  application (le cas le plus courant, de loin). C'est la cause réelle
+  de « mot de passe oublié ne marche pas ».
+- **Correctif** : remplacement du flux PKCE par le flux `token_hash` +
+  `verifyOtp()`, recommandé par Supabase précisément pour ce problème
+  — aucun cookie requis, fonctionne sur n'importe quel appareil.
+  Nouvelle route `app/auth/confirm/route.ts` (remplace
+  `app/auth/callback/route.ts`, supprimée) ; les 4 points d'entrée
+  (`signUp`, `requestPasswordReset` dans `lib/actions/auth.ts`,
+  `signupCustomer`, `requestCustomerPasswordReset` dans
+  `lib/actions/customerAuth.ts`) passent maintenant `emailRedirectTo`/
+  `redirectTo` comme la destination finale directement (le HTML de
+  l'email construit lui-même l'URL `/auth/confirm?token_hash=...&type=...`
+  via `{{ .RedirectTo }}`) ; `updateEmail()` migré de la même façon par
+  cohérence. `middleware.ts` : `/auth/confirm` remplace `/auth/callback`
+  dans les chemins publics.
+- **⚠️ Action manuelle requise côté utilisateur (Supabase Dashboard →
+  Authentication → Email Templates)** — le code seul ne suffit pas,
+  les 3 templates concernés doivent pointer vers `/auth/confirm` :
+  - **Confirm signup** : `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next={{ .RedirectTo }}`
+  - **Reset Password** : `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next={{ .RedirectTo }}`
+  - **Change Email Address** : `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email_change&next={{ .RedirectTo }}`
+  Sans ça les liens envoyés continueront de pointer vers l'ancien
+  format et échoueront. Rappel toujours valable par ailleurs : la
+  délivrabilité réelle des emails dépend d'un SMTP personnalisé
+  (Resend) configuré dans Supabase — le service email intégré par
+  défaut est très limité en volume.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles bloquée tant que les
+  3 templates ci-dessus n'ont pas été mis à jour côté utilisateur.

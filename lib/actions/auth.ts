@@ -35,11 +35,17 @@ export async function signUp(formData: FormData) {
     );
   }
 
+  const origin =
+    headers().get("origin") ?? process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const supabase = createClient();
+  // Sans emailRedirectTo, Supabase renvoie l'utilisateur vers la Site URL
+  // brute (aucune page ne sait échanger le lien) : le compte reste non
+  // confirmé pour toujours et la connexion échoue indéfiniment ensuite —
+  // c'était le bug réellement signalé.
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: { data: { full_name: fullName }, emailRedirectTo: `${origin}${redirectTo}` },
   });
 
   if (error) {
@@ -70,7 +76,7 @@ export async function requestPasswordReset(formData: FormData) {
 
   const supabase = createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    redirectTo: `${origin}/reset-password`,
   });
 
   if (error) {
@@ -120,11 +126,11 @@ export async function updateEmail(formData: FormData) {
   const supabase = createClient();
   // Supabase envoie une confirmation à la nouvelle adresse (et, selon le
   // réglage "Secure email change" du projet, aussi à l'ancienne) avant que
-  // le changement ne prenne effet — rien à faire de plus ici, /auth/callback
-  // gère déjà l'échange du lien de confirmation, quel que soit son type.
+  // le changement ne prenne effet — rien à faire de plus ici, /auth/confirm
+  // gère déjà la vérification du lien, quel que soit son type.
   const { error } = await supabase.auth.updateUser(
     { email },
-    { emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(redirectTo)}` }
+    { emailRedirectTo: `${origin}${redirectTo}` }
   );
 
   if (error) {
