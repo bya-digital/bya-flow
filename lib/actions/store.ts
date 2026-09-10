@@ -76,6 +76,74 @@ export async function createStore(formData: FormData) {
   redirect("/dashboard?success=store_created");
 }
 
+// Réservée admin/propriétaire (jamais un simple membre, contrairement à
+// la création). Garde-fous appliqués ici, pas seulement en RLS : jamais
+// la dernière boutique de l'organisation (sinon plus aucune boutique
+// courante nulle part dans l'app), jamais une boutique qui a déjà des
+// commandes — la suppression cascade sur products/shipping_methods/
+// payment_providers/orders, et on ne perd jamais un historique de
+// commandes réel pour un simple clic. Une boutique avec des commandes
+// doit être désactivée (is_active = false), pas supprimée.
+export async function deleteStore(formData: FormData) {
+  const storeId = formData.get("storeId") as string;
+
+  const membership = await getCurrentMembership();
+  if (!membership) redirect("/onboarding");
+
+  if (membership.role === "member") {
+    redirect(
+      `/boutique?error=${encodeURIComponent(
+        "Seuls les administrateurs peuvent supprimer une boutique."
+      )}`
+    );
+  }
+
+  const supabase = createClient();
+
+  const { count: storeCount } = await supabase
+    .from("stores")
+    .select("*", { count: "exact", head: true })
+    .eq("organization_id", membership.organizationId);
+
+  if ((storeCount ?? 0) <= 1) {
+    redirect(
+      `/boutique?error=${encodeURIComponent(
+        "Impossible de supprimer votre unique boutique."
+      )}`
+    );
+  }
+
+  const { count: orderCount } = await supabase
+    .from("orders")
+    .select("*", { count: "exact", head: true })
+    .eq("store_id", storeId);
+
+  if ((orderCount ?? 0) > 0) {
+    redirect(
+      `/boutique?error=${encodeURIComponent(
+        "Cette boutique a déjà des commandes : désactivez-la plutôt que de la supprimer, pour ne pas perdre cet historique."
+      )}`
+    );
+  }
+
+  const { error } = await supabase.from("stores").delete().eq("id", storeId);
+
+  if (error) {
+    redirect(`/boutique?error=${encodeURIComponent(error.message)}`);
+  }
+
+  // Si la boutique supprimée était la boutique sélectionnée, on efface le
+  // cookie pour retomber proprement sur une autre boutique de
+  // l'organisation au prochain chargement (sinon getCurrentStore()
+  // chercherait encore un id qui n'existe plus).
+  if (cookies().get(CURRENT_STORE_COOKIE)?.value === storeId) {
+    cookies().delete(CURRENT_STORE_COOKIE);
+  }
+
+  revalidatePath("/boutique");
+  redirect("/boutique?success=store_deleted");
+}
+
 export async function updateStore(formData: FormData) {
   // La boutique à modifier est dérivée de la session, jamais du champ caché
   // envoyé par le client (défense en profondeur : RLS bloquerait déjà une

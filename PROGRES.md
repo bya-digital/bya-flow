@@ -1599,4 +1599,27 @@ d'abord).
   secrets).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
   propres. Vérification en conditions réelles à faire avec le compte
-  sandbox Kkiapay de l'utilisateur, migration à exécuter d'abord.
+  sandbox Kkiapay de l'utilisateur — mise en pause à sa demande
+  (configuré sur un compte auquel je n'ai pas accès), reprise dès
+  qu'il est prêt.
+
+## 2026-09-10 — Phase 36 : supprimer une boutique
+
+- **Aucune policy de suppression n'existait sur `stores`** (Phase 2 :
+  seulement select/insert/update pour les membres) — ajoutée,
+  réservée admin/propriétaire (`sql/phase36_supprimer_boutique.sql`),
+  contrairement à la création qui reste ouverte à tout membre.
+- **`deleteStore()`** (`lib/actions/store.ts`) : les vrais garde-fous
+  sont côté application, pas seulement RLS — jamais la dernière
+  boutique de l'organisation (sinon plus aucune boutique courante
+  nulle part dans l'app), et jamais une boutique qui a déjà des
+  commandes (la suppression cascade sur produits/livraison/paiements/
+  commandes — on ne perd jamais un historique financier réel pour un
+  simple clic ; message clair invitant à désactiver plutôt que
+  supprimer dans ce cas). Efface le cookie de boutique sélectionnée
+  si c'est elle qui vient d'être supprimée.
+- **`/boutique`** : bouton supprimer (avec confirmation) à côté de
+  chaque boutique dans la liste, visible uniquement pour un
+  admin/propriétaire.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Vérification en conditions réelles à faire.

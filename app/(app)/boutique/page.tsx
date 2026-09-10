@@ -8,6 +8,7 @@ import {
   Store,
 } from "lucide-react";
 import Link from "next/link";
+import { DeleteStoreButton } from "@/components/boutique/DeleteStoreButton";
 import { StoreForm } from "@/components/boutique/StoreForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
@@ -17,6 +18,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { createStore, switchStore } from "@/lib/actions/store";
 import { getCurrentStore, getOrgStores } from "@/lib/data/store";
+import { getCurrentMembership } from "@/lib/data/team";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CAD", "XOF", "XAF", "CHF"];
 
@@ -31,6 +33,8 @@ export default async function BoutiquePage({
 }) {
   const store = await getCurrentStore();
   const orgStores = store ? await getOrgStores(store.organization_id) : [];
+  const membership = await getCurrentMembership();
+  const canManageStores = membership?.role !== "member";
 
   return (
     <>
@@ -44,7 +48,12 @@ export default async function BoutiquePage({
           <Alert tone="danger" title="Une erreur est survenue" description={searchParams.error} />
         </div>
       )}
-      {searchParams.success && (
+      {searchParams.success === "store_deleted" && (
+        <div className="mb-4">
+          <Alert tone="success" title="Boutique supprimée" />
+        </div>
+      )}
+      {searchParams.success && searchParams.success !== "store_deleted" && (
         <div className="mb-4">
           <Alert tone="success" title="Boutique mise à jour" />
         </div>
@@ -79,8 +88,8 @@ export default async function BoutiquePage({
                 <p className="mb-3 text-sm font-semibold text-slate-900">Vos boutiques</p>
                 <ul className="space-y-1">
                   {orgStores.map((orgStore) => (
-                    <li key={orgStore.id}>
-                      <form action={switchStore}>
+                    <li key={orgStore.id} className="flex items-center gap-1">
+                      <form action={switchStore} className="flex-1">
                         <input type="hidden" name="storeId" value={orgStore.id} />
                         <input type="hidden" name="redirect" value="/boutique" />
                         <button
@@ -93,6 +102,9 @@ export default async function BoutiquePage({
                           )}
                         </button>
                       </form>
+                      {canManageStores && (
+                        <DeleteStoreButton storeId={orgStore.id} storeName={orgStore.name} />
+                      )}
                     </li>
                   ))}
                 </ul>
