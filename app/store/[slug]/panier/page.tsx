@@ -1,5 +1,6 @@
 import { ShoppingCart, Trash2 } from "lucide-react";
 import Link from "next/link";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { removeCartItem, updateCartItemQuantity } from "@/lib/actions/publicCart";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
@@ -76,12 +77,13 @@ export default async function StoreCartPage({
                     defaultValue={item.quantity}
                     className="w-16 rounded-lg border border-slate-300 px-2 py-1.5 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                   />
-                  <button
-                    type="submit"
-                    className="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  <SubmitButton
+                    pendingText="..."
+                    variant="ghost"
+                    className="h-auto rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
                   >
                     Modifier
-                  </button>
+                  </SubmitButton>
                 </form>
 
                 <p className="w-24 shrink-0 text-right text-sm font-semibold text-slate-900">
@@ -91,13 +93,14 @@ export default async function StoreCartPage({
                 <form action={removeCartItem}>
                   <input type="hidden" name="storeSlug" value={store.slug} />
                   <input type="hidden" name="itemId" value={item.id} />
-                  <button
-                    type="submit"
+                  <SubmitButton
+                    pendingText="…"
+                    variant="ghost"
                     aria-label="Retirer du panier"
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-600"
+                    className="h-8 w-8 rounded-lg p-0 text-slate-400 hover:bg-red-50 hover:text-red-600"
                   >
                     <Trash2 className="h-4 w-4" strokeWidth={1.75} />
-                  </button>
+                  </SubmitButton>
                 </form>
               </div>
             ))}

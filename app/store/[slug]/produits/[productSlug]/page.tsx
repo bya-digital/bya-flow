@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StarRating } from "@/components/store/StarRating";
 import { WishlistButton } from "@/components/store/WishlistButton";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { addToCart } from "@/lib/actions/publicCart";
 import { submitReview } from "@/lib/actions/reviews";
 import { getCustomerSession } from "@/lib/data/customerAccount";
@@ -226,13 +227,13 @@ export default async function StoreProductPage({
                   className="mt-1 w-20 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 />
               </div>
-              <button
-                type="submit"
-                className="rounded-lg px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90"
+              <SubmitButton
+                pendingText="Ajout..."
+                className="h-auto rounded-lg px-6 py-2.5 text-sm font-semibold text-white hover:opacity-90"
                 style={{ backgroundColor: "var(--store-accent)" }}
               >
                 Ajouter au panier
-              </button>
+              </SubmitButton>
             </form>
           ) : (
             <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
@@ -288,13 +289,13 @@ export default async function StoreProductPage({
                 className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
               />
             </div>
-            <button
-              type="submit"
-              className="mt-3 rounded-lg px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
+            <SubmitButton
+              pendingText="Envoi..."
+              className="mt-3 h-auto rounded-lg px-5 py-2 text-sm font-semibold text-white hover:opacity-90"
               style={{ backgroundColor: "var(--store-accent)" }}
             >
               {eligibility.existingReview ? "Mettre à jour" : "Publier mon avis"}
-            </button>
+            </SubmitButton>
           </form>
         )}
 

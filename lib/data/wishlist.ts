@@ -1,12 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export async function getWishlistProductIds(storeId: string): Promise<Set<string>> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user?.email) return new Set();
+
+  const supabase = createClient();
 
   const { data } = await supabase
     .from("wishlist_items")
@@ -31,12 +29,10 @@ interface ProductImageRow {
 }
 
 export async function getWishlistProducts(storeId: string): Promise<WishlistProduct[]> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user?.email) return [];
+
+  const supabase = createClient();
 
   const { data } = await supabase
     .from("wishlist_items")

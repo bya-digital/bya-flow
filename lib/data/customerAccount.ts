@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export interface CustomerSession {
   isLoggedIn: boolean;
@@ -6,11 +7,8 @@ export interface CustomerSession {
   fullName: string | null;
 }
 
-export async function getCustomerSession(): Promise<CustomerSession> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export const getCustomerSession = cache(async (): Promise<CustomerSession> => {
+  const user = await getCurrentUser();
 
   if (!user || !user.email) {
     return { isLoggedIn: false, email: null, fullName: null };
@@ -21,7 +19,7 @@ export async function getCustomerSession(): Promise<CustomerSession> {
     email: user.email,
     fullName: (user.user_metadata?.full_name as string | undefined) ?? null,
   };
-}
+});
 
 export interface CustomerOrderSummary {
   id: string;

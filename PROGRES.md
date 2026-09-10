@@ -1623,3 +1623,46 @@ d'abord).
   admin/propriétaire.
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
   propres. Vérification en conditions réelles à faire.
+
+## 2026-09-10 — Correctif performance boutique (lenteur au clic)
+
+- **Symptôme signalé** : la boutique publique réagit tardivement à un
+  clic (jusqu'à 5 secondes), malgré une connexion internet correcte
+  côté utilisateur.
+- **Diagnostic mesuré** (`curl -w` sur la prod, pas une supposition) :
+  TTFB réel de 1.3 à 3.7s en base, un pic isolé à 18.7s — confirmé
+  côté serveur, pas côté réseau client. En-tête `X-Vercel-Id` : région
+  Vercel `iad1` (US East) — mésalignement possible avec la région
+  Supabase (non vérifiable sans accès au dashboard Supabase de
+  l'utilisateur, à surveiller).
+- **Cause principale trouvée dans le code** : appels Supabase
+  redondants et séquentiels sur une même requête —
+  `getPublicStoreBySlug()` relu indépendamment par `layout.tsx` ET
+  chaque `page.tsx` sous `/store/[slug]/**` ; `supabase.auth.getUser()`
+  appelé séparément par `getCustomerSession()`, `getPublicCart()`,
+  `getWishlistProductIds()`/`getWishlistProducts()` au lieu d'être
+  partagé.
+- **`lib/supabase/server.ts`** : nouveau `getCurrentUser()`
+  (`cache()` de React) — dé-duplique `auth.getUser()` sur toute une
+  passe de rendu serveur (layout + page + composants), sans rien
+  changer à l'architecture.
+- **`getPublicStoreBySlug`** (`lib/data/publicStore.ts`),
+  **`getCustomerSession`** (`lib/data/customerAccount.ts`) : passés en
+  `cache()`. **`getPublicCart`** (`lib/data/publicCart.ts`),
+  **`getWishlistProductIds`/`getWishlistProducts`**
+  (`lib/data/wishlist.ts`) : utilisent désormais le `getCurrentUser()`
+  partagé au lieu de leur propre appel.
+- **`app/store/[slug]/layout.tsx`** : `getPublicStoreBySlug()` et
+  `getCustomerSession()` (indépendants l'un de l'autre) lancés en
+  parallèle via `Promise.all` au lieu d'attendre l'un puis l'autre.
+- **Retour visuel de chargement** (composant `SubmitButton` de la
+  Phase 30, jusqu'ici réservé aux formulaires d'auth) ajouté sur les
+  boutons de la boutique publique qui n'avaient aucun feedback : «
+  Ajouter au panier » et « Publier mon avis »
+  (`produits/[productSlug]/page.tsx`), « Modifier » (quantité) et le
+  bouton retirer du panier (`panier/page.tsx`) — le clic ne semble
+  plus « mort » pendant la latence serveur, même quand celle-ci
+  n'est pas totalement éliminée.
+- Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
+  propres. Comparaison de latence avant/après et vérification
+  fonctionnelle du panier/checkout à faire en conditions réelles.

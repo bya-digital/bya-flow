@@ -22,12 +22,17 @@ export default async function StoreLayout({
   children: ReactNode;
   params: { slug: string };
 }) {
-  const store = await getPublicStoreBySlug(params.slug);
+  // getCustomerSession() ne dépend pas de la boutique : lancée en
+  // parallèle plutôt qu'après coup, elle ne rallonge plus la mise en
+  // page d'un aller-retour Supabase supplémentaire.
+  const [store, session] = await Promise.all([
+    getPublicStoreBySlug(params.slug),
+    getCustomerSession(),
+  ]);
   if (!store) notFound();
 
   const cart = await getPublicCart(store.id);
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-  const session = await getCustomerSession();
 
   const socialLinks = [
     { label: "Facebook", href: store.socialFacebook },

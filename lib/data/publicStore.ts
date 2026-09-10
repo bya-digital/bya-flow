@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 
 export interface PublicStore {
@@ -23,7 +24,11 @@ export interface PublicStore {
   referralEnabled: boolean;
 }
 
-export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | null> {
+// La boutique (layout, page d'accueil, et souvent une sous-page) est
+// systématiquement redemandée pour le même slug au sein d'une seule
+// requête — cache() (React) évite de refaire la même lecture Supabase
+// plusieurs fois d'affilée pour le même visiteur.
+export const getPublicStoreBySlug = cache(async (slug: string): Promise<PublicStore | null> => {
   const supabase = createClient();
   const { data } = await supabase
     .from("stores")
@@ -58,7 +63,7 @@ export async function getPublicStoreBySlug(slug: string): Promise<PublicStore | 
     loyaltyRedeemValue: Number(data.loyalty_redeem_value),
     referralEnabled: data.referral_enabled,
   };
-}
+});
 
 export interface PublicTestimonial {
   id: string;

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, getCurrentUser } from "@/lib/supabase/server";
 
 export interface PublicCartItem {
   id: string;
@@ -32,12 +32,10 @@ interface CartItemProductRow {
 const emptyCart: PublicCart = { id: null, items: [], subtotal: 0 };
 
 export async function getPublicCart(storeId: string): Promise<PublicCart> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const user = await getCurrentUser();
   if (!user) return emptyCart;
+
+  const supabase = createClient();
 
   const { data: cart } = await supabase
     .from("carts")
