@@ -3,6 +3,7 @@ import { submitCheckout } from "@/lib/actions/checkout";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
 import { getPublicCart } from "@/lib/data/publicCart";
+import { getOrderBumpsForCart } from "@/lib/data/publicOrderBumps";
 import { getPublicShippingMethods, getPublicStoreBySlug } from "@/lib/data/publicStore";
 
 const inputClasses =
@@ -26,6 +27,10 @@ export default async function StoreCheckoutPage({
 
   const session = await getCustomerSession();
   const shippingMethods = await getPublicShippingMethods(store.id);
+  const cartProductIds = cart.items
+    .map((item) => item.productId)
+    .filter((id): id is string => id !== null);
+  const orderBumps = await getOrderBumpsForCart(store.id, cartProductIds);
 
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
@@ -194,6 +199,38 @@ export default async function StoreCheckoutPage({
             </label>
             <textarea id="notes" name="notes" rows={3} className={inputClasses} />
           </div>
+
+          {orderBumps.length > 0 && (
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Ajoutez à votre commande</h2>
+              <div className="mt-3 space-y-2">
+                {orderBumps.map((offer) => (
+                  <label
+                    key={offer.bumpProductId}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border border-dashed border-brand-300 bg-brand-50/50 p-3 text-sm has-[:checked]:border-brand-500 has-[:checked]:bg-brand-50"
+                  >
+                    <input
+                      type="checkbox"
+                      name="bumpProductIds"
+                      value={offer.bumpProductId}
+                      className="mt-0.5 h-4 w-4 rounded text-brand-600 focus:ring-brand-400"
+                    />
+                    <span className="flex-1">
+                      <span className="block font-medium text-slate-900">
+                        {offer.headline || `Ajouter ${offer.name}`}
+                      </span>
+                      {offer.description && (
+                        <span className="block text-xs text-slate-500">{offer.description}</span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-slate-900">
+                      + {currencyFormatter.format(offer.price)}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
             Le paiement en ligne arrive dans une prochaine étape. Votre commande sera

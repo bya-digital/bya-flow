@@ -1952,3 +1952,35 @@ statistiques par étape").
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-10 — Phase 40 vérifiée en conditions réelles
+
+SQL collé et confirmé. Vérifié en direct : création d'un funnel,
+ajout d'une étape (page existante), compteur "0 visiteur unique" →
+visite réelle de la page publique → rechargement de l'éditeur →
+"1 visiteur unique". Le mécanisme de suivi (RPC appelée depuis les
+pages publiques, agrégée via get_funnel_step_stats) fonctionne de
+bout en bout.
+
+## 2026-09-10 — Phase 41 : Order Bump
+
+Directive Section 15. Offre complémentaire cochable au checkout
+("+ Ebook : 2 000 F" si le panier contient le produit déclencheur).
+
+- **`order_bumps`** (store_id, trigger_product_id, bump_product_id,
+  headline, description, is_active) — RLS lecture publique limitée
+  aux offres actives (même principe que `products_select_public`).
+- **`checkout_cart()`** ré-créée (seule différence avec la version
+  précédente : accepte `p_bump_product_ids`) — chaque bump soumis par
+  le client n'est ajouté à la commande que s'il existe réellement une
+  offre active pour un produit réellement présent dans CE panier, et
+  toujours au prix actuel du produit en base, jamais un montant
+  envoyé par le client. Stock décrémenté pour un bump physique, comme
+  n'importe quel article.
+- **`/store/[slug]/checkout`** : case à cocher par offre trouvée pour
+  le panier courant, prix affiché, jamais pré-cochée.
+- **`/order-bumps`** : gestion marchand (créer/activer-désactiver/
+  supprimer une paire produit déclencheur → offre).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

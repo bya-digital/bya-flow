@@ -23,6 +23,7 @@ export async function submitCheckout(formData: FormData) {
   const phone = formData.get("phone") as string;
   const notes = (formData.get("notes") as string) || null;
   const redeemPoints = Math.max(Number(formData.get("redeemPoints") || 0), 0);
+  const bumpProductIds = formData.getAll("bumpProductIds") as string[];
   const checkoutUrl = `/store/${storeSlug}/checkout`;
 
   const shipping = {
@@ -44,6 +45,7 @@ export async function submitCheckout(formData: FormData) {
       p_notes: notes,
       p_shipping_method_id: shippingMethodId,
       p_redeem_points: redeemPoints,
+      p_bump_product_ids: bumpProductIds.length > 0 ? bumpProductIds : null,
     })
     .single<CheckoutOrderResult>();
 
