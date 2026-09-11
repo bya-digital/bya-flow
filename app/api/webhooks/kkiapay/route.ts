@@ -31,6 +31,21 @@ export async function POST(request: Request) {
   }
 
   const supabase = createClient();
+
+  // Anti-rejeu/anti-doublon (Phase 35B) : si Kkiapay a déjà livré ce
+  // transactionId (retry réseau de leur côté, ou webhook rejoué), on ne
+  // rappelle même pas checkStatus() — confirm_order_payment() était déjà
+  // idempotente, mais refaisait un aller-retour API à chaque fois.
+  const { data: isNewEvent } = await supabase.rpc("record_payment_webhook_event", {
+    p_provider: "kkiapay",
+    p_event_id: transactionId,
+    p_order_id: orderId,
+    p_payload: body,
+  });
+  if (isNewEvent === false) {
+    return NextResponse.json({ ok: true });
+  }
+
   const { data: providerRow } = await supabase
     .rpc("get_payment_provider_config", { p_order_id: orderId, p_provider: "kkiapay" })
     .maybeSingle<ProviderConfigRow>();

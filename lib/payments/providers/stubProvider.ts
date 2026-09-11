@@ -17,11 +17,13 @@ import type {
 export function createStubProvider(
   id: PaymentProviderId,
   name: string,
-  fields: PaymentProviderField[]
+  fields: PaymentProviderField[],
+  checkoutMode: "widget" | "redirect" = "redirect"
 ): PaymentProvider {
   return {
     id,
     name,
+    checkoutMode,
     fields,
     isConfigured(config: PaymentConfig) {
       return fields.every((field) => Boolean(config[field.key]?.trim()));

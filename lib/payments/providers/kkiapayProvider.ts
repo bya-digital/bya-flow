@@ -29,6 +29,7 @@ export function createKkiapayProvider(): PaymentProvider {
   return {
     id: "kkiapay",
     name: "Kkiapay",
+    checkoutMode: "widget",
     fields: [
       { key: "public_key", label: "Clé publique" },
       { key: "private_key", label: "Clé privée" },

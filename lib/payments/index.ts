@@ -31,6 +31,22 @@ export const paymentProviders: Record<PaymentProviderId, PaymentProvider> = {
     { key: "private_key", label: "Clé privée" },
   ]),
   kkiapay: createKkiapayProvider(),
+  // Ajoutés Phase 35B (audit Payment Engine du 2026-09-10) : terrain
+  // préparé uniquement, comme les 7 fournisseurs ci-dessus — aucune
+  // intégration réelle tant que le choix commercial du prochain PSP
+  // n'est pas fait (directive Section 4).
+  flutterwave: createStubProvider("flutterwave", "Flutterwave", [
+    { key: "public_key", label: "Clé publique" },
+    { key: "secret_key", label: "Clé secrète" },
+  ]),
+  cinetpay: createStubProvider("cinetpay", "CinetPay", [
+    { key: "api_key", label: "Clé API" },
+    { key: "site_id", label: "Site ID" },
+  ]),
+  paystack: createStubProvider("paystack", "Paystack", [
+    { key: "public_key", label: "Clé publique" },
+    { key: "secret_key", label: "Clé secrète" },
+  ]),
 };
 
 export function getPaymentProvider(id: PaymentProviderId): PaymentProvider {

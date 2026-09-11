@@ -1716,3 +1716,57 @@ d'abord).
 - Vérifié : `next build`, `next lint`, `npm test` (14/14) tous
   propres. Vérification en conditions réelles bloquée tant que les
   3 templates ci-dessus n'ont pas été mis à jour côté utilisateur.
+
+## 2026-09-10 — Phase 35A + 35B : audit et durcissement du Payment Engine
+
+Suite à la directive de continuation post-audit (2026-09-10) : BYA Flow
+ne doit jamais encaisser ni redistribuer l'argent des marchands (chaque
+marchand utilise son propre compte PSP, déjà le cas avec Kkiapay), et
+aucun nouveau PSP réel ne doit être choisi/codé avant que l'architecture
+Payment Engine elle-même soit auditée et solidifiée.
+
+**Phase 35A (audit, livré en conversation)** : architecture déjà saine
+dans ses grandes lignes (interface `PaymentProvider` jamais contournée,
+`payment_status` jamais décidé côté client, idempotence réelle via
+contrainte SQL unique, zéro `service_role`) mais 6 points concrets à
+corriger — détaillés ci-dessous.
+
+**Phase 35B (correctifs)** :
+- **`lib/payments/types.ts`** : `PaymentProviderId` étendu avec
+  `flutterwave`, `cinetpay`, `paystack` (terrain préparé uniquement,
+  comme les 8 fournisseurs existants — directive Section 4 : ne pas
+  encore choisir/coder d'intégration production pour eux). Nouveau
+  champ `checkoutMode: "widget" | "redirect"` sur `PaymentProvider`
+  pour que le checkout n'ait plus besoin de connaître chaque
+  fournisseur individuellement. Nouvelle méthode optionnelle
+  `refund()` (absente tant qu'aucun fournisseur ne l'implémente
+  réellement — jamais une fausse méthode).
+- **`lib/actions/checkout.ts`** et **`.../payer/page.tsx`** :
+  ne vérifient plus `.eq("provider", "kkiapay")` en dur — n'importe
+  quel fournisseur actif redirige vers `/payer`, qui choisit
+  l'affichage selon `checkoutMode` (widget Kkiapay si actif ; sinon
+  message transparent "pas encore réellement connecté", jamais un
+  faux parcours de paiement).
+- **`sql/phase35b_payment_engine_hardening.sql`** :
+  - `orders.payment_status` élargi (`pending/processing/paid/failed/
+    cancelled/refunded/partially_refunded` — était limité à
+    `pending/paid/refunded` depuis la Phase 5) ; `payment_transactions.
+    status` gagne `partially_refunded` pour rester cohérent.
+  - **Secrets de paiement restreints aux admin/propriétaire** : la RLS
+    de `payment_providers` (Phase 21) laissait n'importe quel membre
+    d'équipe lire/écrire les clés API du compte PSP du marchand —
+    corrigé (`is_store_admin()`, même principe que `deleteStore()` en
+    Phase 36), doublé côté action (`savePaymentProvider`) et côté UI
+    (`PaymentProviderCard` désactivé pour un simple membre, nouvelle
+    fonction `get_store_active_payment_providers()` pour qu'il
+    continue de voir actif/inactif sans jamais voir la config).
+  - **Journalisation anti-rejeu des webhooks** : nouvelle table
+    `payment_webhook_events` + `record_payment_webhook_event()` —
+    un webhook Kkiapay déjà reçu (retry réseau, livraison en double)
+    est désormais détecté avant même de rappeler `checkStatus()`,
+    plutôt que de simplement compter sur l'idempotence de
+    `confirm_order_payment()` en aval.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles à faire
+  une fois le SQL collé (Kkiapay doit continuer à fonctionner
+  exactement comme avant).

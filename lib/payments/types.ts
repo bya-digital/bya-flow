@@ -12,7 +12,10 @@ export type PaymentProviderId =
   | "chariow"
   | "maketou"
   | "ikeepay"
-  | "kkiapay";
+  | "kkiapay"
+  | "flutterwave"
+  | "cinetpay"
+  | "paystack";
 
 export interface PaymentProviderField {
   key: string;
@@ -45,7 +48,7 @@ export interface PaymentInitiationResult {
 }
 
 export interface PaymentStatusResult {
-  status: "pending" | "succeeded" | "failed" | "cancelled";
+  status: "pending" | "succeeded" | "failed" | "cancelled" | "refunded";
   providerReference?: string;
   // Montant confirmé par le fournisseur (jamais celui envoyé par le
   // client) — permet de vérifier qu'il couvre bien le total de la
@@ -53,9 +56,21 @@ export interface PaymentStatusResult {
   amount?: number;
 }
 
+export interface RefundResult {
+  status: "succeeded" | "failed";
+  errorMessage?: string;
+}
+
 export interface PaymentProvider {
   id: PaymentProviderId;
   name: string;
+  // "widget" : le fournisseur ouvre son propre composant JS côté client
+  // (voir components/checkout/*Checkout.tsx) — initiate() n'est pas le
+  // vrai déclencheur. "redirect" : flux serveur classique, initiate()
+  // renvoie une URL vers laquelle rediriger le client. Permet à la page
+  // de paiement de rester générique au lieu de connaître chaque
+  // fournisseur individuellement.
+  checkoutMode: "widget" | "redirect";
   // Champs de configuration nécessaires (clés API...) — génériques pour
   // l'instant, à ajuster une fois la documentation officielle de chaque
   // fournisseur consultée au moment de l'intégration réelle.
@@ -63,4 +78,10 @@ export interface PaymentProvider {
   isConfigured(config: PaymentConfig): boolean;
   initiate(input: PaymentInitiationInput, config: PaymentConfig): Promise<PaymentInitiationResult>;
   checkStatus(providerReference: string, config: PaymentConfig): Promise<PaymentStatusResult>;
+  // Remboursement — absente tant qu'un fournisseur ne l'implémente pas
+  // réellement (jamais une fausse méthode qui ferait semblant) ; sa
+  // seule présence dans l'interface prépare le terrain, voir Section 9
+  // de la directive du 2026-09-10 (aucune redistribution de fonds réelle
+  // implémentée pour l'instant).
+  refund?(providerReference: string, amount: number, config: PaymentConfig): Promise<RefundResult>;
 }

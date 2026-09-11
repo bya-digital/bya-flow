@@ -4,12 +4,27 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getPaymentProvider } from "@/lib/payments";
 import type { PaymentConfig, PaymentProviderId } from "@/lib/payments/types";
+import { getCurrentMembership } from "@/lib/data/team";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 
+// Réservée admin/propriétaire (jamais un simple membre) : ces clés API
+// donnent accès au compte de paiement réel du marchand — même principe
+// que deleteStore() en Phase 36. Doublé côté RLS (payment_providers,
+// Phase 35B), jamais une seule couche.
 export async function savePaymentProvider(formData: FormData) {
   const store = await getCurrentStore();
   if (!store) redirect("/onboarding");
+
+  const membership = await getCurrentMembership();
+  if (membership?.role === "member") {
+    redirect(
+      `/paiements?error=${encodeURIComponent(
+        "Seuls les administrateurs de la boutique peuvent configurer les paiements."
+      )}`
+    );
+    return;
+  }
 
   const providerId = formData.get("providerId") as PaymentProviderId;
   const provider = getPaymentProvider(providerId);

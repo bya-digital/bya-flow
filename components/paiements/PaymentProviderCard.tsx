@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { savePaymentProvider } from "@/lib/actions/payments";
+import { cn } from "@/lib/utils";
 import type { PaymentProvider } from "@/lib/payments/types";
 
 const inputClasses =
@@ -15,11 +16,16 @@ export function PaymentProviderCard({
   // secret : ce composant est rendu côté client, tout ce qui arrive ici
   // finit dans le bundle envoyé au navigateur.
   nonSecretConfig = {},
+  // Un simple membre peut voir l'état (configuré/actif) mais jamais
+  // modifier les clés API du compte de paiement du marchand — appliqué
+  // aussi côté serveur (savePaymentProvider) et RLS, jamais uniquement ici.
+  canManage,
 }: {
   provider: PaymentProvider;
   isConfigured: boolean;
   isActive: boolean;
   nonSecretConfig?: Record<string, string>;
+  canManage: boolean;
 }) {
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-5">
@@ -43,7 +49,8 @@ export function PaymentProviderCard({
                 type="checkbox"
                 name={field.key}
                 defaultChecked={nonSecretConfig[field.key] === "true"}
-                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+                disabled={!canManage}
+                className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400 disabled:opacity-50"
               />
               {field.label}
             </label>
@@ -57,7 +64,8 @@ export function PaymentProviderCard({
                 name={field.key}
                 type="password"
                 placeholder={isConfigured ? "••••••••" : ""}
-                className={inputClasses}
+                disabled={!canManage}
+                className={cn(inputClasses, "disabled:bg-slate-50 disabled:text-slate-400")}
               />
             </div>
           )
@@ -68,12 +76,19 @@ export function PaymentProviderCard({
             type="checkbox"
             name="isActive"
             defaultChecked={isActive}
-            className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400"
+            disabled={!canManage}
+            className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-400 disabled:opacity-50"
           />
           Actif
         </label>
 
-        <Button type="submit">Enregistrer</Button>
+        {canManage ? (
+          <Button type="submit">Enregistrer</Button>
+        ) : (
+          <p className="text-xs text-slate-400">
+            Réservé aux administrateurs de la boutique.
+          </p>
+        )}
       </form>
     </div>
   );

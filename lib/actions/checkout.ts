@@ -65,18 +65,20 @@ export async function submitCheckout(formData: FormData) {
     total: order.total,
   });
 
-  // Si Kkiapay est réellement activé pour cette boutique, le client passe
-  // par le paiement avant la confirmation — sinon (aucun fournisseur réel
-  // branché), comportement inchangé : commande enregistrée en attente.
-  const { data: kkiapayProvider } = await supabase
+  // Si un fournisseur de paiement quelconque est actif pour cette
+  // boutique, le client passe par le paiement avant la confirmation —
+  // sinon (aucun fournisseur branché), comportement inchangé : commande
+  // enregistrée en attente. Jamais un fournisseur en particulier vérifié
+  // ici : /payer décide seul comment le présenter (Phase 35B).
+  const { data: activeProvider } = await supabase
     .from("payment_providers")
-    .select("is_active")
+    .select("provider")
     .eq("store_id", order.store_id)
-    .eq("provider", "kkiapay")
     .eq("is_active", true)
-    .maybeSingle<{ is_active: boolean }>();
+    .limit(1)
+    .maybeSingle<{ provider: string }>();
 
-  if (kkiapayProvider) {
+  if (activeProvider) {
     redirect(`/store/${storeSlug}/commande/${order.id}/payer`);
   }
 
