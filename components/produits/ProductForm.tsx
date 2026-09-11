@@ -108,10 +108,16 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
         >
           <option value="physical">Physique (livré)</option>
           <option value="digital">Numérique (téléchargement)</option>
+          <option value="course">Formation (modules et leçons)</option>
         </select>
         {productType === "digital" && (
           <p className="mt-1 text-xs text-slate-500">
             Sans stock ni poids — le fichier à vendre se gère plus bas, une fois le produit créé.
+          </p>
+        )}
+        {productType === "course" && (
+          <p className="mt-1 text-xs text-slate-500">
+            Sans stock ni poids — les modules et leçons se gèrent plus bas, une fois le produit créé.
           </p>
         )}
       </div>
@@ -174,7 +180,12 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
         </div>
       </div>
 
-      <div className={cn("grid gap-4", productType === "digital" ? "sm:grid-cols-1" : "sm:grid-cols-3")}>
+      <div
+        className={cn(
+          "grid gap-4",
+          productType === "physical" ? "sm:grid-cols-3" : "sm:grid-cols-1"
+        )}
+      >
         <div>
           <label htmlFor="sku" className={labelClasses}>
             SKU

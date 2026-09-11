@@ -1822,3 +1822,58 @@ chantier après le durcissement du Payment Engine.
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé (colonnes/tables/bucket
   inexistants avant ça).
+
+## 2026-09-10 — Phase 37 (suite) : repasser en brouillon si le fichier numérique est supprimé
+
+Un produit numérique actif dont on supprime le fichier restait
+"Actif" sans plus rien à livrer — repasse maintenant automatiquement
+en brouillon (même principe que la garde à l'activation), avec un
+message explicatif. Vérifié en conditions réelles sur le site live
+après ce correctif : création d'un produit numérique, upload,
+activation, suppression du fichier → repasse bien en brouillon.
+
+## 2026-09-10 — Phase 38 : formations (modules, leçons, progression)
+
+Troisième type de produit après physique/numérique (directive
+Section 12). Aucune vidéo hébergée par BYA Flow — `video_url` pointe
+vers une vidéo hébergée ailleurs par le marchand (YouTube/Vimeo
+reconnus et embarqués automatiquement, tout autre lien reste un
+simple lien externe plutôt qu'une iframe risquée sur un domaine
+arbitraire).
+
+- **`products.product_type`** gagne `'course'`. **`course_modules`**
+  (product_id, title, position) → **`course_lessons`** (module_id,
+  title, position, video_url, content, file_path, file_name). Le
+  fichier de leçon (support de cours, PDF...) réutilise **le même
+  bucket privé `digital-products` de la Phase 37**, même convention
+  de chemin (`${storeId}/${productId}/...`) — les policies RLS déjà
+  en place couvrent donc aussi les fichiers de leçon sans rien
+  ajouter côté storage.
+- **Accès réservé aux comptes clients connectés**, jamais un panier
+  invité anonyme : la progression n'aurait aucun sens si l'identité
+  ne survit pas à la fermeture du navigateur. `customer_has_paid_
+  digital_access()` (Phase 37, déjà générique malgré son nom) réutilisée
+  telle quelle pour l'accès aux modules/leçons — pas de nouvelle
+  fonction d'ownership dupliquée.
+- **`mark_lesson_complete()`** (SECURITY DEFINER) revérifie elle-même
+  le paiement avant d'écrire — jamais un lessonId de confiance seul
+  ni un customer_id fourni par le client.
+- **`/produits/[id]`** : nouvelle carte "Modules et leçons"
+  (`CourseBuilder`) à la place de Variantes pour ce type de produit.
+  Impossible d'activer une formation sans au moins une leçon (même
+  garde que le fichier numérique en Phase 37, y compris à la création
+  où c'est structurellement impossible d'avoir déjà du contenu — forcé
+  en brouillon avec message explicatif).
+- **`/store/[slug]/compte/formations/[productId]`** : espace
+  formation du client — vérifie lui-même l'achat payé (indépendamment
+  de la RLS sur course_modules, double vérification), barre de
+  progression, une leçon = vidéo embarquée et/ou texte et/ou fichier
+  à télécharger (URL signée courte, même discipline que Phase 37) +
+  case à cocher "Terminé" persistée.
+- Lien vers l'espace formation ajouté sur la confirmation de commande
+  (invite à se connecter, jamais un accès direct pour un panier
+  invité) et sur le détail de commande du compte client (lien direct,
+  toujours connecté à cet endroit).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

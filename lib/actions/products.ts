@@ -20,7 +20,10 @@ function readProductFields(formData: FormData) {
   const slugInput = (formData.get("slug") as string) || name;
   const compareAtPrice = formData.get("compareAtPrice");
   const weight = formData.get("weight");
-  const productType = formData.get("productType") === "digital" ? "digital" : "physical";
+  const productTypeInput = formData.get("productType");
+  const productType =
+    productTypeInput === "digital" || productTypeInput === "course" ? productTypeInput : "physical";
+  const hasUnlimitedStock = productType !== "physical";
   return {
     name,
     slug: slugify(slugInput),
@@ -28,14 +31,15 @@ function readProductFields(formData: FormData) {
     price: toNonNegativeNumber(formData.get("price")),
     compare_at_price: compareAtPrice ? toNonNegativeNumber(compareAtPrice) : null,
     sku: (formData.get("sku") as string) || null,
-    // Stock/poids n'ont pas de sens pour un produit numérique (quantité
-    // illimitée par nature). checkout_cart()/create_pos_order() ignorent
-    // déjà le stock pour product_type = 'digital' (jamais décrémenté,
-    // jamais bloquant) — ce grand nombre n'a donc qu'un rôle cosmétique :
-    // il évite de casser l'affichage "en stock"/quantité max du
-    // storefront, qui lit stock comme un inventaire réel un peu partout.
-    stock: productType === "digital" ? 999999 : Math.round(toNonNegativeNumber(formData.get("stock"))),
-    weight: productType === "digital" ? null : weight ? toNonNegativeNumber(weight) : null,
+    // Stock/poids n'ont pas de sens pour un produit numérique ou une
+    // formation (quantité illimitée par nature). checkout_cart()/
+    // create_pos_order() ignorent déjà le stock hors product_type =
+    // 'physical' (jamais décrémenté, jamais bloquant) — ce grand nombre
+    // n'a donc qu'un rôle cosmétique : il évite de casser l'affichage
+    // "en stock"/quantité max du storefront, qui lit stock comme un
+    // inventaire réel un peu partout.
+    stock: hasUnlimitedStock ? 999999 : Math.round(toNonNegativeNumber(formData.get("stock"))),
+    weight: hasUnlimitedStock ? null : weight ? toNonNegativeNumber(weight) : null,
     status: (formData.get("status") as string) || "draft",
     category_id: (formData.get("categoryId") as string) || null,
     product_type: productType,
@@ -69,11 +73,14 @@ export async function createProduct(formData: FormData) {
   }
 
   const fields = readProductFields(formData);
-  // Un produit numérique ne peut pas encore avoir de fichier à la
-  // création (l'upload se fait après, sur la fiche produit) — jamais le
-  // publier "Actif" sans rien à livrer (Règle 34 : pas de fonctionnalité
-  // présentée comme opérationnelle sans l'être réellement).
-  const forcedToDraft = fields.product_type === "digital" && fields.status === "active";
+  // Ni un fichier numérique ni un module/leçon de formation ne peuvent
+  // encore exister à la création (ça se gère après, sur la fiche
+  // produit) — jamais publier "Actif" sans rien à livrer (Règle 34 :
+  // pas de fonctionnalité présentée comme opérationnelle sans l'être
+  // réellement).
+  const forcedToDraft =
+    (fields.product_type === "digital" || fields.product_type === "course") &&
+    fields.status === "active";
   if (forcedToDraft) {
     fields.status = "draft";
   }
@@ -97,7 +104,9 @@ export async function createProduct(formData: FormData) {
   redirect(
     forcedToDraft
       ? `/produits/${product.id}?message=${encodeURIComponent(
-          "Enregistré en brouillon : ajoutez le fichier numérique avant d'activer ce produit."
+          fields.product_type === "course"
+            ? "Enregistré en brouillon : ajoutez au moins un module et une leçon avant d'activer cette formation."
+            : "Enregistré en brouillon : ajoutez le fichier numérique avant d'activer ce produit."
         )}`
       : `/produits/${product.id}`
   );
@@ -119,6 +128,21 @@ export async function updateProduct(formData: FormData) {
       redirect(
         `/produits/${productId}?error=${encodeURIComponent(
           "Ajoutez le fichier numérique avant d'activer ce produit."
+        )}`
+      );
+      return;
+    }
+  }
+
+  if (fields.product_type === "course" && fields.status === "active") {
+    const { data: lessonCount } = await supabase.rpc("count_course_lessons", {
+      p_product_id: productId,
+    });
+
+    if (!lessonCount) {
+      redirect(
+        `/produits/${productId}?error=${encodeURIComponent(
+          "Ajoutez au moins un module et une leçon avant d'activer cette formation."
         )}`
       );
       return;

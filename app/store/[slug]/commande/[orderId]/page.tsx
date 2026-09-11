@@ -42,12 +42,27 @@ export default async function StoreOrderConfirmationPage({
                 <span className="text-slate-600">
                   {item.productName} × {item.quantity}
                 </span>
-                {item.isDigital &&
+                {item.productType === "digital" &&
                   (order.paymentStatus === "paid" ? (
                     <DigitalDownloadButton orderItemId={item.id} />
                   ) : (
                     <p className="mt-1 text-xs text-slate-400">
                       Téléchargement disponible après paiement.
+                    </p>
+                  ))}
+                {item.productType === "course" &&
+                  (order.paymentStatus === "paid" ? (
+                    <Link
+                      href={`/store/${store.slug}/compte/connexion?redirect=${encodeURIComponent(
+                        `/store/${store.slug}/compte/formations/${item.productId}`
+                      )}`}
+                      className="mt-1 block text-xs font-semibold text-brand-600 hover:underline"
+                    >
+                      Connectez-vous pour accéder à la formation
+                    </Link>
+                  ) : (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Accès à la formation disponible après paiement.
                     </p>
                   ))}
               </div>

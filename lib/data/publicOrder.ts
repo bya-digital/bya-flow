@@ -2,10 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 
 export interface PublicOrderItem {
   id: string;
+  productId: string | null;
   productName: string;
   quantity: number;
   unitPrice: number;
-  isDigital: boolean;
+  productType: "physical" | "digital" | "course";
 }
 
 interface ShippingAddress {
@@ -48,7 +49,10 @@ export async function getPublicOrder(orderId: string): Promise<PublicOrder | nul
   if (!order) return null;
 
   const [{ data: items }, { data: itemTypes }] = await Promise.all([
-    supabase.from("order_items").select("id, quantity, unit_price, products(name)").eq("order_id", orderId),
+    supabase
+      .from("order_items")
+      .select("id, product_id, quantity, unit_price, products(name)")
+      .eq("order_id", orderId),
     // Jamais via products_select_public (limitée à status='active') :
     // un acheteur doit toujours voir/retélécharger un produit numérique
     // même dépublié depuis par le marchand.
@@ -78,12 +82,15 @@ export async function getPublicOrder(orderId: string): Promise<PublicOrder | nul
     createdAt: order.created_at,
     items: (items ?? []).map((item) => {
       const product = item.products as unknown as { name: string } | null;
+      const productType = productTypeByItem.get(item.id);
       return {
         id: item.id,
+        productId: item.product_id,
         productName: product?.name ?? "Produit",
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
-        isDigital: productTypeByItem.get(item.id) === "digital",
+        productType:
+          productType === "digital" || productType === "course" ? productType : "physical",
       };
     }),
   };

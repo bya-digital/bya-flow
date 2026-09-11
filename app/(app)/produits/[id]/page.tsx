@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { CourseBuilder, type CourseModule } from "@/components/produits/CourseBuilder";
 import { DeleteProductButton } from "@/components/produits/DeleteProductButton";
 import { DigitalFileUpload } from "@/components/produits/DigitalFileUpload";
 import { ProductForm } from "@/components/produits/ProductForm";
@@ -61,6 +62,23 @@ export default async function ProduitDetailPage({
     }
   }
 
+  let courseModules: CourseModule[] = [];
+  if (product.product_type === "course") {
+    const { data: modulesData } = await supabase
+      .from("course_modules")
+      .select("id, title, course_lessons(id, title, video_url, content, file_name)")
+      .eq("product_id", product.id)
+      .order("position", { ascending: true })
+      .order("position", { ascending: true, foreignTable: "course_lessons" });
+    courseModules = (modulesData ?? []).map((mod) => ({
+      id: mod.id,
+      title: mod.title,
+      lessons: (
+        (mod.course_lessons as unknown as CourseModule["lessons"] | null) ?? []
+      ).slice(),
+    }));
+  }
+
   return (
     <>
       <PageHeader title={product.name} description="Fiche produit." />
@@ -92,14 +110,27 @@ export default async function ProduitDetailPage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <h2 className="text-sm font-semibold text-slate-900">Variantes</h2>
-            </CardHeader>
-            <CardContent>
-              <ProductVariants productId={product.id} variants={variants ?? []} />
-            </CardContent>
-          </Card>
+          {product.product_type === "physical" && (
+            <Card>
+              <CardHeader>
+                <h2 className="text-sm font-semibold text-slate-900">Variantes</h2>
+              </CardHeader>
+              <CardContent>
+                <ProductVariants productId={product.id} variants={variants ?? []} />
+              </CardContent>
+            </Card>
+          )}
+
+          {product.product_type === "course" && (
+            <Card>
+              <CardHeader>
+                <h2 className="text-sm font-semibold text-slate-900">Modules et leçons</h2>
+              </CardHeader>
+              <CardContent>
+                <CourseBuilder productId={product.id} modules={courseModules} />
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
