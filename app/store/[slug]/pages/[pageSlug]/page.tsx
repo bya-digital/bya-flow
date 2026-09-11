@@ -3,6 +3,7 @@ import { Alert } from "@/components/ui/Alert";
 import { BlockRenderer } from "@/components/pages/BlockRenderer";
 import { getPublicPage } from "@/lib/data/publicPages";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function StorePageRoute({
   params,
@@ -16,6 +17,12 @@ export default async function StorePageRoute({
 
   const page = await getPublicPage(store.id, params.pageSlug);
   if (!page) notFound();
+
+  // Statistiques par étape de funnel (Phase 40) : jamais comptée pour
+  // un brouillon prévisualisé par l'équipe, uniquement une vraie page publiée.
+  if (page.status === "published") {
+    await createClient().rpc("record_funnel_step_visit", { p_page_id: page.id });
+  }
 
   return (
     <div>

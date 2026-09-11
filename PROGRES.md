@@ -1909,3 +1909,46 @@ dans `BlockRenderer`).
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé (deux fichiers en attente :
   Phase 38 et Phase 39).
+
+## 2026-09-10 — Phases 38 + 39 vérifiées en conditions réelles
+
+SQL collé et confirmé pour les deux phases. Vérifié en direct sur le
+site live : création d'un produit "Formation" (stock/poids bien
+masqués, aucun impact sur l'affichage storefront), module + leçon
+avec lien vidéo, garde d'activation (impossible d'activer sans leçon,
+confirmé en conditions réelles — la première tentative de clic avait
+échoué à cause d'un souci d'automatisation du navigateur, pas du code,
+confirmé en retentant). Page Builder : page créée, les 15 blocs
+présents dans le sélecteur, bloc Hero ajouté/édité/enregistré (persiste
+après rechargement), publiée, rendu public vérifié en direct avec la
+couleur d'accent de la boutique, aucune erreur console.
+
+## 2026-09-10 — Phase 40 : Funnel Builder
+
+Directive Section 14. Un funnel n'est jamais un nouveau système de
+contenu : c'est un ordre nommé sur des pages (Page Builder) et des
+produits déjà existants — LANDING/CAPTURE/VENTE sont des pages,
+CHECKOUT est la fiche produit existante (le client clique "Ajouter au
+panier" lui-même, aucun nouveau chemin de paiement créé), THANK YOU
+est déjà la page de confirmation de commande. Seul ajout réel : le
+suivi de visiteurs uniques par étape (directive : "prévoir des
+statistiques par étape").
+
+- **`funnels`** (store_id, name) → **`funnel_steps`** (position,
+  step_type `page`|`product`, référence l'un ou l'autre jamais les
+  deux à la fois — contrainte SQL). **`funnel_step_visits`** :
+  dédoublonnée par `(funnel_step_id, visitor_key)` où `visitor_key`
+  réutilise directement `auth.uid()` — jamais un nouveau cookie, tout
+  visiteur boutique a déjà une session anonyme posée par
+  `middleware.ts`.
+- **`record_funnel_step_visit()`** appelée depuis les pages publiques
+  existantes (page de vente ET fiche produit) au moment de l'affichage
+  — journalise la visite pour chaque étape de funnel qui référence
+  cette page/ce produit, jamais bloquant si aucune correspondance.
+- **`/funnels`** : liste, création, éditeur (étapes ordonnées avec
+  monter/descendre/supprimer, ajout d'une page ou d'un produit
+  existant, lien "Voir" vers l'URL réelle de chaque étape, nombre de
+  visiteurs uniques par étape).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

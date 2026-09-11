@@ -10,6 +10,7 @@ import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getMyReviewEligibility, getPublicReviews } from "@/lib/data/publicReviews";
 import { getPublicProductBySlug, getPublicStoreBySlug } from "@/lib/data/publicStore";
 import { getWishlistProductIds } from "@/lib/data/wishlist";
+import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata({
   params,
@@ -61,6 +62,10 @@ export default async function StoreProductPage({
 
   const product = await getPublicProductBySlug(store.id, params.productSlug);
   if (!product) notFound();
+
+  // Statistiques par étape de funnel (Phase 40) — cette fiche produit
+  // peut être l'étape "checkout" d'un funnel.
+  await createClient().rpc("record_funnel_step_visit", { p_product_id: product.id });
 
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
