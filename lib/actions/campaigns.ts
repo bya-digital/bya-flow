@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
 import { sendResendBatch } from "@/lib/email/resend";
+import { sendTwilioMessages, toWhatsappAddress } from "@/lib/sms/twilio";
 import type { CustomerSegment } from "@/lib/data/crm";
 
 function readCampaignFields(formData: FormData) {
@@ -120,7 +121,7 @@ export async function sendCampaign(formData: FormData) {
 
   let customerQuery = supabase
     .from("customers")
-    .select("id, email")
+    .select("id, email, phone")
     .eq("organization_id", store.organization_id);
 
   if (targetCustomerIds) {
@@ -131,7 +132,9 @@ export async function sendCampaign(formData: FormData) {
     customerQuery = customerQuery.eq("status", campaign.audience_status);
   }
 
-  const { data: customers } = await customerQuery.returns<{ id: string; email: string | null }[]>();
+  const { data: customers } = await customerQuery.returns<
+    { id: string; email: string | null; phone: string | null }[]
+  >();
 
   if (customers && customers.length > 0) {
     const { error: recipientsError } = await supabase.from("campaign_recipients").insert(
@@ -147,55 +150,107 @@ export async function sendCampaign(formData: FormData) {
     }
   }
 
-  // Envoi réel uniquement si un provider Resend actif existe pour
-  // l'organisation — jamais de faux "envoyé" sans provider réel
-  // (directive Section 18).
-  const { data: providerSettings } = await supabase
-    .from("email_provider_settings")
-    .select("resend_api_key, sender_email, sender_name, is_active")
-    .eq("organization_id", store.organization_id)
-    .maybeSingle<{
-      resend_api_key: string | null;
-      sender_email: string | null;
-      sender_name: string | null;
-      is_active: boolean;
-    }>();
+  // Envoi réel uniquement si un provider actif existe pour
+  // l'organisation, pour le canal de CETTE campagne — jamais de faux
+  // "envoyé" sans provider réel (directive Section 18/19).
+  let canSendReal = false;
 
-  const canSendReal =
-    campaign.channel === "email" &&
-    providerSettings?.is_active &&
-    providerSettings.resend_api_key &&
-    providerSettings.sender_email;
+  if (campaign.channel === "email") {
+    const { data: providerSettings } = await supabase
+      .from("email_provider_settings")
+      .select("resend_api_key, sender_email, sender_name, is_active")
+      .eq("organization_id", store.organization_id)
+      .maybeSingle<{
+        resend_api_key: string | null;
+        sender_email: string | null;
+        sender_name: string | null;
+        is_active: boolean;
+      }>();
 
-  if (canSendReal && customers && customers.length > 0) {
-    const recipientsWithEmail = customers.filter(
-      (c): c is { id: string; email: string } => Boolean(c.email)
-    );
-    const from = providerSettings.sender_name
-      ? `${providerSettings.sender_name} <${providerSettings.sender_email}>`
-      : providerSettings.sender_email!;
-
-    const results = await sendResendBatch(
-      providerSettings.resend_api_key!,
-      recipientsWithEmail.map((c) => ({
-        from,
-        to: c.email,
-        subject: campaign.subject ?? "",
-        html: renderTemplate(campaign.content ?? "", { email: c.email }),
-      }))
+    canSendReal = Boolean(
+      providerSettings?.is_active && providerSettings.resend_api_key && providerSettings.sender_email
     );
 
-    for (let i = 0; i < recipientsWithEmail.length; i++) {
-      const result = results[i];
-      await supabase
-        .from("campaign_recipients")
-        .update({
-          status: result?.success ? "sent" : "failed",
-          error_message: result?.success ? null : result?.errorMessage ?? "Erreur inconnue.",
-          sent_at: result?.success ? new Date().toISOString() : null,
-        })
-        .eq("campaign_id", campaignId)
-        .eq("customer_id", recipientsWithEmail[i].id);
+    if (canSendReal && customers && customers.length > 0) {
+      const recipientsWithEmail = customers.filter(
+        (c): c is { id: string; email: string; phone: string | null } => Boolean(c.email)
+      );
+      const from = providerSettings!.sender_name
+        ? `${providerSettings!.sender_name} <${providerSettings!.sender_email}>`
+        : providerSettings!.sender_email!;
+
+      const results = await sendResendBatch(
+        providerSettings!.resend_api_key!,
+        recipientsWithEmail.map((c) => ({
+          from,
+          to: c.email,
+          subject: campaign.subject ?? "",
+          html: renderTemplate(campaign.content ?? "", { email: c.email }),
+        }))
+      );
+
+      for (let i = 0; i < recipientsWithEmail.length; i++) {
+        const result = results[i];
+        await supabase
+          .from("campaign_recipients")
+          .update({
+            status: result?.success ? "sent" : "failed",
+            error_message: result?.success ? null : result?.errorMessage ?? "Erreur inconnue.",
+            sent_at: result?.success ? new Date().toISOString() : null,
+          })
+          .eq("campaign_id", campaignId)
+          .eq("customer_id", recipientsWithEmail[i].id);
+      }
+    }
+  } else if (campaign.channel === "sms" || campaign.channel === "whatsapp") {
+    const { data: messagingSettings } = await supabase
+      .from("messaging_provider_settings")
+      .select("twilio_account_sid, twilio_auth_token, twilio_sms_from, twilio_whatsapp_from, is_active")
+      .eq("organization_id", store.organization_id)
+      .maybeSingle<{
+        twilio_account_sid: string | null;
+        twilio_auth_token: string | null;
+        twilio_sms_from: string | null;
+        twilio_whatsapp_from: string | null;
+        is_active: boolean;
+      }>();
+
+    const from =
+      campaign.channel === "whatsapp"
+        ? messagingSettings?.twilio_whatsapp_from
+        : messagingSettings?.twilio_sms_from;
+
+    canSendReal = Boolean(
+      messagingSettings?.is_active && messagingSettings.twilio_account_sid && messagingSettings.twilio_auth_token && from
+    );
+
+    if (canSendReal && customers && customers.length > 0) {
+      const recipientsWithPhone = customers.filter(
+        (c): c is { id: string; email: string | null; phone: string } => Boolean(c.phone)
+      );
+
+      const results = await sendTwilioMessages(
+        messagingSettings!.twilio_account_sid!,
+        messagingSettings!.twilio_auth_token!,
+        campaign.channel === "whatsapp" ? toWhatsappAddress(from!) : from!,
+        recipientsWithPhone.map((c) => ({
+          to: campaign.channel === "whatsapp" ? toWhatsappAddress(c.phone) : c.phone,
+          body: renderTemplate(campaign.content ?? "", { phone: c.phone }),
+        }))
+      );
+
+      for (let i = 0; i < recipientsWithPhone.length; i++) {
+        const result = results[i];
+        await supabase
+          .from("campaign_recipients")
+          .update({
+            status: result?.success ? "sent" : "failed",
+            error_message: result?.success ? null : result?.errorMessage ?? "Erreur inconnue.",
+            sent_at: result?.success ? new Date().toISOString() : null,
+          })
+          .eq("campaign_id", campaignId)
+          .eq("customer_id", recipientsWithPhone[i].id);
+      }
     }
   }
 

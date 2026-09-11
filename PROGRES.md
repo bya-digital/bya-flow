@@ -2116,3 +2116,72 @@ inventés par l'assistant.
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé (et l'envoi réel restera simulé
   tant que l'utilisateur n'aura pas connecté sa propre clé Resend).
+
+## 2026-09-11 — Phases 43 et 44 vérifiées en conditions réelles
+
+SQL collé et confirmé (les deux phases). Compte de test + boutique
+dédiés créés (`Phase44 QA Store`), un produit et une vraie commande
+invité passés pour obtenir un client réel avec des données RFM.
+
+- **Phase 43** : `/clients` affiche correctement le segment "Nouveau"
+  pour le client de test (1 commande, ≤ 30 jours), compteurs des
+  pastilles de filtre exacts (Tous 1, Nouveaux 1, autres 0), filtre
+  `?segment=new` fonctionnel.
+- **Phase 44** : `/campagnes/parametres` enregistre et masque
+  correctement la clé Resend (le champ redevient "••••••••" après
+  enregistrement, jamais la valeur réelle) ; laisser le champ vide et
+  ré-enregistrer conserve bien la clé existante (`is_active` reste
+  activé). Sélecteur de segment CRM présent et fonctionnel dans le
+  formulaire de campagne.
+- **Bug réel trouvé et corrigé** : `SendCampaignButton` affichait
+  toujours "Envoyer (simulation)" et le message de confirmation
+  d'envoi simulé, même provider actif — texte figé depuis la Phase 7,
+  jamais mis à jour par la Phase 44. Calcule désormais `isRealSend`
+  côté page et adapte le libellé/la confirmation ; corrigé, commité
+  (`a6c13a7`), redéployé et reconfirmé en direct (le bouton affiche
+  bien "Envoyer" sans la mention simulation une fois un provider actif).
+- Limite d'outillage documentée : le clic final sur "Envoyer" ouvre une
+  boîte de dialogue native `window.confirm()` qui bloque l'automation
+  du navigateur (comportement déjà rencontré en Phase 37/38) — tout le
+  reste du parcours (sauvegarde des paramètres, ciblage, libellés
+  honnêtes, code d'envoi Resend avec gestion d'erreur) est vérifié ;
+  seul le clic de confirmation final n'a pas pu l'être par automation.
+
+## 2026-09-11 — Phase 45 : SMS / WhatsApp réels (Twilio)
+
+Directive Section 19, même discipline que la Phase 44 (Section 18) :
+jamais de faux "envoyé" sans provider réel. Twilio expose une seule
+API pour SMS et WhatsApp (même endpoint `Messages.json`, un simple
+préfixe `whatsapp:` sur `From`/`To` distingue les deux canaux — vérifié
+sur la documentation officielle Twilio avant écriture), donc un seul
+compte/provider couvre les deux canaux déjà proposés dans le sélecteur
+de canal des campagnes (Phase 7). Terrain préparé comme pour Resend :
+l'utilisateur connectera son propre compte Twilio plus tard.
+
+- **`messaging_provider_settings`** (par organisation) : Account SID,
+  Auth Token, numéro d'envoi SMS, numéro d'envoi WhatsApp, actif ou
+  non. RLS admin/propriétaire uniquement, même principe que
+  `email_provider_settings`. Aucune nouvelle colonne sur
+  `campaign_recipients` : `status`/`error_message`/`sent_at` (Phase 44)
+  sont déjà génériques à tout canal.
+- **`lib/sms/twilio.ts`** : un appel HTTP par message (Twilio n'a pas
+  d'API batch, contrairement à Resend), par lots de 10 en concurrence
+  pour rester raisonnable côté rate limiting. `toWhatsappAddress()`
+  ajoute le préfixe `whatsapp:` requis.
+- **`sendCampaign()`** étendu : pour un canal `sms`/`whatsapp`, vérifie
+  `messaging_provider_settings.is_active` + le numéro d'envoi du canal
+  concerné, envoie réellement via Twilio aux clients ayant un
+  téléphone enregistré, marque chaque destinataire sent/failed ; sinon
+  comportement simulé inchangé. La branche email (Phase 44) reste
+  strictement identique, juste réorganisée par canal.
+- **`/campagnes/parametres`** renommée "Paramètres d'envoi" (le lien de
+  nav portait déjà ce nom) : nouvelle carte "SMS / WhatsApp (Twilio)"
+  à côté de la carte email existante, même discipline de masquage du
+  secret (Auth Token) à l'enregistrement.
+- **`/campagnes/[id]`** et le bouton d'envoi affichent désormais le nom
+  du provider concerné par le canal de la campagne (Resend pour email,
+  Twilio pour SMS/WhatsApp) plutôt qu'un texte figé sur Resend.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé (et l'envoi réel restera simulé
+  tant que l'utilisateur n'aura pas connecté son propre compte Twilio).

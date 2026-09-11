@@ -48,16 +48,45 @@ export default async function CampagneDetailPage({
     .eq("status", "failed");
 
   const wasRealSend = (sentCount ?? 0) > 0 || (failedCount ?? 0) > 0;
+  const providerLabel = campaign.channel === "email" ? "Resend" : "Twilio";
 
-  const { data: providerSettings } = await supabase
-    .from("email_provider_settings")
-    .select("resend_api_key, sender_email, is_active")
-    .eq("organization_id", store.organization_id)
-    .maybeSingle<{ resend_api_key: string | null; sender_email: string | null; is_active: boolean }>();
+  let willSendReal = false;
 
-  const willSendReal =
-    campaign.channel === "email" &&
-    Boolean(providerSettings?.is_active && providerSettings.resend_api_key && providerSettings.sender_email);
+  if (campaign.channel === "email") {
+    const { data: providerSettings } = await supabase
+      .from("email_provider_settings")
+      .select("resend_api_key, sender_email, is_active")
+      .eq("organization_id", store.organization_id)
+      .maybeSingle<{ resend_api_key: string | null; sender_email: string | null; is_active: boolean }>();
+
+    willSendReal = Boolean(
+      providerSettings?.is_active && providerSettings.resend_api_key && providerSettings.sender_email
+    );
+  } else if (campaign.channel === "sms" || campaign.channel === "whatsapp") {
+    const { data: messagingSettings } = await supabase
+      .from("messaging_provider_settings")
+      .select("twilio_account_sid, twilio_auth_token, twilio_sms_from, twilio_whatsapp_from, is_active")
+      .eq("organization_id", store.organization_id)
+      .maybeSingle<{
+        twilio_account_sid: string | null;
+        twilio_auth_token: string | null;
+        twilio_sms_from: string | null;
+        twilio_whatsapp_from: string | null;
+        is_active: boolean;
+      }>();
+
+    const from =
+      campaign.channel === "whatsapp"
+        ? messagingSettings?.twilio_whatsapp_from
+        : messagingSettings?.twilio_sms_from;
+
+    willSendReal = Boolean(
+      messagingSettings?.is_active &&
+        messagingSettings.twilio_account_sid &&
+        messagingSettings.twilio_auth_token &&
+        from
+    );
+  }
 
   return (
     <>
@@ -77,8 +106,8 @@ export default async function CampagneDetailPage({
         <div className="mb-4">
           <Alert
             tone="success"
-            title="Envoi réel effectué via Resend"
-            description={`${sentCount ?? 0} email(s) envoyé(s) avec succès, ${failedCount ?? 0} échec(s), sur ${recipientCount ?? 0} contact(s) ciblé(s).`}
+            title={`Envoi réel effectué via ${providerLabel}`}
+            description={`${sentCount ?? 0} message(s) envoyé(s) avec succès, ${failedCount ?? 0} échec(s), sur ${recipientCount ?? 0} contact(s) ciblé(s).`}
           />
         </div>
       )}
@@ -87,7 +116,7 @@ export default async function CampagneDetailPage({
           <Alert
             tone="info"
             title="Envoi simulé"
-            description={`${recipientCount ?? 0} contact(s) ciblé(s) et enregistré(s). Aucun message réel n'a été envoyé (aucun fournisseur email actif — configurez Resend dans Paramètres d'envoi).`}
+            description={`${recipientCount ?? 0} contact(s) ciblé(s) et enregistré(s). Aucun message réel n'a été envoyé (aucun fournisseur ${providerLabel} actif — configurez-le dans Paramètres d'envoi).`}
           />
         </div>
       )}
@@ -118,12 +147,12 @@ export default async function CampagneDetailPage({
                   </div>
                   {wasRealSend && (
                     <p className="text-xs text-slate-500">
-                      {sentCount ?? 0} réellement envoyé(s) via Resend, {failedCount ?? 0} échec(s)
+                      {sentCount ?? 0} réellement envoyé(s) via {providerLabel}, {failedCount ?? 0} échec(s)
                     </p>
                   )}
                   {!wasRealSend && (
                     <p className="text-xs text-slate-500">
-                      Envoi simulé — aucun fournisseur email actif.
+                      Envoi simulé — aucun fournisseur {providerLabel} actif.
                     </p>
                   )}
                 </div>
