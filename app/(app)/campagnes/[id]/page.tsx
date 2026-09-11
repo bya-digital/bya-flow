@@ -49,6 +49,16 @@ export default async function CampagneDetailPage({
 
   const wasRealSend = (sentCount ?? 0) > 0 || (failedCount ?? 0) > 0;
 
+  const { data: providerSettings } = await supabase
+    .from("email_provider_settings")
+    .select("resend_api_key, sender_email, is_active")
+    .eq("organization_id", store.organization_id)
+    .maybeSingle<{ resend_api_key: string | null; sender_email: string | null; is_active: boolean }>();
+
+  const willSendReal =
+    campaign.channel === "email" &&
+    Boolean(providerSettings?.is_active && providerSettings.resend_api_key && providerSettings.sender_email);
+
   return (
     <>
       <PageHeader title={campaign.name} description="Détail de la campagne." />
@@ -118,7 +128,7 @@ export default async function CampagneDetailPage({
                   )}
                 </div>
               ) : (
-                <SendCampaignButton campaignId={campaign.id} />
+                <SendCampaignButton campaignId={campaign.id} isRealSend={willSendReal} />
               )}
             </CardContent>
           </Card>
