@@ -1770,3 +1770,55 @@ corriger — détaillés ci-dessous.
   (14/14) tous propres. Vérification en conditions réelles à faire
   une fois le SQL collé (Kkiapay doit continuer à fonctionner
   exactement comme avant).
+
+## 2026-09-10 — Phase 37 : produits numériques (téléchargement sécurisé)
+
+Suite à la directive de continuation (Section 11) : premier vrai
+chantier après le durcissement du Payment Engine.
+
+- **`products.product_type`** (`physical`/`digital`, défaut `physical` —
+  zéro impact sur les produits existants) + `digital_file_path`/
+  `digital_file_name`/`digital_file_size`. Un seul fichier par produit
+  numérique (upload = remplace toujours l'éventuel fichier précédent,
+  y compris en storage — jamais de fichier orphelin).
+- **Bucket Storage `digital-products` : PRIVÉ** (contrairement à
+  `product-images`/`store-assets`, publics) — jamais d'URL publique.
+  La lecture passe uniquement par une URL signée à durée de vie courte
+  (5 min), générée à la demande côté serveur après vérification que
+  l'acheteur a réellement payé cette ligne de commande précise
+  (`get_digital_file_for_download()` + policy RLS
+  `customer_has_paid_digital_access()` — double barrière : même un
+  bug dans la première laisserait la seconde bloquer `createSignedUrl()`).
+  Comportement vérifié auprès de la documentation Supabase avant
+  d'écrire le code (createSignedUrl() applique bien RLS, jamais un
+  bypass — jamais inventé).
+- **Propriété de commande unifiée** : nouvelle `is_order_owner()`
+  combine les deux chemins déjà existants séparément
+  (`is_order_owner_anon` pour un panier invité, `is_order_owner_account`
+  pour un compte client) — réutilisée pour l'accès au fichier ET pour
+  `get_order_item_product_types()` (permet d'afficher le bouton
+  télécharger même si le marchand a dépublié le produit depuis l'achat,
+  sans dépendre de `products_select_public` qui l'aurait empêché).
+- **Stock jamais pertinent pour un produit numérique** :
+  `checkout_cart()` et `create_pos_order()` (re-créées, seule
+  différence avec Phase 28/33 : le contrôle/décrément de stock
+  n'agit plus que sur `product_type = 'physical'`). Côté storefront
+  (7+ endroits lisent `stock` comme un inventaire réel : badge
+  "rupture", quantité max...), plutôt que retoucher chaque page,
+  un produit numérique s'écrit avec un stock volontairement très
+  élevé (jamais réellement décrémenté ni vérifié côté serveur) — un
+  seul point de correction côté écriture au lieu de sept côté lecture.
+- **`/produits/[id]`** : nouvelle carte "Fichier numérique" (upload/
+  remplacement/suppression, jamais accessible publiquement) +
+  compteur de téléchargements (`product_downloads`, journal alimenté
+  uniquement par `record_product_download()`, jamais une écriture
+  directe). Impossible d'activer un produit numérique sans fichier
+  déjà présent (à la création, forcé en brouillon avec message
+  explicatif — le fichier ne peut être ajouté qu'après coup).
+- **Confirmation de commande + compte client** : bouton télécharger
+  par ligne numérique payée, ou message "disponible après paiement"
+  sinon — jamais un lien exploitable avant paiement réellement vérifié.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé (colonnes/tables/bucket
+  inexistants avant ça).

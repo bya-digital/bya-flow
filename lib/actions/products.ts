@@ -20,6 +20,7 @@ function readProductFields(formData: FormData) {
   const slugInput = (formData.get("slug") as string) || name;
   const compareAtPrice = formData.get("compareAtPrice");
   const weight = formData.get("weight");
+  const productType = formData.get("productType") === "digital" ? "digital" : "physical";
   return {
     name,
     slug: slugify(slugInput),
@@ -27,10 +28,17 @@ function readProductFields(formData: FormData) {
     price: toNonNegativeNumber(formData.get("price")),
     compare_at_price: compareAtPrice ? toNonNegativeNumber(compareAtPrice) : null,
     sku: (formData.get("sku") as string) || null,
-    stock: Math.round(toNonNegativeNumber(formData.get("stock"))),
-    weight: weight ? toNonNegativeNumber(weight) : null,
+    // Stock/poids n'ont pas de sens pour un produit numérique (quantité
+    // illimitée par nature). checkout_cart()/create_pos_order() ignorent
+    // déjà le stock pour product_type = 'digital' (jamais décrémenté,
+    // jamais bloquant) — ce grand nombre n'a donc qu'un rôle cosmétique :
+    // il évite de casser l'affichage "en stock"/quantité max du
+    // storefront, qui lit stock comme un inventaire réel un peu partout.
+    stock: productType === "digital" ? 999999 : Math.round(toNonNegativeNumber(formData.get("stock"))),
+    weight: productType === "digital" ? null : weight ? toNonNegativeNumber(weight) : null,
     status: (formData.get("status") as string) || "draft",
     category_id: (formData.get("categoryId") as string) || null,
+    product_type: productType,
   };
 }
 
@@ -60,9 +68,19 @@ export async function createProduct(formData: FormData) {
     return;
   }
 
+  const fields = readProductFields(formData);
+  // Un produit numérique ne peut pas encore avoir de fichier à la
+  // création (l'upload se fait après, sur la fiche produit) — jamais le
+  // publier "Actif" sans rien à livrer (Règle 34 : pas de fonctionnalité
+  // présentée comme opérationnelle sans l'être réellement).
+  const forcedToDraft = fields.product_type === "digital" && fields.status === "active";
+  if (forcedToDraft) {
+    fields.status = "draft";
+  }
+
   const { data: product, error } = await supabase
     .from("products")
-    .insert({ store_id: store.id, ...readProductFields(formData) })
+    .insert({ store_id: store.id, ...fields })
     .select("id")
     .single<{ id: string }>();
 
@@ -76,16 +94,38 @@ export async function createProduct(formData: FormData) {
   }
 
   revalidatePath("/produits");
-  redirect(`/produits/${product.id}`);
+  redirect(
+    forcedToDraft
+      ? `/produits/${product.id}?message=${encodeURIComponent(
+          "Enregistré en brouillon : ajoutez le fichier numérique avant d'activer ce produit."
+        )}`
+      : `/produits/${product.id}`
+  );
 }
 
 export async function updateProduct(formData: FormData) {
   const productId = formData.get("productId") as string;
   const supabase = createClient();
-  const { error } = await supabase
-    .from("products")
-    .update(readProductFields(formData))
-    .eq("id", productId);
+  const fields = readProductFields(formData);
+
+  if (fields.product_type === "digital" && fields.status === "active") {
+    const { data: existing } = await supabase
+      .from("products")
+      .select("digital_file_path")
+      .eq("id", productId)
+      .maybeSingle<{ digital_file_path: string | null }>();
+
+    if (!existing?.digital_file_path) {
+      redirect(
+        `/produits/${productId}?error=${encodeURIComponent(
+          "Ajoutez le fichier numérique avant d'activer ce produit."
+        )}`
+      );
+      return;
+    }
+  }
+
+  const { error } = await supabase.from("products").update(fields).eq("id", productId);
 
   if (error) {
     redirect(`/produits/${productId}?error=${encodeURIComponent(error.message)}`);
@@ -213,6 +253,102 @@ export async function deleteProductImage(formData: FormData) {
 
   if (error) {
     redirect(`/produits/${productId}?error=${encodeURIComponent(error.message)}`);
+  }
+
+  revalidatePath(`/produits/${productId}`);
+  redirect(`/produits/${productId}`);
+}
+
+// Un seul fichier par produit numérique (contrairement aux images,
+// pas une liste) : l'upload REMPLACE toujours l'éventuel fichier
+// précédent, y compris en storage — jamais un fichier orphelin qui
+// traîne. Bucket privé (jamais getPublicUrl) : seul un chemin est
+// gardé en base, la lecture réelle passe par une URL signée générée
+// à la demande (lib/actions/digitalDownload.ts).
+export async function uploadDigitalFile(formData: FormData) {
+  const productId = formData.get("productId") as string;
+  const file = formData.get("file") as File;
+
+  if (!file || file.size === 0) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent("Aucun fichier sélectionné.")}`);
+    return;
+  }
+
+  const supabase = createClient();
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("store_id, digital_file_path")
+    .eq("id", productId)
+    .maybeSingle<{ store_id: string; digital_file_path: string | null }>();
+
+  if (!product) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent("Produit introuvable.")}`);
+    return;
+  }
+
+  if (product.digital_file_path) {
+    await supabase.storage.from("digital-products").remove([product.digital_file_path]);
+  }
+
+  const extension = file.name.includes(".") ? file.name.split(".").pop() : null;
+  const path = `${product.store_id}/${productId}/${Date.now()}${extension ? `.${extension}` : ""}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("digital-products")
+    .upload(path, file);
+
+  if (uploadError) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent(uploadError.message)}`);
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({
+      digital_file_path: path,
+      digital_file_name: file.name,
+      digital_file_size: file.size,
+    })
+    .eq("id", productId);
+
+  if (updateError) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent(updateError.message)}`);
+    return;
+  }
+
+  revalidatePath(`/produits/${productId}`);
+  redirect(`/produits/${productId}`);
+}
+
+export async function deleteDigitalFile(formData: FormData) {
+  const productId = formData.get("productId") as string;
+  const supabase = createClient();
+
+  const { data: product } = await supabase
+    .from("products")
+    .select("digital_file_path")
+    .eq("id", productId)
+    .maybeSingle<{ digital_file_path: string | null }>();
+
+  if (product?.digital_file_path) {
+    const { error: storageError } = await supabase.storage
+      .from("digital-products")
+      .remove([product.digital_file_path]);
+    if (storageError) {
+      redirect(`/produits/${productId}?error=${encodeURIComponent(storageError.message)}`);
+      return;
+    }
+  }
+
+  const { error } = await supabase
+    .from("products")
+    .update({ digital_file_path: null, digital_file_name: null, digital_file_size: null })
+    .eq("id", productId);
+
+  if (error) {
+    redirect(`/produits/${productId}?error=${encodeURIComponent(error.message)}`);
+    return;
   }
 
   revalidatePath(`/produits/${productId}`);

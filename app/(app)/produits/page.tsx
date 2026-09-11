@@ -21,6 +21,7 @@ interface ProductRow {
   price: number;
   stock: number;
   status: string;
+  product_type: string;
   product_images: { url: string }[];
 }
 
@@ -39,7 +40,9 @@ export default async function ProduitsPage({
     const supabase = createClient();
     const { data, count } = await supabase
       .from("products")
-      .select("id, name, sku, price, stock, status, product_images(url)", { count: "exact" })
+      .select("id, name, sku, price, stock, status, product_type, product_images(url)", {
+        count: "exact",
+      })
       .eq("store_id", store.id)
       .order("created_at", { ascending: false })
       .range(...pageRange(page));
@@ -103,11 +106,16 @@ export default async function ProduitsPage({
                           )}
                         </span>
                         {product.name}
+                        {product.product_type === "digital" && (
+                          <Badge tone="neutral">Numérique</Badge>
+                        )}
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-slate-500">{product.sku ?? "—"}</td>
                     <td className="px-4 py-3 text-slate-500">{Number(product.price).toFixed(2)} €</td>
-                    <td className="px-4 py-3 text-slate-500">{product.stock}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {product.product_type === "digital" ? "—" : product.stock}
+                    </td>
                     <td className="px-4 py-3">
                       <Badge tone={status.tone}>{status.label}</Badge>
                     </td>

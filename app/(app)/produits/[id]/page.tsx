@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { DeleteProductButton } from "@/components/produits/DeleteProductButton";
+import { DigitalFileUpload } from "@/components/produits/DigitalFileUpload";
 import { ProductForm } from "@/components/produits/ProductForm";
 import { ProductImages } from "@/components/produits/ProductImages";
 import { ProductVariants } from "@/components/produits/ProductVariants";
@@ -15,7 +16,7 @@ export default async function ProduitDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { error?: string; success?: string };
+  searchParams: { error?: string; success?: string; message?: string };
 }) {
   const store = await getCurrentStore();
   if (!store) notFound();
@@ -44,6 +45,22 @@ export default async function ProduitDetailPage({
 
   if (!product) notFound();
 
+  let downloadCount = 0;
+  if (product.product_type === "digital") {
+    const { data: orderItemRows } = await supabase
+      .from("order_items")
+      .select("id")
+      .eq("product_id", product.id);
+    const orderItemIds = (orderItemRows ?? []).map((row) => row.id as string);
+    if (orderItemIds.length > 0) {
+      const { count } = await supabase
+        .from("product_downloads")
+        .select("id", { count: "exact", head: true })
+        .in("order_item_id", orderItemIds);
+      downloadCount = count ?? 0;
+    }
+  }
+
   return (
     <>
       <PageHeader title={product.name} description="Fiche produit." />
@@ -56,6 +73,11 @@ export default async function ProduitDetailPage({
       {searchParams.success && (
         <div className="mb-4">
           <Alert tone="success" title="Modifications enregistrées" />
+        </div>
+      )}
+      {searchParams.message && (
+        <div className="mb-4">
+          <Alert tone="info" title="Information" description={searchParams.message} />
         </div>
       )}
 
@@ -81,6 +103,26 @@ export default async function ProduitDetailPage({
         </div>
 
         <div className="space-y-6">
+          {product.product_type === "digital" && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-slate-900">Fichier numérique</h2>
+                  <span className="text-xs text-slate-400">
+                    {downloadCount} téléchargement{downloadCount > 1 ? "s" : ""}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <DigitalFileUpload
+                  productId={product.id}
+                  fileName={product.digital_file_name}
+                  fileSize={product.digital_file_size}
+                />
+              </CardContent>
+            </Card>
+          )}
+
           <Card>
             <CardHeader>
               <h2 className="text-sm font-semibold text-slate-900">Images</h2>

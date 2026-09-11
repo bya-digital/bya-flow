@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { DigitalDownloadButton } from "@/components/checkout/DigitalDownloadButton";
 import { Badge } from "@/components/ui/Badge";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicOrder } from "@/lib/data/publicOrder";
@@ -72,9 +73,19 @@ export default async function StoreAccountOrderPage({
         <div className="divide-y divide-slate-100">
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center justify-between p-4 text-sm">
-              <span className="text-slate-600">
-                {item.productName} × {item.quantity}
-              </span>
+              <div>
+                <span className="text-slate-600">
+                  {item.productName} × {item.quantity}
+                </span>
+                {item.isDigital &&
+                  (order.paymentStatus === "paid" ? (
+                    <DigitalDownloadButton orderItemId={item.id} />
+                  ) : (
+                    <p className="mt-1 text-xs text-slate-400">
+                      Téléchargement disponible après paiement.
+                    </p>
+                  ))}
+              </div>
               <span className="font-medium text-slate-900">
                 {currencyFormatter.format(item.unitPrice * item.quantity)}
               </span>

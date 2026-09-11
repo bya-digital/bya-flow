@@ -5,7 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { CategoryQuickCreate } from "@/components/produits/CategoryQuickCreate";
 import { generateProductDescription } from "@/lib/actions/ai";
-import { slugify } from "@/lib/utils";
+import { cn, slugify } from "@/lib/utils";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -23,6 +23,7 @@ export interface ProductFormValues {
   weight: number | null;
   status: string;
   category_id: string | null;
+  product_type: string;
 }
 
 interface Category {
@@ -41,6 +42,7 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(Boolean(product?.slug));
   const [description, setDescription] = useState(product?.description ?? "");
+  const [productType, setProductType] = useState(product?.product_type ?? "physical");
   const [isGenerating, startGenerating] = useTransition();
   const priceRef = useRef<HTMLInputElement>(null);
   const categoryRef = useRef<HTMLSelectElement>(null);
@@ -91,6 +93,27 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
           }}
           className={inputClasses}
         />
+      </div>
+
+      <div>
+        <label htmlFor="productType" className={labelClasses}>
+          Type de produit
+        </label>
+        <select
+          id="productType"
+          name="productType"
+          value={productType}
+          onChange={(e) => setProductType(e.target.value)}
+          className={inputClasses}
+        >
+          <option value="physical">Physique (livré)</option>
+          <option value="digital">Numérique (téléchargement)</option>
+        </select>
+        {productType === "digital" && (
+          <p className="mt-1 text-xs text-slate-500">
+            Sans stock ni poids — le fichier à vendre se gère plus bas, une fois le produit créé.
+          </p>
+        )}
       </div>
 
       <div>
@@ -151,40 +174,44 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className={cn("grid gap-4", productType === "digital" ? "sm:grid-cols-1" : "sm:grid-cols-3")}>
         <div>
           <label htmlFor="sku" className={labelClasses}>
             SKU
           </label>
           <input id="sku" name="sku" defaultValue={product?.sku ?? ""} className={inputClasses} />
         </div>
-        <div>
-          <label htmlFor="stock" className={labelClasses}>
-            Stock
-          </label>
-          <input
-            id="stock"
-            name="stock"
-            type="number"
-            min="0"
-            defaultValue={product?.stock ?? 0}
-            className={inputClasses}
-          />
-        </div>
-        <div>
-          <label htmlFor="weight" className={labelClasses}>
-            Poids (kg)
-          </label>
-          <input
-            id="weight"
-            name="weight"
-            type="number"
-            step="0.001"
-            min="0"
-            defaultValue={product?.weight ?? ""}
-            className={inputClasses}
-          />
-        </div>
+        {productType === "physical" && (
+          <>
+            <div>
+              <label htmlFor="stock" className={labelClasses}>
+                Stock
+              </label>
+              <input
+                id="stock"
+                name="stock"
+                type="number"
+                min="0"
+                defaultValue={product?.stock ?? 0}
+                className={inputClasses}
+              />
+            </div>
+            <div>
+              <label htmlFor="weight" className={labelClasses}>
+                Poids (kg)
+              </label>
+              <input
+                id="weight"
+                name="weight"
+                type="number"
+                step="0.001"
+                min="0"
+                defaultValue={product?.weight ?? ""}
+                className={inputClasses}
+              />
+            </div>
+          </>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
