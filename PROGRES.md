@@ -1984,3 +1984,45 @@ Directive Section 15. Offre complémentaire cochable au checkout
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-10 — Phase 41 vérifiée en conditions réelles
+
+SQL collé et confirmé. Order bump créé en direct (Formation Test QA
+→ Ebook Test QA) : liste correcte, prix résolu depuis le produit en
+base (1 000,00 €), statut "Actif" par défaut.
+
+## 2026-09-10 — Phase 42 : Upsell / Downsell
+
+Directive Section 16 : "Ne jamais contourner le processus de
+paiement." Contrairement à un vrai one-click upsell (rechargerait une
+carte enregistrée sans repasser par le PSP — capacité qu'aucune
+intégration de ce projet n'a), accepter une offre crée toujours une
+VRAIE nouvelle commande séparée (`orders.parent_order_id`),
+`payment_status = 'pending'` comme n'importe quelle commande, qui
+repasse par le même vrai parcours de paiement (`/payer` si un PSP est
+actif). Configuré par produit déclencheur, comme l'Order Bump — les
+funnels de cette app n'ont pas de "checkout" propre à eux.
+
+- **`upsell_offers`** (trigger_product_id → upsell_product_id, +
+  downsell_product_id optionnel). **`orders.parent_order_id`** +
+  **`orders.upsell_resolved_at`** — une commande née d'une offre
+  acceptée est marquée résolue dès sa création (jamais de deuxième
+  offre en cascade, protection contre un enchaînement A→B→A mal
+  configuré qui ballotterait le client sans fin).
+- **RLS** : la nouvelle commande n'a ni `cart_id` ni forcément de
+  compte client réel (un invité n'a pas de mot de passe) — nouveau
+  chemin de propriété `parent_order_id` + `is_order_owner()` réutilisée
+  (Phase 37), toujours SECURITY DEFINER donc aucun cycle RLS.
+- **`accept_upsell_offer()`** / **`decline_upsell_offer()`**
+  revérifient elles-mêmes l'offre et l'ownership de la commande —
+  jamais un produit/prix fourni par le client.
+- **`/commande/[orderId]`** intercepte désormais vers
+  `/commande/[orderId]/upsell` s'il existe une offre non résolue,
+  avant même d'afficher la confirmation — jamais après. La page
+  upsell affiche l'upsell, puis le downsell si refusé (aucun s'il n'y
+  en a pas configuré), jamais bloquante si aucune offre.
+- **`/upsells`** : gestion marchand (déclencheur → upsell + downsell
+  optionnel, titres personnalisables, activer/désactiver/supprimer).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

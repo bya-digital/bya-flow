@@ -1,9 +1,10 @@
 import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { DigitalDownloadButton } from "@/components/checkout/DigitalDownloadButton";
 import { getPublicOrder } from "@/lib/data/publicOrder";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
+import { createClient } from "@/lib/supabase/server";
 
 export default async function StoreOrderConfirmationPage({
   params,
@@ -15,6 +16,16 @@ export default async function StoreOrderConfirmationPage({
 
   const order = await getPublicOrder(params.orderId);
   if (!order) notFound();
+
+  // Offre upsell/downsell (Phase 42) jamais encore résolue pour cette
+  // commande — toujours proposée avant la confirmation finale, jamais
+  // après (directive Section 16 : reste entre CHECKOUT et THANK YOU).
+  const { data: offer } = await createClient()
+    .rpc("get_upsell_offer_for_order", { p_order_id: params.orderId })
+    .maybeSingle<{ offer_id: string | null }>();
+  if (offer?.offer_id) {
+    redirect(`/store/${params.slug}/commande/${params.orderId}/upsell`);
+  }
 
   const currencyFormatter = new Intl.NumberFormat("fr-FR", {
     style: "currency",
