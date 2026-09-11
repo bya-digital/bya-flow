@@ -2063,3 +2063,56 @@ données réelles".
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-11 — Phase 44 : Email marketing réel (Resend)
+
+Directive Section 18 : "Le système actuel ne doit pas prétendre
+envoyer des emails marketing s'il n'existe pas de provider réel."
+Jusqu'ici, "Envoyer" une campagne ne faisait qu'enregistrer les
+destinataires ciblés — honnête (le message le disait), mais jamais
+un vrai envoi. Terrain préparé comme pour chaque provider de
+paiement (Phase 35B) : toute l'architecture est construite dès
+maintenant, l'utilisateur connecte sa PROPRE clé Resend plus tard
+via les paramètres en libre-service — jamais de credentials
+inventés par l'assistant.
+
+- **`email_provider_settings`** (par organisation, comme le CRM) :
+  clé API Resend, email/nom d'expéditeur, actif ou non. RLS
+  admin/propriétaire uniquement, même principe que
+  `payment_providers` — une clé API est un secret, jamais lisible
+  par un simple membre.
+- **`get_customer_rfm_by_org()`** : variante organisation entière de
+  la RFM de la Phase 43 (`get_customer_rfm_by_org` en SQL,
+  `getCustomerRfmMapByOrg()` côté app, quintiles calculés par la même
+  fonction partagée `computeRfmSegments()`) — nécessaire car les
+  campagnes ciblent déjà tous les clients de l'organisation, pas
+  d'une seule boutique.
+- **`campaigns.audience_segment`** : cible additionnelle par segment
+  RFM (Nouveau/VIP/À risque/Inactif/Actif), en plus des tags/statut
+  existants — prioritaire si renseigné.
+- **`campaign_recipients`** gagne `status`/`error_message`/`sent_at`
+  (la Phase 7 ne loggait que "ciblé", jamais un vrai statut d'envoi)
+  + la policy UPDATE manquante pour les écrire après l'appel Resend.
+- **`lib/email/resend.ts`** : envoi par lots de 100 max (contrat
+  officiel Resend vérifié sur leur documentation avant écriture,
+  jamais deviné), un `to` individuel par email — un destinataire ne
+  voit jamais l'adresse d'un autre. Résultat succès/échec par email.
+- **`sendCampaign()`** : si `email_provider_settings.is_active` est
+  vrai pour l'organisation ET que le canal est email, envoie
+  réellement via Resend et marque chaque destinataire sent/failed ;
+  sinon, comportement simulé de la Phase 7 strictement inchangé (même
+  message honnête "aucun message réel n'a été envoyé"). Jamais de
+  faux "envoyé" sans provider actif.
+- **`/campagnes/parametres`** : page admin-only (clé API masquée à
+  l'enregistrement, champ vide conserve la clé existante — même
+  discipline que `PaymentProviderCard`).
+- **`components/campagnes/CampaignForm.tsx`** : nouveau sélecteur de
+  segment CRM ; `SEGMENT_LABELS`/`CustomerSegment` déplacés dans
+  `lib/data/segments.ts` (sans dépendance au client Supabase serveur)
+  pour rester importables depuis ce composant client.
+- **`/campagnes/[id]`** : distingue désormais "Envoi réel effectué via
+  Resend" (avec compteurs sent/failed réels) de "Envoi simulé".
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé (et l'envoi réel restera simulé
+  tant que l'utilisateur n'aura pas connecté sa propre clé Resend).

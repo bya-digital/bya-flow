@@ -15,7 +15,7 @@ export default async function CampagneDetailPage({
   searchParams,
 }: {
   params: { id: string };
-  searchParams: { error?: string; success?: string; sent?: string };
+  searchParams: { error?: string; success?: string; sent?: string; real?: string };
 }) {
   const store = await getCurrentStore();
   if (!store) notFound();
@@ -35,6 +35,20 @@ export default async function CampagneDetailPage({
     .select("*", { count: "exact", head: true })
     .eq("campaign_id", params.id);
 
+  const { count: sentCount } = await supabase
+    .from("campaign_recipients")
+    .select("*", { count: "exact", head: true })
+    .eq("campaign_id", params.id)
+    .eq("status", "sent");
+
+  const { count: failedCount } = await supabase
+    .from("campaign_recipients")
+    .select("*", { count: "exact", head: true })
+    .eq("campaign_id", params.id)
+    .eq("status", "failed");
+
+  const wasRealSend = (sentCount ?? 0) > 0 || (failedCount ?? 0) > 0;
+
   return (
     <>
       <PageHeader title={campaign.name} description="Détail de la campagne." />
@@ -49,12 +63,21 @@ export default async function CampagneDetailPage({
           <Alert tone="success" title="Modifications enregistrées" />
         </div>
       )}
-      {searchParams.sent && (
+      {searchParams.sent && searchParams.real === "1" && (
+        <div className="mb-4">
+          <Alert
+            tone="success"
+            title="Envoi réel effectué via Resend"
+            description={`${sentCount ?? 0} email(s) envoyé(s) avec succès, ${failedCount ?? 0} échec(s), sur ${recipientCount ?? 0} contact(s) ciblé(s).`}
+          />
+        </div>
+      )}
+      {searchParams.sent && searchParams.real !== "1" && (
         <div className="mb-4">
           <Alert
             tone="info"
             title="Envoi simulé"
-            description={`${recipientCount ?? 0} contact(s) ciblé(s) et enregistré(s). Aucun message réel n'a été envoyé (aucun fournisseur email/SMS/WhatsApp connecté).`}
+            description={`${recipientCount ?? 0} contact(s) ciblé(s) et enregistré(s). Aucun message réel n'a été envoyé (aucun fournisseur email actif — configurez Resend dans Paramètres d'envoi).`}
           />
         </div>
       )}
@@ -78,9 +101,21 @@ export default async function CampagneDetailPage({
             </CardHeader>
             <CardContent className="space-y-4">
               {campaign.status === "sent" ? (
-                <div className="flex items-center gap-2 text-sm text-slate-600">
-                  <Users className="h-4 w-4" />
-                  {recipientCount ?? 0} destinataire(s) ciblé(s)
+                <div className="space-y-1 text-sm text-slate-600">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    {recipientCount ?? 0} destinataire(s) ciblé(s)
+                  </div>
+                  {wasRealSend && (
+                    <p className="text-xs text-slate-500">
+                      {sentCount ?? 0} réellement envoyé(s) via Resend, {failedCount ?? 0} échec(s)
+                    </p>
+                  )}
+                  {!wasRealSend && (
+                    <p className="text-xs text-slate-500">
+                      Envoi simulé — aucun fournisseur email actif.
+                    </p>
+                  )}
                 </div>
               ) : (
                 <SendCampaignButton campaignId={campaign.id} />

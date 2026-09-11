@@ -1,4 +1,4 @@
-import { Megaphone, Plus } from "lucide-react";
+import { Megaphone, Plus, Settings } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -46,13 +46,22 @@ export default async function CampagnesPage() {
         title="Campagnes"
         description="Création et suivi de vos campagnes marketing."
         action={
-          <Link
-            href="/campagnes/nouvelle"
-            className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
-          >
-            <Plus className="h-4 w-4" />
-            Nouvelle campagne
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/campagnes/parametres"
+              className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Settings className="h-4 w-4" />
+              Paramètres d&apos;envoi
+            </Link>
+            <Link
+              href="/campagnes/nouvelle"
+              className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700"
+            >
+              <Plus className="h-4 w-4" />
+              Nouvelle campagne
+            </Link>
+          </div>
         }
       />
 

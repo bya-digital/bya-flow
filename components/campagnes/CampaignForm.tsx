@@ -4,6 +4,7 @@ import { Sparkles } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { generateCampaignContent } from "@/lib/actions/ai";
+import { SEGMENT_LABELS } from "@/lib/data/segments";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -17,6 +18,7 @@ export interface CampaignFormValues {
   channel: string;
   audience_tags: string[];
   audience_status: string | null;
+  audience_segment: string | null;
   scheduled_at: string | null;
 }
 
@@ -135,20 +137,27 @@ export function CampaignForm({
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
         <p className={labelClasses}>Audience ciblée</p>
         <p className="mt-1 text-xs text-slate-500">
-          Ciblez par tags, ou par statut, ou laissez vide pour toucher tous vos contacts.
+          Ciblez par segment CRM, ou par tags, ou par statut — laissez tout vide pour
+          toucher tous vos contacts. Le segment CRM prend priorité s&apos;il est renseigné.
         </p>
         <div className="mt-3 grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="audienceTags" className="text-xs font-medium text-slate-600">
-              Tags (séparés par des virgules)
+            <label htmlFor="audienceSegment" className="text-xs font-medium text-slate-600">
+              Segment CRM (RFM)
             </label>
-            <input
-              id="audienceTags"
-              name="audienceTags"
-              defaultValue={campaign?.audience_tags.join(", ") ?? ""}
-              placeholder="vip, newsletter"
+            <select
+              id="audienceSegment"
+              name="audienceSegment"
+              defaultValue={campaign?.audience_segment ?? ""}
               className={inputClasses}
-            />
+            >
+              <option value="">Aucun</option>
+              {Object.entries(SEGMENT_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
           </div>
           <div>
             <label htmlFor="audienceStatus" className="text-xs font-medium text-slate-600">
@@ -164,6 +173,18 @@ export function CampaignForm({
               <option value="prospect">Prospects</option>
               <option value="client">Clients</option>
             </select>
+          </div>
+          <div className="sm:col-span-2">
+            <label htmlFor="audienceTags" className="text-xs font-medium text-slate-600">
+              Tags (séparés par des virgules)
+            </label>
+            <input
+              id="audienceTags"
+              name="audienceTags"
+              defaultValue={campaign?.audience_tags.join(", ") ?? ""}
+              placeholder="vip, newsletter"
+              className={inputClasses}
+            />
           </div>
         </div>
       </div>

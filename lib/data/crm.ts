@@ -1,14 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
+import { type CustomerSegment, SEGMENT_LABELS } from "@/lib/data/segments";
 
-export type CustomerSegment = "new" | "vip" | "at_risk" | "inactive" | "active";
-
-export const SEGMENT_LABELS: Record<CustomerSegment, string> = {
-  new: "Nouveau",
-  vip: "VIP",
-  at_risk: "À risque",
-  inactive: "Inactif",
-  active: "Actif",
-};
+export type { CustomerSegment };
+export { SEGMENT_LABELS };
 
 export interface CustomerRfm {
   customerId: string;
@@ -42,14 +36,7 @@ function quintileScore(values: number[], value: number, higherIsBetter: boolean)
   return higherIsBetter ? score : 6 - score;
 }
 
-// Segmentation dynamique (directive Section 17) : un client sans
-// commande n'apparaît pas ici (aucune donnée réelle à segmenter) — la
-// page appelante garde son statut prospect/client existant pour lui.
-export async function getCustomerRfmMap(storeId: string): Promise<Map<string, CustomerRfm>> {
-  const supabase = createClient();
-  const { data } = await supabase.rpc("get_customer_rfm", { p_store_id: storeId });
-  const rows = (data ?? []) as RfmRow[];
-
+function computeRfmSegments(rows: RfmRow[]): Map<string, CustomerRfm> {
   const now = Date.now();
   const base = rows.map((row) => ({
     customerId: row.customer_id,
@@ -87,4 +74,25 @@ export async function getCustomerRfmMap(storeId: string): Promise<Map<string, Cu
   }
 
   return map;
+}
+
+// Segmentation dynamique (directive Section 17) : un client sans
+// commande n'apparaît pas ici (aucune donnée réelle à segmenter) — la
+// page appelante garde son statut prospect/client existant pour lui.
+export async function getCustomerRfmMap(storeId: string): Promise<Map<string, CustomerRfm>> {
+  const supabase = createClient();
+  const { data } = await supabase.rpc("get_customer_rfm", { p_store_id: storeId });
+  return computeRfmSegments((data ?? []) as RfmRow[]);
+}
+
+// Variante organisation entière, pour le ciblage de campagnes
+// (le CRM est déjà partagé entre boutiques d'une même organisation).
+export async function getCustomerRfmMapByOrg(
+  organizationId: string
+): Promise<Map<string, CustomerRfm>> {
+  const supabase = createClient();
+  const { data } = await supabase.rpc("get_customer_rfm_by_org", {
+    p_organization_id: organizationId,
+  });
+  return computeRfmSegments((data ?? []) as RfmRow[]);
 }
