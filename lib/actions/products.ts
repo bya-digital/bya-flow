@@ -327,9 +327,9 @@ export async function deleteDigitalFile(formData: FormData) {
 
   const { data: product } = await supabase
     .from("products")
-    .select("digital_file_path")
+    .select("digital_file_path, status")
     .eq("id", productId)
-    .maybeSingle<{ digital_file_path: string | null }>();
+    .maybeSingle<{ digital_file_path: string | null; status: string }>();
 
   if (product?.digital_file_path) {
     const { error: storageError } = await supabase.storage
@@ -341,9 +341,16 @@ export async function deleteDigitalFile(formData: FormData) {
     }
   }
 
+  // Un produit numérique actif sans fichier serait vendable sans rien à
+  // livrer (Règle 34) — repasse automatiquement en brouillon.
   const { error } = await supabase
     .from("products")
-    .update({ digital_file_path: null, digital_file_name: null, digital_file_size: null })
+    .update({
+      digital_file_path: null,
+      digital_file_name: null,
+      digital_file_size: null,
+      ...(product?.status === "active" ? { status: "draft" } : {}),
+    })
     .eq("id", productId);
 
   if (error) {
@@ -352,7 +359,13 @@ export async function deleteDigitalFile(formData: FormData) {
   }
 
   revalidatePath(`/produits/${productId}`);
-  redirect(`/produits/${productId}`);
+  redirect(
+    product?.status === "active"
+      ? `/produits/${productId}?message=${encodeURIComponent(
+          "Produit repassé en brouillon : plus rien à livrer sans fichier."
+        )}`
+      : `/produits/${productId}`
+  );
 }
 
 interface VariantInput {
