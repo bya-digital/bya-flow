@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pagination } from "@/components/ui/Pagination";
+import { SEGMENT_LABELS, getCustomerRfmMap, type CustomerRfm, type CustomerSegment } from "@/lib/data/crm";
 import { getCurrentStore } from "@/lib/data/store";
 import { PAGE_SIZE, pageRange, parsePage } from "@/lib/pagination";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/server";
 
 interface CustomerRow {
@@ -17,66 +19,81 @@ interface CustomerRow {
   tags: string[];
 }
 
-interface OrderAgg {
-  customer_id: string | null;
-  total: number;
-  created_at: string;
-}
+const SEGMENT_BADGE_TONE: Record<CustomerSegment, "brand" | "success" | "warning" | "neutral"> = {
+  new: "brand",
+  vip: "success",
+  at_risk: "warning",
+  inactive: "neutral",
+  active: "neutral",
+};
+
+const SEGMENT_FILTERS: { value: CustomerSegment | "all"; label: string }[] = [
+  { value: "all", label: "Tous" },
+  { value: "new", label: "Nouveaux" },
+  { value: "vip", label: "VIP" },
+  { value: "at_risk", label: "À risque" },
+  { value: "inactive", label: "Inactifs" },
+  { value: "active", label: "Actifs" },
+];
 
 export default async function ClientsPage({
   searchParams,
 }: {
-  searchParams: { page?: string };
+  searchParams: { page?: string; segment?: string };
 }) {
   const store = await getCurrentStore();
   const page = parsePage(searchParams.page);
+  const segmentFilter = searchParams.segment as CustomerSegment | "all" | undefined;
 
-  let customers: CustomerRow[] = [];
-  let totalCount = 0;
-  const spentByCustomer = new Map<string, number>();
-  const lastOrderByCustomer = new Map<string, string>();
+  let allCustomers: CustomerRow[] = [];
+  let rfmMap = new Map<string, CustomerRfm>();
 
   if (store) {
     const supabase = createClient();
-    const { data: customersData, count } = await supabase
-      .from("customers")
-      .select("id, full_name, email, phone, status, tags", { count: "exact" })
-      .eq("organization_id", store.organization_id)
-      .order("created_at", { ascending: false })
-      .range(...pageRange(page));
-
-    customers = customersData ?? [];
-    totalCount = count ?? 0;
-
-    const customerIds = customers.map((customer) => customer.id);
-    if (customerIds.length > 0) {
-      const { data: ordersData } = await supabase
-        .from("orders")
-        .select("customer_id, total, created_at")
-        .eq("store_id", store.id)
-        .in("customer_id", customerIds);
-
-      for (const order of (ordersData ?? []) as OrderAgg[]) {
-        if (!order.customer_id) continue;
-        spentByCustomer.set(
-          order.customer_id,
-          (spentByCustomer.get(order.customer_id) ?? 0) + Number(order.total)
-        );
-        const current = lastOrderByCustomer.get(order.customer_id);
-        if (!current || order.created_at > current) {
-          lastOrderByCustomer.set(order.customer_id, order.created_at);
-        }
-      }
-    }
+    const [{ data: customersData }, rfm] = await Promise.all([
+      supabase
+        .from("customers")
+        .select("id, full_name, email, phone, status, tags")
+        .eq("organization_id", store.organization_id)
+        .order("created_at", { ascending: false })
+        .limit(2000),
+      getCustomerRfmMap(store.id),
+    ]);
+    allCustomers = customersData ?? [];
+    rfmMap = rfm;
   }
 
+  const segmentCounts: Record<CustomerSegment, number> = {
+    new: 0,
+    vip: 0,
+    at_risk: 0,
+    inactive: 0,
+    active: 0,
+  };
+  for (const rfm of rfmMap.values()) {
+    segmentCounts[rfm.segment]++;
+  }
+
+  const filteredCustomers =
+    !segmentFilter || segmentFilter === "all"
+      ? allCustomers
+      : allCustomers.filter((c) => rfmMap.get(c.id)?.segment === segmentFilter);
+
+  const totalCount = filteredCustomers.length;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const [rangeStart, rangeEnd] = pageRange(page);
+  const customers = filteredCustomers.slice(rangeStart, rangeEnd + 1);
+
+  const currencyFormatter = new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: store?.currency ?? "EUR",
+  });
 
   return (
     <>
       <PageHeader
         title="Clients & CRM"
-        description="Fiches clients, prospects, segments et historique."
+        description="Fiches clients, segments dynamiques (RFM) et historique."
         action={
           <Link
             href="/clients/nouveau"
@@ -87,6 +104,27 @@ export default async function ClientsPage({
           </Link>
         }
       />
+
+      <div className="mb-4 flex flex-wrap gap-2">
+        {SEGMENT_FILTERS.map((filter) => {
+          const active = (segmentFilter ?? "all") === filter.value;
+          const count = filter.value === "all" ? allCustomers.length : segmentCounts[filter.value];
+          return (
+            <Link
+              key={filter.value}
+              href={filter.value === "all" ? "/clients" : `/clients?segment=${filter.value}`}
+              className={cn(
+                "rounded-full border px-3 py-1.5 text-xs font-medium",
+                active
+                  ? "border-brand-400 bg-brand-50 text-brand-700"
+                  : "border-slate-200 text-slate-600 hover:bg-slate-50"
+              )}
+            >
+              {filter.label} ({count})
+            </Link>
+          );
+        })}
+      </div>
 
       {customers.length === 0 ? (
         <EmptyState
@@ -101,50 +139,61 @@ export default async function ClientsPage({
               <tr>
                 <th className="px-4 py-3">Client</th>
                 <th className="px-4 py-3">Contact</th>
-                <th className="px-4 py-3">Statut</th>
+                <th className="px-4 py-3">Segment</th>
                 <th className="px-4 py-3">Dépensé</th>
+                <th className="px-4 py-3">Commandes</th>
                 <th className="px-4 py-3">Dernière commande</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {customers.map((customer) => (
-                <tr key={customer.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/clients/${customer.id}`}
-                      className="font-medium text-slate-900 hover:text-brand-600"
-                    >
-                      {customer.full_name}
-                    </Link>
-                    {customer.tags.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {customer.tags.map((tag) => (
-                          <Badge key={tag} tone="neutral">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    <div>{customer.email ?? "—"}</div>
-                    <div>{customer.phone ?? ""}</div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge tone={customer.status === "client" ? "success" : "warning"}>
-                      {customer.status === "client" ? "Client" : "Prospect"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {(spentByCustomer.get(customer.id) ?? 0).toFixed(2)} €
-                  </td>
-                  <td className="px-4 py-3 text-slate-500">
-                    {lastOrderByCustomer.get(customer.id)
-                      ? new Date(lastOrderByCustomer.get(customer.id)!).toLocaleDateString("fr-FR")
-                      : "—"}
-                  </td>
-                </tr>
-              ))}
+              {customers.map((customer) => {
+                const rfm = rfmMap.get(customer.id);
+                return (
+                  <tr key={customer.id} className="hover:bg-slate-50">
+                    <td className="px-4 py-3">
+                      <Link
+                        href={`/clients/${customer.id}`}
+                        className="font-medium text-slate-900 hover:text-brand-600"
+                      >
+                        {customer.full_name}
+                      </Link>
+                      {customer.tags.length > 0 && (
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {customer.tags.map((tag) => (
+                            <Badge key={tag} tone="neutral">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      <div>{customer.email ?? "—"}</div>
+                      <div>{customer.phone ?? ""}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      {rfm ? (
+                        <Badge tone={SEGMENT_BADGE_TONE[rfm.segment]}>
+                          {SEGMENT_LABELS[rfm.segment]}
+                        </Badge>
+                      ) : (
+                        <Badge tone={customer.status === "client" ? "success" : "warning"}>
+                          {customer.status === "client" ? "Client" : "Prospect"}
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {currencyFormatter.format(rfm?.totalSpent ?? 0)}
+                    </td>
+                    <td className="px-4 py-3 text-slate-500">{rfm?.orderCount ?? 0}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {rfm?.lastOrderAt
+                        ? new Date(rfm.lastOrderAt).toLocaleDateString("fr-FR")
+                        : "—"}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <Pagination page={page} totalPages={totalPages} basePath="/clients" />

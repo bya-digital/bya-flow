@@ -8,6 +8,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SEGMENT_LABELS, getCustomerRfmMap } from "@/lib/data/crm";
 import { getCurrentStore } from "@/lib/data/store";
 import { updateCustomer } from "@/lib/actions/customers";
 import { createClient } from "@/lib/supabase/server";
@@ -46,6 +47,8 @@ export default async function ClientDetailPage({
   if (!customer) notFound();
 
   const totalSpent = (orders ?? []).reduce((sum, order) => sum + Number(order.total), 0);
+  const rfmMap = await getCustomerRfmMap(store.id);
+  const rfm = rfmMap.get(customer.id);
 
   return (
     <>
@@ -118,6 +121,12 @@ export default async function ClientDetailPage({
               <h2 className="text-sm font-semibold text-slate-900">Statistiques</h2>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
+              {rfm && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Segment</span>
+                  <Badge tone="brand">{SEGMENT_LABELS[rfm.segment]}</Badge>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Montant dépensé</span>
                 <span className="font-medium text-slate-900">{totalSpent.toFixed(2)} €</span>
@@ -126,6 +135,14 @@ export default async function ClientDetailPage({
                 <span className="text-slate-500">Nombre de commandes</span>
                 <span className="font-medium text-slate-900">{orders?.length ?? 0}</span>
               </div>
+              {rfm && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Dernière commande</span>
+                  <span className="font-medium text-slate-900">
+                    {new Date(rfm.lastOrderAt).toLocaleDateString("fr-FR")}
+                  </span>
+                </div>
+              )}
             </CardContent>
           </Card>
 

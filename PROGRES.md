@@ -2026,3 +2026,40 @@ funnels de cette app n'ont pas de "checkout" propre à eux.
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-10 — Phase 42 vérifiée en conditions réelles
+
+SQL collé et confirmé. Offre créée en direct (Formation Test QA →
+Ebook Test QA, titre personnalisé) : liste correcte, la jointure à
+trois FK vers `products` (déclencheur/upsell/downsell) résout
+correctement chaque nom.
+
+## 2026-09-10 — Phase 43 : CRM avancé (segmentation RFM)
+
+Directive Section 17 : segmentation dynamique, récence/fréquence/
+montant, clients VIP/inactifs/à risque/nouveaux — "basée sur les
+données réelles".
+
+- **`get_customer_rfm()`** (SQL) : agrège commandes par client pour
+  une boutique (nombre, montant total, première/dernière commande).
+  Le score (quintiles 1-5) et le classement en segment se calculent
+  côté application (`lib/data/crm.ts`), jamais avec un seuil absolu
+  identique pour toutes les boutiques — une boutique qui vend à
+  2 000 F et une autre à 2 000 000 F obtiennent chacune leurs propres
+  quintiles cohérents avec leur propre distribution réelle.
+- **Segments** : Nouveau (1 commande, ≤ 30 jours), VIP (R/F/M tous
+  ≥ 4/5), À risque (récence faible mais fréquence ou montant élevés
+  auparavant), Inactif (récence très faible), Actif (le reste). Un
+  client sans commande garde son badge Client/Prospect existant —
+  aucune donnée réelle à segmenter pour lui.
+- **`/clients`** : filtres de segment cliquables avec compteur réel,
+  colonnes Segment/Commandes ajoutées ; le filtrage s'applique avant
+  la pagination (nécessite désormais de charger tous les clients de
+  l'organisation pour calculer les quintiles correctement, plafonné à
+  2000 — au-delà, la pagination reste correcte mais les quintiles
+  n'incluraient pas les clients supplémentaires).
+- **`/clients/[id]`** : badge de segment et date de dernière commande
+  ajoutés aux statistiques existantes.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.
