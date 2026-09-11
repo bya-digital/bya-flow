@@ -2185,3 +2185,14 @@ l'utilisateur connectera son propre compte Twilio plus tard.
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé (et l'envoi réel restera simulé
   tant que l'utilisateur n'aura pas connecté son propre compte Twilio).
+
+## 2026-09-11 — Phase 45 vérifiée en conditions réelles
+
+SQL collé et confirmé. `/campagnes/parametres` enregistre et persiste
+correctement les identifiants Twilio (SID, numéros SMS/WhatsApp,
+actif). Une campagne créée avec le canal SMS affiche bien "Envoyer"
+sans la mention "(simulation)" une fois le provider actif — confirme
+que le calcul `willSendReal` fonctionne aussi pour SMS/WhatsApp, pas
+seulement pour email. Même limite d'outillage que la Phase 44 : le
+clic final derrière la boîte `window.confirm()` n'a pas pu être forcé
+par automation.
