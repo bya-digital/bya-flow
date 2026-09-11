@@ -1877,3 +1877,35 @@ arbitraire).
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (14/14) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-10 — Phase 39 : Page Builder
+
+Pages de vente sans code (directive Section 13). Une page = un titre/
+slug + un tableau ordonné de blocs (`blocks jsonb`), pas une table par
+type de bloc — un nouveau type de bloc s'ajoutera plus tard sans
+migration (juste une entrée dans `lib/pageBuilder/types.ts` et un cas
+dans `BlockRenderer`).
+
+- **15 types de blocs** (Hero, Titre, Texte, Image, Vidéo, Bouton,
+  Formulaire, Produit, Prix, Témoignage, FAQ, Avantages, Compte à
+  rebours, CTA, Pied de page) — la vidéo n'est jamais hébergée par BYA
+  Flow (lien externe embarqué si YouTube/Vimeo reconnu, sinon simple
+  lien, même principe que la Phase 38 pour les leçons).
+- **`/pages-de-vente`** (nouvelle entrée de menu "Commerce") :
+  liste, création, éditeur par blocs (`PageEditor` — ajout/suppression/
+  duplication/réorganisation haut-bas, tout en mémoire côté client puis
+  un seul `UPDATE` du tableau `blocks` à l'enregistrement), aperçu
+  ("Voir la page" fonctionne même en brouillon pour l'équipe de la
+  boutique, bandeau "Aperçu" visible), publier/dépublier.
+- **`/store/[slug]/pages/[pageSlug]`** : rendu public, uniquement les
+  pages `status = 'published'` pour un visiteur anonyme (RLS
+  `store_pages_select_public`, même principe que `products_select_
+  public`).
+- **Bloc "Formulaire"** (capture email) : jamais de policy insert
+  ouverte sur `page_leads` — `capture_page_lead()` (SECURITY DEFINER)
+  revérifie elle-même que la page existe et est publiée avant
+  d'écrire, même discipline que `checkout_cart()`.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (14/14) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé (deux fichiers en attente :
+  Phase 38 et Phase 39).

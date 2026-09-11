@@ -5,6 +5,7 @@ import {
   CreditCard,
   Gift,
   Landmark,
+  Layout,
   LayoutDashboard,
   Megaphone,
   MessageSquareQuote,
@@ -46,6 +47,7 @@ export const navSections: NavSection[] = [
     items: [
       { label: "Boutique", href: "/boutique", icon: Store },
       { label: "Produits", href: "/produits", icon: Package },
+      { label: "Pages de vente", href: "/pages-de-vente", icon: Layout },
       { label: "Commandes", href: "/commandes", icon: ShoppingCart },
       { label: "Caisse", href: "/caisse", icon: ShoppingBag },
       { label: "Livraison", href: "/livraison", icon: Truck },
