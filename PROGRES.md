@@ -2377,3 +2377,12 @@ mais fonctionnel dès maintenant sans dépendance externe.
   de la lecture de données déjà exposées ailleurs dans l'app).
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (20/20) tous propres.
+
+## 2026-09-12 — Phase 49 vérifiée en conditions réelles
+
+Pas de SQL à coller (phase applicative pure), vérifiable
+immédiatement. "Quel est mon chiffre d'affaires ?" répond avec les
+vrais chiffres de la boutique de test (110,00 € sur 4 commandes,
+panier moyen 27,50 € — exact au centime près). Une question hors
+périmètre ("Quelle est la météo ?") reçoit bien le message honnête
+de non-reconnaissance plutôt qu'une réponse inventée.
