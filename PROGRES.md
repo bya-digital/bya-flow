@@ -2331,3 +2331,12 @@ comme une recommandation.
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (20/20) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-12 — Phase 48 vérifiée en conditions réelles
+
+SQL collé et confirmé. Second produit créé dans la boutique de test :
+avant tout achat commun, la fiche du premier produit affiche bien le
+repli honnête "Vous pourriez aussi aimer". Après une commande réelle
+contenant les deux produits, la même fiche affiche désormais "Souvent
+achetés ensemble" avec le bon produit — confirme que `basedOnPurchases`
+bascule correctement dès qu'une vraie donnée de co-achat existe.
