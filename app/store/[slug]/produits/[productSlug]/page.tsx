@@ -1,6 +1,7 @@
 import { Package } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { RelatedProducts } from "@/components/store/RelatedProducts";
 import { StarRating } from "@/components/store/StarRating";
 import { WishlistButton } from "@/components/store/WishlistButton";
 import { AddToCartForm } from "@/components/store/tracking/AddToCartForm";
@@ -10,7 +11,7 @@ import { addToCart } from "@/lib/actions/publicCart";
 import { submitReview } from "@/lib/actions/reviews";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getMyReviewEligibility, getPublicReviews } from "@/lib/data/publicReviews";
-import { getPublicProductBySlug, getPublicStoreBySlug } from "@/lib/data/publicStore";
+import { getPublicProductBySlug, getPublicStoreBySlug, getRelatedProducts } from "@/lib/data/publicStore";
 import { getWishlistProductIds } from "@/lib/data/wishlist";
 import { createClient } from "@/lib/supabase/server";
 
@@ -74,10 +75,11 @@ export default async function StoreProductPage({
     currency: store.currency,
   });
 
-  const [session, wishlistIds, reviewSummary] = await Promise.all([
+  const [session, wishlistIds, reviewSummary, related] = await Promise.all([
     getCustomerSession(),
     getWishlistProductIds(store.id),
     getPublicReviews(product.id),
+    getRelatedProducts(store.id, product.id),
   ]);
   const eligibility = await getMyReviewEligibility(product.id, session.email);
   const productUrl = `/store/${store.slug}/produits/${product.slug}`;
@@ -262,6 +264,13 @@ export default async function StoreProductPage({
           )}
         </div>
       </div>
+
+      <RelatedProducts
+        products={related.products}
+        basedOnPurchases={related.basedOnPurchases}
+        storeSlug={store.slug}
+        currency={store.currency}
+      />
 
       <div className="mt-16 max-w-3xl">
         <h2 className="text-xl font-bold text-slate-900">Avis clients</h2>

@@ -2305,3 +2305,29 @@ exacte (25,00 € × 15 % = 3,75 €) affichées sur `/affiliation`. Confirme
 au passage que le hash MD5 calculé côté app (Node `crypto`) correspond
 bien caractère pour caractère à `md5()` Postgres — sans ce alignement,
 `resolve_affiliate_code()` n'aurait jamais retrouvé l'affilié.
+
+## 2026-09-12 — Phase 48 : Recommandations produits
+
+Directive Section 22 : recommandations basées sur les VRAIES commandes
+passées, jamais un algorithme inventé ou un tri aléatoire présenté
+comme une recommandation.
+
+- **`get_related_products(p_product_id, p_limit)`** (SQL, SECURITY
+  DEFINER) : compte, pour chaque autre produit actif, le nombre de
+  commandes distinctes où il apparaît avec le produit consulté — les
+  vrais "souvent achetés ensemble". Appelable depuis la boutique
+  publique (visiteur anonyme) sans exposer aucune commande ou client
+  individuel : ne renvoie qu'une agrégation (produit, compteur), RLS
+  contournée en interne comme toute fonction SECURITY DEFINER de ce
+  projet, jamais un accès direct à `orders`/`order_items`.
+- **`getRelatedProducts()`** (`lib/data/publicStore.ts`) : si aucune
+  commande commune n'existe encore (boutique neuve), repli honnête sur
+  "autres produits de la boutique" — jamais présenté comme "souvent
+  achetés ensemble" s'il n'y a pas de données réelles derrière
+  (`basedOnPurchases: false` change le titre affiché : "Vous pourriez
+  aussi aimer" vs "Souvent achetés ensemble").
+- **`components/store/RelatedProducts.tsx`** : nouvelle section sur la
+  fiche produit, entre le bloc principal et les avis clients.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

@@ -261,3 +261,82 @@ export async function getPublicProductBySlug(
     variants: (data.product_variants as ProductVariantRow[] | null) ?? [],
   };
 }
+
+export interface RelatedProducts {
+  products: PublicProductSummary[];
+  // false quand la boutique n'a pas encore assez de commandes pour un
+  // vrai calcul "souvent achetés ensemble" — le contenu affiché est
+  // alors un simple aperçu d'autres produits, jamais présenté comme
+  // une recommandation basée sur des achats réels.
+  basedOnPurchases: boolean;
+}
+
+// Directive Section 22 : recommandations basées sur les commandes
+// réellement passées, jamais un tri inventé — voir get_related_products()
+// (SQL, Phase 48). Repli honnête sur "autres produits" seulement si la
+// boutique n'a pas encore assez d'historique de commandes.
+export async function getRelatedProducts(
+  storeId: string,
+  productId: string,
+  limit = 4
+): Promise<RelatedProducts> {
+  const supabase = createClient();
+
+  const { data: related } = await supabase.rpc("get_related_products", {
+    p_product_id: productId,
+    p_limit: limit,
+  });
+  const relatedIds = ((related ?? []) as { product_id: string }[]).map((r) => r.product_id);
+
+  if (relatedIds.length > 0) {
+    const { data } = await supabase
+      .from("products")
+      .select("id, slug, name, price, compare_at_price, stock, product_images(url, position)")
+      .eq("store_id", storeId)
+      .in("id", relatedIds)
+      .eq("status", "active");
+
+    const byId = new Map(
+      (data ?? []).map((p) => [
+        p.id,
+        {
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          price: Number(p.price),
+          compareAtPrice: p.compare_at_price !== null ? Number(p.compare_at_price) : null,
+          imageUrl: firstImage(p.product_images as ProductImageRow[] | null),
+          stock: p.stock,
+        } satisfies PublicProductSummary,
+      ])
+    );
+    // Conserve l'ordre de pertinence renvoyé par get_related_products()
+    // (nombre de commandes en commun décroissant), jamais réordonné.
+    const products = relatedIds.map((id) => byId.get(id)).filter((p): p is PublicProductSummary => Boolean(p));
+    if (products.length > 0) {
+      return { products, basedOnPurchases: true };
+    }
+  }
+
+  const { data: fallback } = await supabase
+    .from("products")
+    .select("id, slug, name, price, compare_at_price, stock, product_images(url, position)")
+    .eq("store_id", storeId)
+    .eq("status", "active")
+    .neq("id", productId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  return {
+    products: (fallback ?? []).map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price: Number(p.price),
+      compareAtPrice: p.compare_at_price !== null ? Number(p.compare_at_price) : null,
+      imageUrl: firstImage(p.product_images as ProductImageRow[] | null),
+      stock: p.stock,
+    })),
+    basedOnPurchases: false,
+  };
+}
