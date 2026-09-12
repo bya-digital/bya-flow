@@ -1,5 +1,6 @@
-import { Sparkles, TrendingUp } from "lucide-react";
+import { MessageCircle, Sparkles, TrendingUp } from "lucide-react";
 import Link from "next/link";
+import { AssistantChat } from "@/components/ia/AssistantChat";
 import { GrowthScoreGauge } from "@/components/score/GrowthScoreGauge";
 import { ScoreBreakdown } from "@/components/score/ScoreBreakdown";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -17,6 +18,20 @@ export default async function IaPage() {
         title="IA & recommandations"
         description="BYA Flow Score et opportunités de croissance."
       />
+
+      <div className="mb-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-brand-600" strokeWidth={1.75} />
+              <h2 className="text-sm font-semibold text-slate-900">BYA AI — Assistant</h2>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <AssistantChat />
+          </CardContent>
+        </Card>
+      </div>
 
       {!result ? (
         <EmptyState

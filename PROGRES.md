@@ -2340,3 +2340,40 @@ repli honnête "Vous pourriez aussi aimer". Après une commande réelle
 contenant les deux produits, la même fiche affiche désormais "Souvent
 achetés ensemble" avec le bon produit — confirme que `basedOnPurchases`
 bascule correctement dès qu'une vraie donnée de co-achat existe.
+
+## 2026-09-12 — Phase 49 : BYA AI — Assistant conversationnel
+
+Directive Section 23. Aucun fournisseur LLM n'est connecté (ni
+inventé) — même discipline que le `heuristicProvider` déjà en place
+pour la génération de contenu (Phases produits/campagnes) : "aucun
+appel externe, aucune clé API requise... pour rester utile dès
+aujourd'hui sans connecter un fournisseur IA payant sans nécessité."
+Un vrai LLM (OpenAI, Anthropic via Vercel AI Gateway...) pourra un
+jour implémenter la même interface `AIProvider` et remplacer ce
+provider sans changer le reste de l'application — terrain préparé,
+mais fonctionnel dès maintenant sans dépendance externe.
+
+- **`AIProvider.chat(message, context)`** : nouvelle méthode sur
+  l'interface existante. Le `ChatContext` porte uniquement des VRAIES
+  données déjà calculées ailleurs dans l'app (chiffre d'affaires 30j,
+  commandes, panier moyen, nouveaux clients, produit le plus vendu,
+  BYA Flow Score, comptes de segments RFM VIP/à risque) — jamais un
+  chiffre inventé.
+- **`lib/data/assistantContext.ts`** : réutilise `getGrowthScore()`
+  (Phase IA existante) et `getCustomerRfmMap()` (Phase 43) plutôt que
+  de recalculer une troisième fois la même chose.
+- **`heuristicProvider.chat()`** : reconnaît par mots-clés un petit
+  ensemble de questions courantes (chiffre d'affaires, commandes,
+  produit le plus vendu, clients VIP/à risque, nouveaux clients,
+  score) et répond toujours à partir du contexte réel ; pour toute
+  autre question, le dit honnêtement plutôt que d'improviser une
+  réponse plausible mais fausse.
+- **`components/ia/AssistantChat.tsx`** sur `/ia` : chat simple
+  (historique de messages, suggestions de questions), appelle
+  `askAssistant()` (server action) directement depuis le client via
+  `useTransition`, même schéma que la génération de contenu IA
+  existante (`CampaignForm.tsx`).
+- Aucune migration SQL nécessaire (aucun nouveau schéma, uniquement
+  de la lecture de données déjà exposées ailleurs dans l'app).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20) tous propres.

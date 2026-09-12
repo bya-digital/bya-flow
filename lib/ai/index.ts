@@ -7,4 +7,10 @@ import type { AIProvider } from "@/lib/ai/types";
 // Aucun autre fichier de l'application n'a besoin de changer.
 export const aiProvider: AIProvider = heuristicProvider;
 
-export type { AIProvider, ProductDescriptionInput, CampaignContentInput, CampaignContentOutput } from "@/lib/ai/types";
+export type {
+  AIProvider,
+  ProductDescriptionInput,
+  CampaignContentInput,
+  CampaignContentOutput,
+  ChatContext,
+} from "@/lib/ai/types";
