@@ -2295,3 +2295,13 @@ affiche ce qui est dû, ne simule jamais un paiement sortant.
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (20/20) tous propres. Vérification en conditions réelles bloquée
   tant que le SQL n'a pas été collé.
+
+## 2026-09-12 — Phase 47 vérifiée en conditions réelles
+
+SQL collé et confirmé. Affilié créé (15% de commission), lien copié
+(`?aff=2336F9C6`), visite du lien → ajout au panier → commande réelle
+passée : attribution correcte (1 commande apportée) et commission
+exacte (25,00 € × 15 % = 3,75 €) affichées sur `/affiliation`. Confirme
+au passage que le hash MD5 calculé côté app (Node `crypto`) correspond
+bien caractère pour caractère à `md5()` Postgres — sans ce alignement,
+`resolve_affiliate_code()` n'aurait jamais retrouvé l'affilié.
