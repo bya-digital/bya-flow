@@ -123,6 +123,19 @@ export async function middleware(request: NextRequest) {
         sameSite: "lax",
       });
     }
+
+    // Affiliation (Phase 47) : même mécanique que le parrainage
+    // ci-dessus — le code n'est jamais résolu ici, juste mémorisé, la
+    // résolution en id d'affilié se fait côté serveur à la création
+    // du panier.
+    const aff = request.nextUrl.searchParams.get("aff");
+    if (aff) {
+      response.cookies.set("bya_aff", aff, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 30,
+        sameSite: "lax",
+      });
+    }
   }
 
   if (!user) {

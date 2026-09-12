@@ -2242,3 +2242,56 @@ place, aucune nouvelle RLS nécessaire.
   de vrais identifiants Meta/Google pour observer des événements dans
   ces plateformes — seule l'injection conditionnelle des scripts et
   l'absence d'erreur console sont vérifiables ici).
+
+## 2026-09-12 — Phase 46 vérifiée en conditions réelles
+
+SQL collé et confirmé. `/boutique/tracking` enregistre et persiste
+les trois identifiants. Sur le storefront : `window.fbq`/`window.gtag`
+bien définis, script GTM et script GA4 présents dans le DOM,
+`dataLayer` peuplé (`gtm.js`, `config`, `gtm.dom`, `gtm.load`). La
+visite d'une fiche produit pousse bien un événement `view_item` avec
+le bon produit/prix/devise dans `dataLayer`. Ajout au panier vérifié
+fonctionnellement intact (le flux serveur n'est pas perturbé par
+`AddToCartForm`) ; l'événement lui-même n'a pas pu être inspecté
+directement (déclenché juste avant une navigation complète de page,
+donc invisible après coup) mais partage le même code éprouvé que
+`view_item`.
+
+## 2026-09-12 — Phase 47 : Programme d'affiliation
+
+Directive Section 21 — distinct du parrainage client (Phase 28,
+points de fidélité entre clients) : ici, un partenaire EXTERNE reçoit
+un lien unique et gagne une VRAIE commission calculée côté serveur,
+jamais un montant fourni par le client. Le versement réel de la
+commission reste manuel (hors de l'application) — BYA Flow calcule et
+affiche ce qui est dû, ne simule jamais un paiement sortant.
+
+- **`affiliates`** (par boutique, comme les order bumps/upsells) :
+  nom, email, taux de commission (0-100%), statut actif/suspendu. Pas
+  de colonne `code` stockée : dérivée à la volée du hash de l'id
+  (`upper(substr(md5(id::text),1,8))`), exactement le même principe
+  sans gestion de collision que `get_my_referral_code()` (Phase 28) —
+  côté app, `lib/data/affiliates.ts` calcule le même hash via
+  `crypto.createHash('md5')` (Node), garanti identique caractère pour
+  caractère à `md5()` Postgres pour une chaîne ASCII (un UUID).
+- **`resolve_affiliate_code()`** : même mécanique d'attribution que le
+  parrainage — cookie `bya_aff` posé par le middleware dès la visite
+  de `?aff=CODE`, résolu en id d'affilié seulement à la création du
+  panier (`ensureCart()` dans `lib/actions/publicCart.ts`), jamais
+  fourni par le client au paiement.
+- **`checkout_cart()` ré-créée** : revérifie que l'affilié est
+  toujours ACTIF au moment du paiement (pas seulement au clic sur le
+  lien — un partenaire suspendu entre-temps ne génère plus de
+  commission), calcule la commission sur le sous-total réel final
+  (après order bumps), l'enregistre sur `orders.affiliate_commission`.
+  Contrairement au bonus de parrainage, la commission s'applique à
+  CHAQUE commande apportée par le lien, pas seulement au premier achat
+  du client — modèle d'affiliation marketing standard, pas un
+  programme anti-abus entre clients.
+- **`/affiliation`** : CRUD marchand (créer/suspendre/supprimer),
+  lien de suivi copiable par affilié, statistiques réelles calculées
+  depuis `orders` (commandes apportées, ventes totales, commission
+  due) — jamais un chiffre inventé.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

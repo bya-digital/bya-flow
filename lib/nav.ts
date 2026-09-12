@@ -4,6 +4,7 @@ import {
   Building2,
   CreditCard,
   Gift,
+  Handshake,
   Landmark,
   Layout,
   LayoutDashboard,
@@ -73,6 +74,7 @@ export const navSections: NavSection[] = [
       { label: "Order bumps", href: "/order-bumps", icon: PackagePlus },
       { label: "Upsell / Downsell", href: "/upsells", icon: TrendingUp },
       { label: "Paniers abandonnés", href: "/paniers-abandonnes", icon: ShoppingBasket },
+      { label: "Affiliation", href: "/affiliation", icon: Handshake },
     ],
   },
   {

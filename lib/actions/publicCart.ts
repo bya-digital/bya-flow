@@ -43,6 +43,19 @@ async function ensureCart(storeId: string): Promise<string | null> {
     referredByCustomerId = typeof referrerId === "string" ? referrerId : null;
   }
 
+  // Affiliation (Phase 47) : même principe — attribué une seule fois
+  // à la création du panier, revérifié (affilié toujours actif) côté
+  // serveur au paiement dans checkout_cart().
+  let affiliateId: string | null = null;
+  const affCode = cookies().get("bya_aff")?.value;
+  if (affCode) {
+    const { data: resolvedAffiliateId } = await supabase.rpc("resolve_affiliate_code", {
+      p_store_id: storeId,
+      p_code: affCode,
+    });
+    affiliateId = typeof resolvedAffiliateId === "string" ? resolvedAffiliateId : null;
+  }
+
   const { data: created } = await supabase
     .from("carts")
     .insert({
@@ -50,6 +63,7 @@ async function ensureCart(storeId: string): Promise<string | null> {
       anon_user_id: user.id,
       status: "active",
       referred_by_customer_id: referredByCustomerId,
+      affiliate_id: affiliateId,
     })
     .select("id")
     .single<{ id: string }>();
