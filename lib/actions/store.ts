@@ -253,3 +253,32 @@ export async function updateStoreAppearance(formData: FormData) {
   revalidatePath(`/store/${store.slug}`, "layout");
   redirect("/boutique/apparence?success=1");
 }
+
+// Pixel ID / Measurement ID / Container ID ne sont pas des secrets —
+// visibles dans le code source de toute page qui les utilise, donc
+// simplement stockés en clair comme le reste de la personnalisation
+// boutique (pas de masquage à l'enregistrement, contrairement aux
+// clés API des Phases 44/45).
+export async function updateStoreTracking(formData: FormData) {
+  const store = await getCurrentStore();
+  if (!store) redirect("/onboarding");
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("stores")
+    .update({
+      meta_pixel_id: (formData.get("metaPixelId") as string)?.trim() || null,
+      ga4_measurement_id: (formData.get("ga4MeasurementId") as string)?.trim() || null,
+      gtm_container_id: (formData.get("gtmContainerId") as string)?.trim() || null,
+    })
+    .eq("id", store.id);
+
+  if (error) {
+    redirect(`/boutique/tracking?error=${encodeURIComponent(error.message)}`);
+    return;
+  }
+
+  revalidatePath("/boutique/tracking");
+  revalidatePath(`/store/${store.slug}`, "layout");
+  redirect("/boutique/tracking?success=1");
+}

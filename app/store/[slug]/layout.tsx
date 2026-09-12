@@ -6,6 +6,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { getPublicCart } from "@/lib/data/publicCart";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
+import { TrackingScripts } from "@/components/store/tracking/TrackingScripts";
 
 export async function generateMetadata({
   params,
@@ -46,6 +47,11 @@ export default async function StoreLayout({
       className="flex min-h-screen flex-col bg-white"
       style={{ "--store-accent": store.accentColor || "#2563eb" } as CSSProperties}
     >
+      <TrackingScripts
+        metaPixelId={store.metaPixelId}
+        ga4MeasurementId={store.ga4MeasurementId}
+        gtmContainerId={store.gtmContainerId}
+      />
       <header className="border-b border-slate-200">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href={`/store/${store.slug}`} className="flex items-center gap-3">

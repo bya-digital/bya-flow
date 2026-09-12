@@ -2196,3 +2196,49 @@ que le calcul `willSendReal` fonctionne aussi pour SMS/WhatsApp, pas
 seulement pour email. Même limite d'outillage que la Phase 44 : le
 clic final derrière la boîte `window.confirm()` n'a pas pu être forcé
 par automation.
+
+## 2026-09-12 — Phase 46 : Tracking (Meta Pixel / GA4 / GTM)
+
+Directive Section 20. Contrairement aux Phases 44/45, un Pixel ID, un
+Measurement ID GA4 ou un Container ID GTM ne sont pas des secrets —
+systématiquement visibles dans le code source de toute page qui les
+utilise (fonctionnement normal de ces plateformes). Simples colonnes
+sur `stores`, protégées par la policy `stores_update_member` déjà en
+place, aucune nouvelle RLS nécessaire.
+
+- **`stores.meta_pixel_id` / `ga4_measurement_id` / `gtm_container_id`**
+  — configurables par le marchand sur `/boutique/tracking`, jamais
+  inventés, un champ vide désactive simplement ce tracking.
+- **`components/store/tracking/TrackingScripts.tsx`** : injecte
+  uniquement les scripts réellement configurés (`next/script`,
+  `strategy="afterInteractive"`, cohérent avec l'intégration Kkiapay
+  existante) — chaque plateforme fait sa propre PageView/page_view
+  automatique via son snippet officiel.
+- **`lib/tracking/events.ts`** : 4 événements e-commerce standards
+  (ViewContent/view_item, AddToCart/add_to_cart,
+  InitiateCheckout/begin_checkout, Purchase/purchase) poussés en
+  parallèle vers GTM dataLayer, Meta Pixel (`fbq`) et GA4 (`gtag`) —
+  chacun n'agit que si son script a été chargé (donc seulement si
+  configuré), jamais un faux événement vers une plateforme non
+  connectée.
+- **Purchase jamais compté avant un paiement réellement confirmé** :
+  déclenché uniquement si `order.paymentStatus === 'paid'` — tant
+  qu'aucun PSP n'est branché sur une boutique, l'événement ne part
+  jamais (même discipline que "ne jamais simuler un paiement comme
+  réel", directive fondatrice du projet). Protection anti-double
+  comptage par `sessionStorage` clé par commande (un rechargement de
+  la page de confirmation ne recompte jamais le même achat).
+- **`AddToCartForm`** : enveloppe client léger autour du
+  `<form action={addToCart}>` existant (fiche produit) sans changer
+  son fonctionnement — déclenche l'événement au clic, le vrai server
+  action continue de s'exécuter normalement.
+- **`/boutique/tracking`** : nouvelle page de personnalisation
+  boutique (carte ajoutée à `/boutique`), aucun masquage de champ
+  (ce ne sont pas des secrets).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20, dont un nouveau fichier de tests unitaires ajouté pour
+  `getCurrentStore()`) tous propres. Vérification en conditions
+  réelles bloquée tant que le SQL n'a pas été collé (nécessite aussi
+  de vrais identifiants Meta/Google pour observer des événements dans
+  ces plateformes — seule l'injection conditionnelle des scripts et
+  l'absence d'erreur console sont vérifiables ici).

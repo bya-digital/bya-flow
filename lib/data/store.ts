@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 const CURRENT_STORE_COOKIE = "bya_current_store";
 
 const CURRENT_STORE_FIELDS =
-  "id, organization_id, name, description, logo_url, slug, currency, country, is_active, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled, referral_bonus_points, referral_welcome_points, custom_domain, custom_domain_verified_at";
+  "id, organization_id, name, description, logo_url, slug, currency, country, is_active, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled, referral_bonus_points, referral_welcome_points, custom_domain, custom_domain_verified_at, meta_pixel_id, ga4_measurement_id, gtm_container_id";
 
 export interface CurrentStore {
   id: string;
@@ -34,6 +34,9 @@ export interface CurrentStore {
   referral_welcome_points: number;
   custom_domain: string | null;
   custom_domain_verified_at: string | null;
+  meta_pixel_id: string | null;
+  ga4_measurement_id: string | null;
+  gtm_container_id: string | null;
 }
 
 // Boutique actuellement gérée : celle mémorisée dans le cookie

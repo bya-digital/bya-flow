@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { TrackInitiateCheckout } from "@/components/store/tracking/TrackInitiateCheckout";
 import { submitCheckout } from "@/lib/actions/checkout";
 import { getCustomerSession } from "@/lib/data/customerAccount";
 import { getCustomerLoyaltyBalance } from "@/lib/data/loyalty";
@@ -50,6 +51,16 @@ export default async function StoreCheckoutPage({
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
+      <TrackInitiateCheckout
+        items={cart.items.map((item) => ({
+          id: item.productId ?? item.id,
+          name: item.name,
+          price: item.unitPrice,
+          quantity: item.quantity,
+        }))}
+        value={cart.subtotal}
+        currency={store.currency}
+      />
       <h1 className="text-2xl font-bold text-slate-900">Finaliser la commande</h1>
 
       {searchParams.error && (

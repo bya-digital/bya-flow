@@ -22,6 +22,9 @@ export interface PublicStore {
   loyaltyEarnRate: number;
   loyaltyRedeemValue: number;
   referralEnabled: boolean;
+  metaPixelId: string | null;
+  ga4MeasurementId: string | null;
+  gtmContainerId: string | null;
 }
 
 // La boutique (layout, page d'accueil, et souvent une sous-page) est
@@ -33,7 +36,7 @@ export const getPublicStoreBySlug = cache(async (slug: string): Promise<PublicSt
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled"
+      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled, meta_pixel_id, ga4_measurement_id, gtm_container_id"
     )
     .eq("slug", slug)
     .eq("is_active", true)
@@ -62,6 +65,9 @@ export const getPublicStoreBySlug = cache(async (slug: string): Promise<PublicSt
     loyaltyEarnRate: Number(data.loyalty_earn_rate),
     loyaltyRedeemValue: Number(data.loyalty_redeem_value),
     referralEnabled: data.referral_enabled,
+    metaPixelId: data.meta_pixel_id,
+    ga4MeasurementId: data.ga4_measurement_id,
+    gtmContainerId: data.gtm_container_id,
   };
 });
 

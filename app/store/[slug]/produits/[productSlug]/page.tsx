@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { StarRating } from "@/components/store/StarRating";
 import { WishlistButton } from "@/components/store/WishlistButton";
+import { AddToCartForm } from "@/components/store/tracking/AddToCartForm";
+import { TrackViewContent } from "@/components/store/tracking/TrackViewContent";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { addToCart } from "@/lib/actions/publicCart";
 import { submitReview } from "@/lib/actions/reviews";
@@ -116,6 +118,12 @@ export default async function StoreProductPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      <TrackViewContent
+        productId={product.id}
+        productName={product.name}
+        price={product.price}
+        currency={store.currency}
+      />
       <div className="grid gap-10 lg:grid-cols-2">
         <div>
           <div className="aspect-square overflow-hidden rounded-xl bg-slate-100">
@@ -213,7 +221,14 @@ export default async function StoreProductPage({
           )}
 
           {product.stock > 0 ? (
-            <form action={addToCart} className="mt-6 flex items-end gap-3">
+            <AddToCartForm
+              action={addToCart}
+              className="mt-6 flex items-end gap-3"
+              productId={product.id}
+              productName={product.name}
+              price={product.price}
+              currency={store.currency}
+            >
               <input type="hidden" name="storeId" value={store.id} />
               <input type="hidden" name="storeSlug" value={store.slug} />
               <input type="hidden" name="productId" value={product.id} />
@@ -239,7 +254,7 @@ export default async function StoreProductPage({
               >
                 Ajouter au panier
               </SubmitButton>
-            </form>
+            </AddToCartForm>
           ) : (
             <div className="mt-8 rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-500">
               Ce produit est actuellement en rupture de stock.

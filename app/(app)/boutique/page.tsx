@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Check,
   ExternalLink,
   Globe,
@@ -184,6 +185,14 @@ export default async function BoutiquePage({
                   <Globe className="h-4 w-4 text-brand-600" />
                   <span className="font-medium text-slate-900">Domaine</span>
                   <span className="text-xs text-slate-500">Utiliser votre propre domaine</span>
+                </Link>
+                <Link
+                  href="/boutique/tracking"
+                  className="flex flex-col items-start gap-2 rounded-lg border border-slate-200 p-3 text-sm hover:border-brand-300 hover:bg-brand-50"
+                >
+                  <BarChart3 className="h-4 w-4 text-brand-600" />
+                  <span className="font-medium text-slate-900">Tracking</span>
+                  <span className="text-xs text-slate-500">Meta Pixel, GA4, GTM</span>
                 </Link>
               </div>
             </CardContent>

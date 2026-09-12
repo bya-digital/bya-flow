@@ -2,6 +2,7 @@ import { CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { DigitalDownloadButton } from "@/components/checkout/DigitalDownloadButton";
+import { TrackPurchase } from "@/components/store/tracking/TrackPurchase";
 import { getPublicOrder } from "@/lib/data/publicOrder";
 import { getPublicStoreBySlug } from "@/lib/data/publicStore";
 import { createClient } from "@/lib/supabase/server";
@@ -38,6 +39,22 @@ export default async function StoreOrderConfirmationPage({
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
           <CheckCircle2 className="h-7 w-7 text-emerald-600" strokeWidth={1.75} />
         </div>
+        {/* Jamais de conversion "Purchase" tant que le paiement n'est
+            pas réellement confirmé — même discipline que le reste du
+            projet ("ne jamais simuler un paiement comme réel"). */}
+        {order.paymentStatus === "paid" && (
+          <TrackPurchase
+            orderId={order.id}
+            items={order.items.map((item) => ({
+              id: item.productId ?? item.id,
+              name: item.productName,
+              price: item.unitPrice,
+              quantity: item.quantity,
+            }))}
+            value={order.total}
+            currency={store.currency}
+          />
+        )}
         <h1 className="mt-4 text-2xl font-bold text-slate-900">Commande enregistrée</h1>
         <p className="mt-2 text-sm text-slate-500">
           Commande n° {order.orderNumber} — {store.name} vous contactera pour les modalités
