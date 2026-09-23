@@ -1,7 +1,7 @@
 "use client";
 
 import { Bell, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { convertCartToOrder, markCartReminded, updateCartStatus } from "@/lib/actions/carts";
 
 const inputClasses =
@@ -43,27 +43,27 @@ export function CartActions({
             className={inputClasses}
           />
         </div>
-        <Button type="submit" variant="secondary" size="sm">
+        <SubmitButton variant="secondary" size="sm" pendingText="Enregistrement...">
           Enregistrer
-        </Button>
+        </SubmitButton>
       </form>
 
       <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-4">
         <form action={markCartReminded}>
           <input type="hidden" name="cartId" value={cartId} />
-          <Button type="submit" variant="secondary" size="sm">
+          <SubmitButton variant="secondary" size="sm" pendingText="Mise à jour...">
             <Bell className="h-4 w-4" />
             Marquer comme relancé
-          </Button>
+          </SubmitButton>
         </form>
 
         {status !== "converted" && (
           <form action={convertCartToOrder}>
             <input type="hidden" name="cartId" value={cartId} />
-            <Button type="submit" size="sm">
+            <SubmitButton size="sm" pendingText="Conversion...">
               <RefreshCw className="h-4 w-4" />
               Convertir en commande
-            </Button>
+            </SubmitButton>
           </form>
         )}
       </div>

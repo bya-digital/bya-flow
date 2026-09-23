@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -95,7 +95,9 @@ export function ShippingMethodForm({
         Proposée aux clients
       </label>
 
-      <Button type="submit">{method?.id ? "Enregistrer" : "Créer la méthode"}</Button>
+      <SubmitButton pendingText={method?.id ? "Enregistrement..." : "Création..."}>
+        {method?.id ? "Enregistrer" : "Créer la méthode"}
+      </SubmitButton>
     </form>
   );
 }

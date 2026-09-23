@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const roleLabels: Record<string, string> = {
   admin: "Administrateur",
@@ -83,9 +84,9 @@ export default async function RejoindrePage({
         ) : (
           <form action={acceptInvitation}>
             <input type="hidden" name="token" value={params.token} />
-            <Button type="submit" className="w-full">
+            <SubmitButton className="w-full" pendingText="Acceptation...">
               Accepter l&apos;invitation
-            </Button>
+            </SubmitButton>
           </form>
         )}
       </CardContent>

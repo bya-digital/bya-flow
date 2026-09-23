@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { deleteFaq } from "@/lib/actions/storeContent";
 
 export function DeleteFaqButton({ faqId }: { faqId: string }) {
@@ -14,13 +15,13 @@ export function DeleteFaqButton({ faqId }: { faqId: string }) {
       }}
     >
       <input type="hidden" name="faqId" value={faqId} />
-      <button
-        type="submit"
+      <InlineSubmitButton
         className="text-slate-400 hover:text-red-600"
         aria-label="Supprimer la question"
+        pendingContent={<Trash2 className="h-4 w-4 animate-pulse" />}
       >
         <Trash2 className="h-4 w-4" />
-      </button>
+      </InlineSubmitButton>
     </form>
   );
 }

@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createPage } from "@/lib/actions/pages";
 
 const inputClasses =
@@ -26,7 +26,7 @@ export default function NouvellePageDeVente() {
               </label>
               <input id="slug" name="slug" placeholder="ex-mon-offre-speciale" className={inputClasses} />
             </div>
-            <Button type="submit">Créer la page</Button>
+            <SubmitButton pendingText="Création...">Créer la page</SubmitButton>
           </form>
         </CardContent>
       </Card>

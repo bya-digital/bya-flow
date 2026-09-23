@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 import { updateLoyaltySettings } from "@/lib/actions/loyalty";
 import { getCurrentStore } from "@/lib/data/store";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -149,7 +149,7 @@ export default async function FidelitePage({
               </div>
             </div>
 
-            <Button type="submit">Enregistrer</Button>
+            <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
           </form>
         </CardContent>
       </Card>

@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { saveVariants } from "@/lib/actions/products";
 
 interface VariantRow {
@@ -148,9 +148,9 @@ export function ProductVariants({
         </button>
       </div>
 
-      <Button type="submit" variant="secondary" size="sm">
+      <SubmitButton variant="secondary" size="sm" pendingText="Enregistrement...">
         Enregistrer les variantes
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { removeCustomDomain, updateCustomDomain } from "@/lib/actions/customDomain";
 import { Alert } from "@/components/ui/Alert";
 import { Card, CardContent } from "@/components/ui/Card";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { getCurrentStore } from "@/lib/data/store";
@@ -52,12 +53,12 @@ export default async function BoutiqueDomainePage({
                   )}
                 </div>
                 <form action={removeCustomDomain}>
-                  <button
-                    type="submit"
+                  <InlineSubmitButton
                     className="text-sm font-medium text-red-600 hover:underline"
+                    pendingContent="Retrait..."
                   >
                     Retirer
-                  </button>
+                  </InlineSubmitButton>
                 </form>
               </div>
 

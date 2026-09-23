@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { savePaymentProvider } from "@/lib/actions/payments";
 import { cn } from "@/lib/utils";
 import type { PaymentProvider } from "@/lib/payments/types";
@@ -83,7 +83,7 @@ export function PaymentProviderCard({
         </label>
 
         {canManage ? (
-          <Button type="submit">Enregistrer</Button>
+          <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
         ) : (
           <p className="text-xs text-slate-400">
             Réservé aux administrateurs de la boutique.

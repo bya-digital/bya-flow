@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { deleteStore } from "@/lib/actions/store";
 
 export function DeleteStoreButton({ storeId, storeName }: { storeId: string; storeName: string }) {
@@ -18,13 +19,13 @@ export function DeleteStoreButton({ storeId, storeName }: { storeId: string; sto
       }}
     >
       <input type="hidden" name="storeId" value={storeId} />
-      <button
-        type="submit"
+      <InlineSubmitButton
         className="text-slate-400 hover:text-red-600"
         aria-label={`Supprimer ${storeName}`}
+        pendingContent={<Trash2 className="h-4 w-4 animate-pulse" />}
       >
         <Trash2 className="h-4 w-4" />
-      </button>
+      </InlineSubmitButton>
     </form>
   );
 }

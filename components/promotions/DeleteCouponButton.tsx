@@ -1,6 +1,7 @@
 "use client";
 
 import { Trash2 } from "lucide-react";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { deleteCoupon } from "@/lib/actions/coupons";
 
 export function DeleteCouponButton({ couponId }: { couponId: string }) {
@@ -14,13 +15,13 @@ export function DeleteCouponButton({ couponId }: { couponId: string }) {
       }}
     >
       <input type="hidden" name="couponId" value={couponId} />
-      <button
-        type="submit"
+      <InlineSubmitButton
         className="text-slate-400 hover:text-red-600"
         aria-label="Supprimer le coupon"
+        pendingContent={<Trash2 className="h-4 w-4 animate-pulse" />}
       >
         <Trash2 className="h-4 w-4" />
-      </button>
+      </InlineSubmitButton>
     </form>
   );
 }

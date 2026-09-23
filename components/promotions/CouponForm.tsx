@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -137,7 +137,9 @@ export function CouponForm({
         Actif
       </label>
 
-      <Button type="submit">{coupon?.id ? "Enregistrer" : "Créer le coupon"}</Button>
+      <SubmitButton pendingText={coupon?.id ? "Enregistrement..." : "Création..."}>
+        {coupon?.id ? "Enregistrer" : "Créer le coupon"}
+      </SubmitButton>
     </form>
   );
 }

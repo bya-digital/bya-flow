@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { updateStoreAppearance } from "@/lib/actions/store";
 import type { CurrentStore } from "@/lib/data/store";
 
@@ -176,7 +176,7 @@ export function StoreAppearanceForm({ store }: { store: CurrentStore }) {
         </div>
       </section>
 
-      <Button type="submit">Enregistrer</Button>
+      <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
     </form>
   );
 }

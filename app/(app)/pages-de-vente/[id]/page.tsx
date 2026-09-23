@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { DeletePageButton } from "@/components/pages/DeletePageButton";
 import { PageEditor } from "@/components/pages/PageEditor";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { setPageStatus, updatePageMeta } from "@/lib/actions/pages";
 import type { Block } from "@/lib/pageBuilder/types";
 import { getCurrentStore } from "@/lib/data/store";
@@ -100,9 +100,9 @@ export default async function PageDeVenteDetailPage({
                   </label>
                   <input id="slug" name="slug" defaultValue={page.slug} className={inputClasses} />
                 </div>
-                <Button type="submit" size="sm">
+                <SubmitButton size="sm" pendingText="Enregistrement...">
                   Enregistrer
-                </Button>
+                </SubmitButton>
               </form>
 
               <form action={setPageStatus} className="mt-4 border-t border-slate-100 pt-4">
@@ -112,13 +112,13 @@ export default async function PageDeVenteDetailPage({
                   name="status"
                   value={page.status === "published" ? "draft" : "published"}
                 />
-                <Button
-                  type="submit"
+                <SubmitButton
                   variant={page.status === "published" ? "secondary" : "primary"}
                   size="sm"
+                  pendingText="Mise à jour..."
                 >
                   {page.status === "published" ? "Dépublier" : "Publier"}
-                </Button>
+                </SubmitButton>
               </form>
             </CardContent>
           </Card>

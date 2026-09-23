@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { saveEmailProviderSettings } from "@/lib/actions/emailSettings";
 import { saveMessagingProviderSettings } from "@/lib/actions/messagingSettings";
 import { getCurrentMembership } from "@/lib/data/team";
@@ -158,7 +158,7 @@ export default async function CampagnesParametresPage({
                 Activer l&apos;envoi réel
               </label>
 
-              <Button type="submit">Enregistrer</Button>
+              <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
             </form>
           </CardContent>
         </Card>
@@ -245,7 +245,7 @@ export default async function CampagnesParametresPage({
                 Activer l&apos;envoi réel
               </label>
 
-              <Button type="submit">Enregistrer</Button>
+              <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
             </form>
           </CardContent>
         </Card>

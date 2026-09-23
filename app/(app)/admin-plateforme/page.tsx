@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { verifyCustomDomain } from "@/lib/actions/platformAdmin";
 import { getPlan } from "@/lib/billing/plans";
@@ -146,12 +147,12 @@ export default async function AdminPlateformePage({
                   </div>
                   <form action={verifyCustomDomain}>
                     <input type="hidden" name="storeId" value={pending.storeId} />
-                    <button
-                      type="submit"
+                    <InlineSubmitButton
                       className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      pendingContent="Vérification..."
                     >
                       Marquer comme vérifié
-                    </button>
+                    </InlineSubmitButton>
                   </form>
                 </li>
               ))}

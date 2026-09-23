@@ -1,10 +1,10 @@
 import { Gift } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createOrderBump, deleteOrderBump, toggleOrderBump } from "@/lib/actions/orderBumps";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
@@ -97,15 +97,15 @@ export default async function OrderBumpsPage({
                   <form action={toggleOrderBump}>
                     <input type="hidden" name="bumpId" value={bump.id} />
                     <input type="hidden" name="isActive" value={String(bump.is_active)} />
-                    <Button type="submit" variant="secondary" size="sm">
+                    <SubmitButton variant="secondary" size="sm" pendingText="Mise à jour...">
                       {bump.is_active ? "Désactiver" : "Activer"}
-                    </Button>
+                    </SubmitButton>
                   </form>
                   <form action={deleteOrderBump}>
                     <input type="hidden" name="bumpId" value={bump.id} />
-                    <Button type="submit" variant="ghost" size="sm">
+                    <SubmitButton variant="ghost" size="sm" pendingText="Suppression...">
                       Supprimer
-                    </Button>
+                    </SubmitButton>
                   </form>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export default async function OrderBumpsPage({
                 </label>
                 <textarea name="description" rows={2} className={inputClasses} />
               </div>
-              <Button type="submit">Créer l&apos;order bump</Button>
+              <SubmitButton pendingText="Création...">Créer l&apos;order bump</SubmitButton>
             </form>
           </CardContent>
         </Card>

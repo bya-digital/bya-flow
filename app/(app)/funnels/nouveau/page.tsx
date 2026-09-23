@@ -1,6 +1,6 @@
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createFunnel } from "@/lib/actions/funnels";
 
 const inputClasses =
@@ -26,7 +26,7 @@ export default function NouveauFunnelPage() {
                 className={inputClasses}
               />
             </div>
-            <Button type="submit">Créer le funnel</Button>
+            <SubmitButton pendingText="Création...">Créer le funnel</SubmitButton>
           </form>
         </CardContent>
       </Card>

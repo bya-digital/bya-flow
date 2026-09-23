@@ -2,7 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { CategoryQuickCreate } from "@/components/produits/CategoryQuickCreate";
 import { generateProductDescription } from "@/lib/actions/ai";
 import { cn, slugify } from "@/lib/utils";
@@ -265,7 +265,9 @@ export function ProductForm({ action, product, categories }: ProductFormProps) {
         </div>
       </div>
 
-      <Button type="submit">{product?.id ? "Enregistrer" : "Créer le produit"}</Button>
+      <SubmitButton pendingText={product?.id ? "Enregistrement..." : "Création..."}>
+        {product?.id ? "Enregistrer" : "Créer le produit"}
+      </SubmitButton>
     </form>
   );
 }

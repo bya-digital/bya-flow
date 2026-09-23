@@ -2,7 +2,8 @@
 
 import { FileText, Trash2, Upload } from "lucide-react";
 import { useRef, useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { useFormStatus } from "react-dom";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import {
   createLesson,
   createModule,
@@ -26,6 +27,41 @@ export interface CourseModule {
   id: string;
   title: string;
   lessons: CourseLesson[];
+}
+
+// Boutons icône seule, avec classes sur mesure — SubmitButton générique
+// romprait le style. On anime l'icône pendant le pending (même logique que
+// WishlistToggleButton / ProductImages.DeleteImageButton).
+function DeleteLessonButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none"
+      aria-label="Supprimer la leçon"
+    >
+      <Trash2 className={pending ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
+    </button>
+  );
+}
+
+function DeleteModuleButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none"
+      aria-label="Supprimer le module"
+    >
+      <Trash2 className={pending ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
+    </button>
+  );
 }
 
 function LessonRow({
@@ -54,13 +90,7 @@ function LessonRow({
         <form action={deleteLesson}>
           <input type="hidden" name="lessonId" value={lesson.id} />
           <input type="hidden" name="productId" value={productId} />
-          <button
-            type="submit"
-            className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
-            aria-label="Supprimer la leçon"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          <DeleteLessonButton />
         </form>
       </div>
 
@@ -118,7 +148,7 @@ function NewLessonForm({ productId, moduleId }: { productId: string; moduleId: s
         className={inputClasses}
       />
       <div className="flex gap-2">
-        <Button type="submit">Ajouter</Button>
+        <SubmitButton pendingText="Création...">Ajouter</SubmitButton>
         <button
           type="button"
           onClick={() => setOpen(false)}
@@ -152,7 +182,7 @@ function NewModuleForm({ productId }: { productId: string }) {
       <div className="flex-1">
         <input name="title" placeholder="Titre du module" required className={inputClasses} autoFocus />
       </div>
-      <Button type="submit">Ajouter</Button>
+      <SubmitButton pendingText="Création...">Ajouter</SubmitButton>
       <button
         type="button"
         onClick={() => setOpen(false)}
@@ -186,13 +216,7 @@ export function CourseBuilder({
             <form action={deleteModule}>
               <input type="hidden" name="moduleId" value={mod.id} />
               <input type="hidden" name="productId" value={productId} />
-              <button
-                type="submit"
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                aria-label="Supprimer le module"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+              <DeleteModuleButton />
             </form>
           </div>
 

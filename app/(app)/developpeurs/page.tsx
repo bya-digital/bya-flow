@@ -3,10 +3,11 @@ import { notFound } from "next/navigation";
 import { CreateApiKeyForm } from "@/components/developpeurs/CreateApiKeyForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { revokeApiKey } from "@/lib/actions/apiKeys";
 import { createWebhook, deleteWebhook, toggleWebhook } from "@/lib/actions/webhooks";
 import { getApiKeys } from "@/lib/data/apiKeys";
@@ -86,13 +87,13 @@ export default async function DeveloppeursPage({
                     </div>
                     <form action={revokeApiKey}>
                       <input type="hidden" name="keyId" value={key.id} />
-                      <button
-                        type="submit"
+                      <InlineSubmitButton
                         className="shrink-0 text-slate-400 hover:text-red-600"
                         aria-label="Révoquer la clé"
+                        pendingContent={<Trash2 className="h-4 w-4 animate-pulse" />}
                       >
                         <Trash2 className="h-4 w-4" />
-                      </button>
+                      </InlineSubmitButton>
                     </form>
                   </li>
                 ))}
@@ -137,15 +138,21 @@ export default async function DeveloppeursPage({
                       <form action={toggleWebhook}>
                         <input type="hidden" name="webhookId" value={webhook.id} />
                         <input type="hidden" name="isActive" value={String(webhook.isActive)} />
-                        <button type="submit" className="text-xs font-medium text-brand-600 hover:underline">
+                        <InlineSubmitButton
+                          className="text-xs font-medium text-brand-600 hover:underline"
+                          pendingContent="Mise à jour..."
+                        >
                           {webhook.isActive ? "Désactiver" : "Activer"}
-                        </button>
+                        </InlineSubmitButton>
                       </form>
                       <form action={deleteWebhook}>
                         <input type="hidden" name="webhookId" value={webhook.id} />
-                        <button type="submit" className="text-xs font-medium text-red-600 hover:underline">
+                        <InlineSubmitButton
+                          className="text-xs font-medium text-red-600 hover:underline"
+                          pendingContent="Suppression..."
+                        >
                           Supprimer
-                        </button>
+                        </InlineSubmitButton>
                       </form>
                     </div>
                   </li>
@@ -168,7 +175,7 @@ export default async function DeveloppeursPage({
                   className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400"
                 />
               </div>
-              <Button type="submit">Ajouter</Button>
+              <SubmitButton pendingText="Ajout...">Ajouter</SubmitButton>
             </form>
           </CardContent>
         </Card>

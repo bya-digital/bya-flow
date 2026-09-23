@@ -2,11 +2,32 @@
 
 import { Trash2, Upload } from "lucide-react";
 import { useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { deleteProductImage, uploadProductImage } from "@/lib/actions/products";
 
 interface ProductImage {
   id: string;
   url: string;
+}
+
+// Bouton dédié (icône seule, positionnement absolu sur la vignette) plutôt
+// que SubmitButton générique, dont les tailles/variantes fixes casseraient
+// ce style. Même logique que WishlistToggleButton : on anime l'icône
+// pendant le pending plutôt que de remplacer un texte (il n'y en a pas).
+function DeleteImageButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-500 opacity-0 shadow transition-opacity hover:text-red-600 group-hover:opacity-100 disabled:pointer-events-none"
+      aria-label="Supprimer l'image"
+    >
+      <Trash2 className={pending ? "h-3.5 w-3.5 animate-pulse" : "h-3.5 w-3.5"} />
+    </button>
+  );
 }
 
 export function ProductImages({
@@ -30,13 +51,7 @@ export function ProductImages({
                 <input type="hidden" name="imageId" value={image.id} />
                 <input type="hidden" name="productId" value={productId} />
                 <input type="hidden" name="imageUrl" value={image.url} />
-                <button
-                  type="submit"
-                  className="absolute right-1 top-1 rounded-full bg-white/90 p-1 text-slate-500 opacity-0 shadow transition-opacity hover:text-red-600 group-hover:opacity-100"
-                  aria-label="Supprimer l'image"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+                <DeleteImageButton />
               </form>
             </div>
           ))}

@@ -1,6 +1,7 @@
 "use client";
 
 import { PLANS } from "@/lib/billing/plans";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { updateOrganizationPlan } from "@/lib/actions/platformAdmin";
 
 export function PlanChangeForm({
@@ -24,12 +25,12 @@ export function PlanChangeForm({
           </option>
         ))}
       </select>
-      <button
-        type="submit"
+      <InlineSubmitButton
         className="rounded-lg border border-slate-300 px-2 py-1 text-xs font-medium text-slate-600 hover:bg-slate-100"
+        pendingContent="Changement..."
       >
         Changer
-      </button>
+      </InlineSubmitButton>
     </form>
   );
 }

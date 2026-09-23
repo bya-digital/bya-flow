@@ -2,7 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { generateCampaignContent } from "@/lib/actions/ai";
 import { SEGMENT_LABELS } from "@/lib/data/segments";
 
@@ -189,7 +189,9 @@ export function CampaignForm({
         </div>
       </div>
 
-      <Button type="submit">{campaign?.id ? "Enregistrer" : "Créer la campagne"}</Button>
+      <SubmitButton pendingText={campaign?.id ? "Enregistrement..." : "Création..."}>
+        {campaign?.id ? "Enregistrer" : "Créer la campagne"}
+      </SubmitButton>
     </form>
   );
 }

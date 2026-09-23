@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { AutomationForm } from "@/components/automatisations/AutomationForm";
 import { DeleteAutomationButton } from "@/components/automatisations/DeleteAutomationButton";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { getCurrentStore } from "@/lib/data/store";
 import { runInactivityCheck, updateAutomation } from "@/lib/actions/automations";
 import { createClient } from "@/lib/supabase/server";
@@ -78,10 +78,10 @@ export default async function AutomationDetailPage({
                 </p>
                 <form action={runInactivityCheck}>
                   <input type="hidden" name="automationId" value={automation.id} />
-                  <Button type="submit" variant="secondary" size="sm">
+                  <SubmitButton variant="secondary" size="sm" pendingText="Vérification...">
                     <PlayCircle className="h-4 w-4" />
                     Exécuter maintenant
-                  </Button>
+                  </SubmitButton>
                 </form>
               </CardContent>
             </Card>

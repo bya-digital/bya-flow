@@ -2447,3 +2447,32 @@ devise sur XOF. Au checkout : le pays par défaut de la boutique
 numéro puis changé le pays pour "Sénégal", le champ affiche
 correctement "+221 612345678" — l'ancien indicatif est bien retiré,
 les chiffres tapés sont bien conservés.
+
+## 2026-09-23 — Retours de clic généralisés (suite)
+
+Balayage complet des ~40 formulaires back-office repérés lors de
+l'audit précédent comme n'ayant aucun retour visuel pendant l'envoi
+— même correctif que `SubmitButton`/`CheckoutSubmitButton` déjà posé
+sur les parcours prioritaires, étendu à tout le reste de
+l'application marchande (produits, commandes/paniers, livraison/
+paiements, campagnes/promotions/upsells/bumps/affiliation/fidélité/
+funnels/pages de vente/avis, apparence/FAQ/témoignages/domaine,
+équipe/invitations/clients, développeurs/admin plateforme/
+automatisations/facturation).
+
+- **`components/ui/InlineSubmitButton.tsx`** (nouveau) : même principe
+  que `SubmitButton` mais pour les boutons au style sur mesure (icône
+  seule, lien texte, bordure compacte) où forcer la variante fixe de
+  `Button` aurait changé l'apparence — préserve exactement le
+  markup/les classes existantes, ne change que le contenu et l'état
+  `disabled` pendant l'envoi.
+- Chaque `window.confirm()` existant (suppression produit/boutique/
+  campagne/coupon/funnel/page/client/automatisation...) conservé à
+  l'identique — seul le bouton lui-même gagne le retour visuel,
+  jamais la logique de confirmation.
+- Travail réparti en deux lots parallèles (produits/commandes/
+  livraison/paiements d'un côté, marketing/réglages boutique/équipe/
+  admin de l'autre) pour aller plus vite sans se marcher dessus
+  (fichiers disjoints).
+- Vérifié après fusion des deux lots : `next build`, `next lint`,
+  `tsc --noEmit`, `npm test` (20/20) tous propres.

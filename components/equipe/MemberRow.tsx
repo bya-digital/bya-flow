@@ -1,6 +1,7 @@
 "use client";
 
 import { removeMember, updateMemberRole } from "@/lib/actions/team";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import type { TeamMember } from "@/lib/data/team";
 
 const selectClasses =
@@ -60,9 +61,12 @@ export function MemberRow({ member }: { member: TeamMember }) {
           }}
         >
           <input type="hidden" name="memberId" value={member.id} />
-          <button type="submit" className="text-xs font-medium text-red-600 hover:underline">
+          <InlineSubmitButton
+            className="text-xs font-medium text-red-600 hover:underline"
+            pendingContent="Retrait..."
+          >
             Retirer
-          </button>
+          </InlineSubmitButton>
         </form>
       </td>
     </tr>

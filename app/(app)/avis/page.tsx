@@ -3,6 +3,7 @@ import { StarRating } from "@/components/store/StarRating";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { updateReviewModeration } from "@/lib/actions/reviews";
 import { getCurrentStore } from "@/lib/data/store";
@@ -102,12 +103,12 @@ export default async function AvisPage({
                     />
                     Visible sur la boutique
                   </label>
-                  <button
-                    type="submit"
+                  <InlineSubmitButton
                     className="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+                    pendingContent="Enregistrement..."
                   >
                     Enregistrer
-                  </button>
+                  </InlineSubmitButton>
                 </div>
               </form>
             </div>

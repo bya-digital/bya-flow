@@ -3,7 +3,7 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CustomerQuickCreate } from "@/components/commandes/CustomerQuickCreate";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createCart } from "@/lib/actions/carts";
 
 const inputClasses =
@@ -189,7 +189,7 @@ export function CartCreateForm({
         <textarea id="notes" name="notes" rows={3} className={inputClasses} />
       </div>
 
-      <Button type="submit">Enregistrer le panier</Button>
+      <SubmitButton pendingText="Enregistrement...">Enregistrer le panier</SubmitButton>
     </form>
   );
 }

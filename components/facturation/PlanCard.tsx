@@ -1,7 +1,7 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { changePlan } from "@/lib/actions/billing";
 import { formatLimit, type Plan } from "@/lib/billing/plans";
 
@@ -52,9 +52,9 @@ export function PlanCard({ plan, isCurrent }: { plan: Plan; isCurrent: boolean }
             }}
           >
             <input type="hidden" name="plan" value={plan.id} />
-            <Button type="submit" variant="secondary" className="w-full">
+            <SubmitButton variant="secondary" className="w-full" pendingText="Changement...">
               Choisir ce plan
-            </Button>
+            </SubmitButton>
           </form>
         )}
       </div>

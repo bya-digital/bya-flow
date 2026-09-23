@@ -1,11 +1,11 @@
 import { Users } from "lucide-react";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { CopyAffiliateLink } from "@/components/affiliation/CopyAffiliateLink";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createAffiliate, deleteAffiliate, toggleAffiliate } from "@/lib/actions/affiliates";
 import { getAffiliatesWithStats } from "@/lib/data/affiliates";
 import { getCurrentStore } from "@/lib/data/store";
@@ -69,15 +69,15 @@ export default async function AffiliationPage({
                     <form action={toggleAffiliate}>
                       <input type="hidden" name="affiliateId" value={affiliate.id} />
                       <input type="hidden" name="status" value={affiliate.status} />
-                      <Button type="submit" variant="secondary" size="sm">
+                      <SubmitButton variant="secondary" size="sm" pendingText="Mise à jour...">
                         {affiliate.status === "active" ? "Suspendre" : "Réactiver"}
-                      </Button>
+                      </SubmitButton>
                     </form>
                     <form action={deleteAffiliate}>
                       <input type="hidden" name="affiliateId" value={affiliate.id} />
-                      <Button type="submit" variant="ghost" size="sm">
+                      <SubmitButton variant="ghost" size="sm" pendingText="Suppression...">
                         Supprimer
-                      </Button>
+                      </SubmitButton>
                     </form>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default async function AffiliationPage({
                   className={inputClasses}
                 />
               </div>
-              <Button type="submit">Créer l&apos;affilié</Button>
+              <SubmitButton pendingText="Création...">Créer l&apos;affilié</SubmitButton>
             </form>
           </CardContent>
         </Card>

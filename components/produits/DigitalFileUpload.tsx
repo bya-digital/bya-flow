@@ -2,12 +2,31 @@
 
 import { FileText, Trash2, Upload } from "lucide-react";
 import { useRef } from "react";
+import { useFormStatus } from "react-dom";
 import { deleteDigitalFile, uploadDigitalFile } from "@/lib/actions/products";
 
 function formatSize(bytes: number | null): string {
   if (!bytes) return "";
   if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+}
+
+// Icône seule avec classes sur mesure — SubmitButton générique romprait le
+// style. On anime l'icône pendant le pending, comme WishlistToggleButton.
+function DeleteFileButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <button
+      type="submit"
+      disabled={pending}
+      aria-busy={pending}
+      className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:pointer-events-none"
+      aria-label="Supprimer le fichier"
+    >
+      <Trash2 className={pending ? "h-4 w-4 animate-pulse" : "h-4 w-4"} />
+    </button>
+  );
 }
 
 export function DigitalFileUpload({
@@ -34,13 +53,7 @@ export function DigitalFileUpload({
           </div>
           <form action={deleteDigitalFile}>
             <input type="hidden" name="productId" value={productId} />
-            <button
-              type="submit"
-              className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
-              aria-label="Supprimer le fichier"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+            <DeleteFileButton />
           </form>
         </div>
       ) : (

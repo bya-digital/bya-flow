@@ -3,9 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DeleteFunnelButton } from "@/components/funnels/DeleteFunnelButton";
 import { Alert } from "@/components/ui/Alert";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { addFunnelStep, moveFunnelStep, removeFunnelStep } from "@/lib/actions/funnels";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
@@ -109,38 +110,38 @@ export default async function FunnelDetailPage({
                         <input type="hidden" name="funnelId" value={funnel.id} />
                         <input type="hidden" name="stepId" value={step.id} />
                         <input type="hidden" name="direction" value="up" />
-                        <button
-                          type="submit"
+                        <InlineSubmitButton
                           disabled={index === 0}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 disabled:opacity-30"
                           aria-label="Monter"
+                          pendingContent="↑"
                         >
                           ↑
-                        </button>
+                        </InlineSubmitButton>
                       </form>
                       <form action={moveFunnelStep}>
                         <input type="hidden" name="funnelId" value={funnel.id} />
                         <input type="hidden" name="stepId" value={step.id} />
                         <input type="hidden" name="direction" value="down" />
-                        <button
-                          type="submit"
+                        <InlineSubmitButton
                           disabled={index === steps.length - 1}
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 disabled:opacity-30"
                           aria-label="Descendre"
+                          pendingContent="↓"
                         >
                           ↓
-                        </button>
+                        </InlineSubmitButton>
                       </form>
                       <form action={removeFunnelStep}>
                         <input type="hidden" name="funnelId" value={funnel.id} />
                         <input type="hidden" name="stepId" value={step.id} />
-                        <button
-                          type="submit"
+                        <InlineSubmitButton
                           className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
                           aria-label="Supprimer"
+                          pendingContent="…"
                         >
                           ✕
-                        </button>
+                        </InlineSubmitButton>
                       </form>
                     </div>
                   </div>
@@ -170,9 +171,9 @@ export default async function FunnelDetailPage({
                       </option>
                     ))}
                   </select>
-                  <Button type="submit" size="sm" className="mt-2">
+                  <SubmitButton size="sm" className="mt-2" pendingText="Ajout...">
                     Ajouter cette page
-                  </Button>
+                  </SubmitButton>
                 </form>
 
                 <form action={addFunnelStep}>
@@ -187,9 +188,9 @@ export default async function FunnelDetailPage({
                       </option>
                     ))}
                   </select>
-                  <Button type="submit" size="sm" className="mt-2">
+                  <SubmitButton size="sm" className="mt-2" pendingText="Ajout...">
                     Ajouter ce produit
-                  </Button>
+                  </SubmitButton>
                 </form>
               </div>
             </CardContent>

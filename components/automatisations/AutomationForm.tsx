@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -140,7 +140,9 @@ export function AutomationForm({
         Active
       </label>
 
-      <Button type="submit">{automation?.id ? "Enregistrer" : "Créer l'automatisation"}</Button>
+      <SubmitButton pendingText={automation?.id ? "Enregistrement..." : "Création..."}>
+        {automation?.id ? "Enregistrer" : "Créer l'automatisation"}
+      </SubmitButton>
     </form>
   );
 }
