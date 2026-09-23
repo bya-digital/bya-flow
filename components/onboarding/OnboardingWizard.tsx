@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { completeOnboarding } from "@/lib/actions/onboarding";
+import { currencyForCountryName } from "@/lib/countries";
 
 const BUSINESS_TYPES = [
   { value: "ecommerce", label: "Boutique en ligne" },
@@ -23,7 +26,12 @@ const GOALS = [
   { value: "developper_boutique", label: "Développer ma boutique" },
 ];
 
-const STEPS = ["Entreprise", "Activité", "Devise", "Pays", "Objectif", "Boutique"];
+// "Pays" avant "Devise" : le pays choisi pré-remplit automatiquement
+// la devise correspondante (jamais EUR par défaut sans rapport avec
+// le pays réel du marchand) — l'étape Devise ne sert plus qu'à
+// confirmer ou, si besoin, facturer dans une autre devise que celle
+// de son pays.
+const STEPS = ["Entreprise", "Activité", "Pays", "Devise", "Objectif", "Boutique"];
 
 interface FormState {
   companyName: string;
@@ -42,7 +50,7 @@ export function OnboardingWizard({ error }: { error?: string }) {
   const [data, setData] = useState<FormState>({
     companyName: "",
     businessType: "",
-    currency: "EUR",
+    currency: "",
     country: "",
     primaryGoal: "",
     storeName: "",
@@ -50,6 +58,18 @@ export function OnboardingWizard({ error }: { error?: string }) {
 
   const update = (field: keyof FormState, value: string) =>
     setData((prev) => ({ ...prev, [field]: value }));
+
+  // Le pays détermine la devise par défaut — jamais EUR imposé sans
+  // rapport avec le pays réel du marchand. Le marchand garde la main
+  // sur l'étape Devise ensuite s'il facture dans une autre devise.
+  const updateCountry = (name: string) => {
+    const matchedCurrency = currencyForCountryName(name);
+    setData((prev) => ({
+      ...prev,
+      country: name,
+      currency: matchedCurrency ?? prev.currency,
+    }));
+  };
 
   const isLastStep = step === STEPS.length - 1;
 
@@ -60,9 +80,9 @@ export function OnboardingWizard({ error }: { error?: string }) {
       case 1:
         return data.businessType.length > 0;
       case 2:
-        return data.currency.length > 0;
-      case 3:
         return data.country.trim().length > 0;
+      case 3:
+        return data.currency.length > 0;
       case 4:
         return data.primaryGoal.length > 0;
       default:
@@ -139,35 +159,39 @@ export function OnboardingWizard({ error }: { error?: string }) {
 
         {step === 2 && (
           <div>
+            <h2 className="text-lg font-semibold text-slate-900">Pays</h2>
+            <p className="mt-1 text-sm text-slate-500">Où est basée votre activité ?</p>
+            <CountrySelect
+              autoFocus
+              value={data.country}
+              onChange={(e) => updateCountry(e.target.value)}
+              className={inputClasses}
+            />
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
             <h2 className="text-lg font-semibold text-slate-900">Devise principale</h2>
             <p className="mt-1 text-sm text-slate-500">
-              Dans quelle devise facturez-vous vos clients ?
+              {data.country
+                ? `Devise détectée pour ${data.country}. Modifiez-la si vous facturez autrement.`
+                : "Dans quelle devise facturez-vous vos clients ?"}
             </p>
             <select
               value={data.currency}
               onChange={(e) => update("currency", e.target.value)}
               className={inputClasses}
             >
+              <option value="" disabled>
+                Choisir une devise
+              </option>
               {CURRENCIES.map((currency) => (
                 <option key={currency} value={currency}>
                   {currency}
                 </option>
               ))}
             </select>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">Pays</h2>
-            <p className="mt-1 text-sm text-slate-500">Où est basée votre activité ?</p>
-            <input
-              autoFocus
-              value={data.country}
-              onChange={(e) => update("country", e.target.value)}
-              placeholder="Ex. France"
-              className={inputClasses}
-            />
           </div>
         )}
 
@@ -223,7 +247,7 @@ export function OnboardingWizard({ error }: { error?: string }) {
           </Button>
 
           {isLastStep ? (
-            <Button type="submit">Terminer</Button>
+            <SubmitButton pendingText="Création...">Terminer</SubmitButton>
           ) : (
             <Button type="button" onClick={() => setStep((s) => s + 1)} disabled={!canGoNext}>
               Suivant

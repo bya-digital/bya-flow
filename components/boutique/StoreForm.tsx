@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/Button";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { updateStore } from "@/lib/actions/store";
 import type { CurrentStore } from "@/lib/data/store";
 
@@ -75,7 +76,7 @@ export function StoreForm({ store }: { store: CurrentStore }) {
           <label htmlFor="country" className={labelClasses}>
             Pays
           </label>
-          <input
+          <CountrySelect
             id="country"
             name="country"
             defaultValue={store.country ?? ""}
@@ -102,7 +103,7 @@ export function StoreForm({ store }: { store: CurrentStore }) {
         Boutique active (visible publiquement sur <code>/store/{store.slug}</code>)
       </label>
 
-      <Button type="submit">Enregistrer</Button>
+      <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
     </form>
   );
 }

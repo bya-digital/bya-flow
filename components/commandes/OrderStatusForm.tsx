@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/components/ui/Button";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { updateOrder } from "@/lib/actions/orders";
 
 const inputClasses =
@@ -91,9 +92,8 @@ export function OrderStatusForm({
             defaultValue={shippingAddress?.postalCode ?? ""}
             className={inputClasses}
           />
-          <input
+          <CountrySelect
             name="shippingCountry"
-            placeholder="Pays"
             defaultValue={shippingAddress?.country ?? ""}
             className={inputClasses}
           />
@@ -113,7 +113,7 @@ export function OrderStatusForm({
         />
       </div>
 
-      <Button type="submit">Enregistrer</Button>
+      <SubmitButton pendingText="Enregistrement...">Enregistrer</SubmitButton>
     </form>
   );
 }

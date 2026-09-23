@@ -9,19 +9,18 @@ import {
   Store,
 } from "lucide-react";
 import Link from "next/link";
+import { CountryCurrencyFields } from "@/components/boutique/CountryCurrencyFields";
 import { DeleteStoreButton } from "@/components/boutique/DeleteStoreButton";
 import { StoreForm } from "@/components/boutique/StoreForm";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createStore, switchStore } from "@/lib/actions/store";
 import { getCurrentStore, getOrgStores } from "@/lib/data/store";
 import { getCurrentMembership } from "@/lib/data/team";
-
-const CURRENCIES = ["EUR", "USD", "GBP", "CAD", "XOF", "XAF", "CHF"];
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -117,7 +116,7 @@ export default async function BoutiquePage({
             <CardContent>
               <p className="mb-3 text-sm font-semibold text-slate-900">Ajouter une boutique</p>
               <form action={createStore} className="grid gap-3 sm:grid-cols-3 sm:items-end">
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-3">
                   <label htmlFor="newStoreName" className={labelClasses}>
                     Nom
                   </label>
@@ -129,22 +128,19 @@ export default async function BoutiquePage({
                     className={inputClasses}
                   />
                 </div>
-                <div>
-                  <label htmlFor="newStoreCurrency" className={labelClasses}>
-                    Devise
-                  </label>
-                  <select id="newStoreCurrency" name="currency" defaultValue="EUR" className={inputClasses}>
-                    {CURRENCIES.map((currency) => (
-                      <option key={currency} value={currency}>
-                        {currency}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <CountryCurrencyFields
+                  countryId="newStoreCountry"
+                  currencyId="newStoreCurrency"
+                  countryLabel="Pays"
+                  currencyLabel="Devise"
+                  labelClassName={labelClasses}
+                  countryInputClassName={inputClasses}
+                  currencyInputClassName={inputClasses}
+                />
                 <div className="sm:col-span-3">
-                  <Button type="submit" size="sm">
+                  <SubmitButton size="sm" pendingText="Création...">
                     Créer cette boutique
-                  </Button>
+                  </SubmitButton>
                 </div>
               </form>
             </CardContent>

@@ -2386,3 +2386,54 @@ vrais chiffres de la boutique de test (110,00 € sur 4 commandes,
 panier moyen 27,50 € — exact au centime près). Une question hors
 périmètre ("Quelle est la météo ?") reçoit bien le message honnête
 de non-reconnaissance plutôt qu'une réponse inventée.
+
+## 2026-09-23 — Pays/téléphone/devise automatiques + retours de clic
+
+Demande directe de l'utilisateur (pas une section de la directive) :
+"que les pays soit automatiquement selectionnable", "indicatif pays
+automatique avant chaque saisie de numéro", "devise automatique avec
+le pays choisi, ne mets plus euro par défaut", et une plainte générale
+de lenteur ressentie au clic.
+
+- **`lib/countries.ts`** : liste fermée de 30 pays (Afrique
+  francophone + grands marchés occidentaux), chacun mappé à l'une des
+  7 devises réellement supportées (EUR/USD/GBP/CAD/XOF/XAF/CHF) — un
+  pays dont la devise ne serait pas supportée n'a pas sa place ici.
+  `stripKnownDialCode()` retire un indicatif déjà présent avant d'en
+  appliquer un nouveau (changement de pays en cours de saisie).
+- **`<CountrySelect>`** remplace tous les champs "Pays" en saisie
+  libre trouvés dans l'app : checkout boutique, `StoreForm`,
+  `OrderCreateForm`, `OrderStatusForm`, assistant de création de
+  boutique (onboarding et "Ajouter une boutique"). Élimine les fautes
+  de frappe/variantes qui rendaient le pays inexploitable ailleurs.
+- **Checkout boutique** (`CheckoutContactContext`) : les sections
+  "Coordonnées" et "Adresse de livraison" partagent désormais un
+  contexte React (elles sont physiquement séparées dans la mise en
+  page) — choisir un pays met à jour l'indicatif en tête du numéro de
+  téléphone sans écraser les chiffres déjà saisis ; le téléphone est
+  pré-rempli avec l'indicatif du pays de la boutique dès l'arrivée.
+- **Devise automatique** : l'étape "Pays" de l'onboarding précède
+  désormais "Devise" (inversion de l'ordre) et pré-remplit la devise
+  correspondante — jamais EUR par défaut sans rapport avec le pays
+  réel. Même logique sur "Ajouter une boutique"
+  (`CountryCurrencyFields`). Garde-fou côté serveur ajouté dans
+  `completeOnboarding()` et `createStore()` : si la devise n'arrive
+  pas du client, dérivée du pays plutôt que de retomber sur "EUR" en
+  dur.
+- **Réactivité perçue** : `SubmitButton` (composant existant basé sur
+  `useFormStatus`, déjà utilisé par endroits) branché sur les
+  parcours les plus visibles qui ne l'avaient pas encore — checkout
+  ("Confirmer la commande", nouveau `CheckoutSubmitButton` pour
+  conserver l'accent couleur de la boutique), favoris
+  (`WishlistToggleButton`), capture de lead sur les pages de vente
+  (`LeadFormSubmitButton`), plus `StoreForm`, `OrderCreateForm`,
+  `OrderStatusForm`, l'onboarding et "Ajouter une boutique". Un clic
+  sans aucun retour visuel pendant l'aller-retour serveur est ce qui
+  donne l'impression que "rien ne se passe" — pas nécessairement une
+  vraie lenteur réseau. Audit complet effectué : une quarantaine de
+  formulaires côté back-office marchand n'ont pas encore ce retour
+  visuel (créations/suppressions dans produits, campagnes, coupons,
+  équipe, etc.) — repérés mais pas encore tous corrigés, voir tâche
+  de suivi.
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20) tous propres.

@@ -3,7 +3,8 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { CustomerQuickCreate } from "@/components/commandes/CustomerQuickCreate";
-import { Button } from "@/components/ui/Button";
+import { CountrySelect } from "@/components/ui/CountrySelect";
+import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createOrder } from "@/lib/actions/orders";
 
 const inputClasses =
@@ -238,7 +239,7 @@ export function OrderCreateForm({
           <input name="shippingAddressLine" placeholder="Adresse" className={inputClasses} />
           <input name="shippingCity" placeholder="Ville" className={inputClasses} />
           <input name="shippingPostalCode" placeholder="Code postal" className={inputClasses} />
-          <input name="shippingCountry" placeholder="Pays" className={inputClasses} />
+          <CountrySelect name="shippingCountry" className={inputClasses} />
         </div>
       </div>
 
@@ -249,7 +250,7 @@ export function OrderCreateForm({
         <textarea id="notes" name="notes" rows={3} className={inputClasses} />
       </div>
 
-      <Button type="submit">Créer la commande</Button>
+      <SubmitButton pendingText="Création...">Créer la commande</SubmitButton>
     </form>
   );
 }

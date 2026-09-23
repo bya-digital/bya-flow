@@ -2,12 +2,16 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { currencyForCountryName } from "@/lib/countries";
 
 export async function completeOnboarding(formData: FormData) {
   const companyName = formData.get("companyName") as string;
   const businessType = formData.get("businessType") as string;
-  const currency = formData.get("currency") as string;
   const country = formData.get("country") as string;
+  // Jamais EUR par défaut sans rapport avec le pays réel du marchand
+  // — dérivé du pays si la devise n'a pas été fournie (garde-fou côté
+  // serveur, même si le client la calcule déjà).
+  const currency = (formData.get("currency") as string) || currencyForCountryName(country) || "EUR";
   const primaryGoal = formData.get("primaryGoal") as string;
   const storeName = (formData.get("storeName") as string) || companyName;
 

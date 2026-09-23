@@ -1,4 +1,8 @@
 import { redirect } from "next/navigation";
+import { CheckoutContactProvider } from "@/components/store/checkout/CheckoutContactContext";
+import { CheckoutSubmitButton } from "@/components/store/checkout/CheckoutSubmitButton";
+import { CountryField } from "@/components/store/checkout/CountryField";
+import { PhoneField } from "@/components/store/checkout/PhoneField";
 import { TrackInitiateCheckout } from "@/components/store/tracking/TrackInitiateCheckout";
 import { submitCheckout } from "@/lib/actions/checkout";
 import { getCustomerSession } from "@/lib/data/customerAccount";
@@ -74,73 +78,75 @@ export default async function StoreCheckoutPage({
           <input type="hidden" name="storeSlug" value={store.slug} />
           <input type="hidden" name="cartId" value={cart.id ?? ""} />
 
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">Coordonnées</h2>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="fullName" className={labelClasses}>
-                  Nom complet
-                </label>
-                <input
-                  id="fullName"
-                  name="fullName"
-                  required
-                  defaultValue={session.fullName ?? ""}
-                  className={inputClasses}
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className={labelClasses}>
-                  Email
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  readOnly={session.isLoggedIn}
-                  defaultValue={session.email ?? ""}
-                  className={`${inputClasses} ${session.isLoggedIn ? "bg-slate-50 text-slate-500" : ""}`}
-                />
-              </div>
-              <div>
-                <label htmlFor="phone" className={labelClasses}>
-                  Téléphone
-                </label>
-                <input id="phone" name="phone" className={inputClasses} />
+          <CheckoutContactProvider defaultCountry={store.country ?? ""}>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Coordonnées</h2>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="fullName" className={labelClasses}>
+                    Nom complet
+                  </label>
+                  <input
+                    id="fullName"
+                    name="fullName"
+                    required
+                    defaultValue={session.fullName ?? ""}
+                    className={inputClasses}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="email" className={labelClasses}>
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    readOnly={session.isLoggedIn}
+                    defaultValue={session.email ?? ""}
+                    className={`${inputClasses} ${session.isLoggedIn ? "bg-slate-50 text-slate-500" : ""}`}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phone" className={labelClasses}>
+                    Téléphone
+                  </label>
+                  <PhoneField className={inputClasses} />
+                </div>
               </div>
             </div>
-          </div>
 
-          <div>
-            <h2 className="text-sm font-semibold text-slate-900">Adresse de livraison</h2>
-            <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="address" className={labelClasses}>
-                  Adresse
-                </label>
-                <input id="address" name="address" required className={inputClasses} />
-              </div>
-              <div>
-                <label htmlFor="city" className={labelClasses}>
-                  Ville
-                </label>
-                <input id="city" name="city" required className={inputClasses} />
-              </div>
-              <div>
-                <label htmlFor="postalCode" className={labelClasses}>
-                  Code postal
-                </label>
-                <input id="postalCode" name="postalCode" className={inputClasses} />
-              </div>
-              <div>
-                <label htmlFor="country" className={labelClasses}>
-                  Pays
-                </label>
-                <input id="country" name="country" required className={inputClasses} />
+            <div>
+              <h2 className="text-sm font-semibold text-slate-900">Adresse de livraison</h2>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div className="sm:col-span-2">
+                  <label htmlFor="address" className={labelClasses}>
+                    Adresse
+                  </label>
+                  <input id="address" name="address" required className={inputClasses} />
+                </div>
+                <div>
+                  <label htmlFor="city" className={labelClasses}>
+                    Ville
+                  </label>
+                  <input id="city" name="city" required className={inputClasses} />
+                </div>
+                <div>
+                  <label htmlFor="postalCode" className={labelClasses}>
+                    Code postal
+                  </label>
+                  <input id="postalCode" name="postalCode" className={inputClasses} />
+                </div>
+                <div>
+                  <label htmlFor="country" className={labelClasses}>
+                    Pays
+                  </label>
+                  <CountryField className={inputClasses} />
+                </div>
               </div>
             </div>
-          </div>
+          </CheckoutContactProvider>
 
           {shippingMethods.length > 0 && (
             <div>
@@ -249,13 +255,7 @@ export default async function StoreCheckoutPage({
             modalités de règlement.
           </div>
 
-          <button
-            type="submit"
-            className="rounded-lg px-6 py-3 text-sm font-semibold text-white hover:opacity-90"
-            style={{ backgroundColor: "var(--store-accent)" }}
-          >
-            Confirmer la commande
-          </button>
+          <CheckoutSubmitButton />
         </form>
 
         <div className="rounded-xl border border-slate-200 p-5">

@@ -8,6 +8,7 @@ export interface PublicStore {
   description: string | null;
   logoUrl: string | null;
   currency: string;
+  country: string | null;
   heroTitle: string | null;
   heroSubtitle: string | null;
   heroImageUrl: string | null;
@@ -36,7 +37,7 @@ export const getPublicStoreBySlug = cache(async (slug: string): Promise<PublicSt
   const { data } = await supabase
     .from("stores")
     .select(
-      "id, name, slug, description, logo_url, currency, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled, meta_pixel_id, ga4_measurement_id, gtm_container_id"
+      "id, name, slug, description, logo_url, currency, country, hero_title, hero_subtitle, hero_image_url, hero_cta_label, accent_color, social_facebook, social_instagram, social_tiktok, social_whatsapp, footer_text, loyalty_enabled, loyalty_earn_rate, loyalty_redeem_value, referral_enabled, meta_pixel_id, ga4_measurement_id, gtm_container_id"
     )
     .eq("slug", slug)
     .eq("is_active", true)
@@ -51,6 +52,7 @@ export const getPublicStoreBySlug = cache(async (slug: string): Promise<PublicSt
     description: data.description,
     logoUrl: data.logo_url,
     currency: data.currency,
+    country: data.country,
     heroTitle: data.hero_title,
     heroSubtitle: data.hero_subtitle,
     heroImageUrl: data.hero_image_url,

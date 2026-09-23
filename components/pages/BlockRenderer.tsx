@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CountdownTimer } from "@/components/pages/CountdownTimer";
 import { capturePageLead } from "@/lib/actions/pages";
+import { LeadFormSubmitButton } from "@/components/pages/LeadFormSubmitButton";
 import { toEmbedUrl } from "@/lib/videoEmbed";
 import { createClient } from "@/lib/supabase/server";
 import type { Block } from "@/lib/pageBuilder/types";
@@ -153,9 +154,9 @@ export async function BlockRenderer({
                 placeholder="Votre email"
                 className="flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-1"
               />
-              <button type="submit" className={buttonClasses} style={style}>
+              <LeadFormSubmitButton className={buttonClasses} style={style}>
                 {p.submitLabel || "Envoyer"}
-              </button>
+              </LeadFormSubmitButton>
             </form>
           </div>
         </div>

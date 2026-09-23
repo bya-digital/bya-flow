@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { getCurrentMembership } from "@/lib/data/team";
 import { getCurrentStore } from "@/lib/data/store";
 import { createClient } from "@/lib/supabase/server";
+import { currencyForCountryName } from "@/lib/countries";
 import { slugify } from "@/lib/utils";
 
 const CURRENT_STORE_COOKIE = "bya_current_store";
@@ -50,8 +51,11 @@ export async function createStore(formData: FormData) {
     redirect(`/boutique?error=${encodeURIComponent("Nom requis.")}`);
   }
 
-  const currency = (formData.get("currency") as string) || "EUR";
   const country = (formData.get("country") as string) || null;
+  // Jamais EUR par défaut sans rapport avec le pays réel de la
+  // boutique — dérivé du pays si la devise n'a pas été fournie
+  // (garde-fou côté serveur, même si le client la calcule déjà).
+  const currency = (formData.get("currency") as string) || currencyForCountryName(country) || "EUR";
 
   const supabase = createClient();
   const { data: newStore, error } = await supabase
