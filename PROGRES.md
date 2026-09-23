@@ -2437,3 +2437,13 @@ de lenteur ressentie au clic.
   de suivi.
 - Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
   (20/20) tous propres.
+
+## 2026-09-23 — Vérifié en conditions réelles
+
+Aucun SQL à coller (réutilise `stores.country`, déjà existant). Sur
+"Ajouter une boutique" : choisir "Sénégal" bascule immédiatement la
+devise sur XOF. Au checkout : le pays par défaut de la boutique
+(France) pré-remplit le téléphone avec "+33" ; après avoir tapé un
+numéro puis changé le pays pour "Sénégal", le champ affiche
+correctement "+221 612345678" — l'ancien indicatif est bien retiré,
+les chiffres tapés sont bien conservés.
