@@ -2476,3 +2476,8 @@ automatisations/facturation).
   (fichiers disjoints).
 - Vérifié après fusion des deux lots : `next build`, `next lint`,
   `tsc --noEmit`, `npm test` (20/20) tous propres.
+- Vérifié en conditions réelles : création d'un produit test via
+  `/produits/nouveau` (bouton passé en `SubmitButton`) réussie et
+  visible dans la liste ; `/fidelite` (bouton passé en `SubmitButton`)
+  s'affiche normalement. Aucune régression détectée sur les pages
+  vérifiées.
