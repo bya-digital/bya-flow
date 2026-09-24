@@ -1,10 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
+import type { PermissionKey, TeamRole } from "@/lib/permissions";
 
-export type TeamRole = "owner" | "admin" | "member";
+export type { TeamRole, PermissionKey };
+export { hasPermission, PERMISSION_LABELS } from "@/lib/permissions";
 
 export interface CurrentMembership {
   organizationId: string;
   role: TeamRole;
+  permissions: PermissionKey[] | null;
 }
 
 export async function getCurrentMembership(): Promise<CurrentMembership | null> {
@@ -16,19 +19,20 @@ export async function getCurrentMembership(): Promise<CurrentMembership | null> 
 
   const { data } = await supabase
     .from("organization_members")
-    .select("organization_id, role")
+    .select("organization_id, role, permissions")
     .eq("user_id", user.id)
     .limit(1)
-    .maybeSingle<{ organization_id: string; role: TeamRole }>();
+    .maybeSingle<{ organization_id: string; role: TeamRole; permissions: PermissionKey[] | null }>();
 
   if (!data) return null;
-  return { organizationId: data.organization_id, role: data.role };
+  return { organizationId: data.organization_id, role: data.role, permissions: data.permissions };
 }
 
 interface MemberRow {
   id: string;
   user_id: string;
   role: TeamRole;
+  permissions: PermissionKey[] | null;
   created_at: string;
 }
 
@@ -42,6 +46,7 @@ export interface TeamMember {
   id: string;
   userId: string;
   role: TeamRole;
+  permissions: PermissionKey[] | null;
   fullName: string | null;
   email: string | null;
   createdAt: string;
@@ -60,7 +65,7 @@ export async function getTeamMembers(organizationId: string): Promise<TeamMember
 
   const { data: members } = await supabase
     .from("organization_members")
-    .select("id, user_id, role, created_at")
+    .select("id, user_id, role, permissions, created_at")
     .eq("organization_id", organizationId)
     .order("created_at", { ascending: true })
     .returns<MemberRow[]>();
@@ -83,6 +88,7 @@ export async function getTeamMembers(organizationId: string): Promise<TeamMember
     id: row.id,
     userId: row.user_id,
     role: row.role,
+    permissions: row.permissions,
     fullName: profileById.get(row.user_id)?.full_name ?? null,
     email: profileById.get(row.user_id)?.email ?? null,
     createdAt: row.created_at,
@@ -94,6 +100,7 @@ export interface PendingInvitation {
   id: string;
   email: string;
   role: "admin" | "member";
+  permissions: PermissionKey[] | null;
   token: string;
   createdAt: string;
 }
@@ -102,7 +109,7 @@ export async function getPendingInvitations(organizationId: string): Promise<Pen
   const supabase = createClient();
   const { data } = await supabase
     .from("organization_invitations")
-    .select("id, email, role, token, created_at")
+    .select("id, email, role, permissions, token, created_at")
     .eq("organization_id", organizationId)
     .eq("status", "pending")
     .order("created_at", { ascending: false });
@@ -111,6 +118,7 @@ export async function getPendingInvitations(organizationId: string): Promise<Pen
     id: row.id,
     email: row.email,
     role: row.role as "admin" | "member",
+    permissions: row.permissions,
     token: row.token,
     createdAt: row.created_at,
   }));

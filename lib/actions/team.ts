@@ -2,10 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getCurrentMembership } from "@/lib/data/team";
+import { getCurrentMembership, PERMISSION_LABELS, type PermissionKey } from "@/lib/data/team";
 import { createClient } from "@/lib/supabase/server";
 
 const INVITABLE_ROLES = ["admin", "member"];
+const ALL_PERMISSION_KEYS = Object.keys(PERMISSION_LABELS) as PermissionKey[];
+
+// Les cases à cocher sont pré-cochées (accès complet, comportement
+// actuel) — si TOUTES restent cochées à l'envoi, on enregistre `null`
+// (accès complet, jamais une restriction silencieuse). Ce n'est que
+// si l'admin décoche au moins une case qu'une restriction explicite
+// (potentiellement une liste vide) est enregistrée.
+function readPermissions(formData: FormData): PermissionKey[] | null {
+  const checked = formData.getAll("permissions") as PermissionKey[];
+  return checked.length === ALL_PERMISSION_KEYS.length ? null : checked;
+}
 
 export async function inviteMember(formData: FormData) {
   const membership = await getCurrentMembership();
@@ -18,6 +29,10 @@ export async function inviteMember(formData: FormData) {
     redirect(`/equipe?error=${encodeURIComponent("Rôle invalide.")}`);
   }
 
+  // La restriction ne veut dire quelque chose que pour un membre
+  // simple — un futur admin garde de toute façon un accès complet.
+  const permissions = role === "member" ? readPermissions(formData) : null;
+
   const supabase = createClient();
   const {
     data: { user },
@@ -27,6 +42,7 @@ export async function inviteMember(formData: FormData) {
     organization_id: membership.organizationId,
     email,
     role,
+    permissions,
     invited_by: user?.id,
   });
 
@@ -76,6 +92,28 @@ export async function updateMemberRole(formData: FormData) {
     redirect(
       `/equipe?error=${encodeURIComponent(
         "Impossible de modifier ce rôle : " + error.message
+      )}`
+    );
+  }
+
+  revalidatePath("/equipe");
+  redirect("/equipe");
+}
+
+export async function updateMemberPermissions(formData: FormData) {
+  const memberId = formData.get("memberId") as string;
+  const permissions = readPermissions(formData);
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("organization_members")
+    .update({ permissions })
+    .eq("id", memberId);
+
+  if (error) {
+    redirect(
+      `/equipe?error=${encodeURIComponent(
+        "Impossible de modifier ces droits : " + error.message
       )}`
     );
   }

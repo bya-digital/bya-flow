@@ -20,7 +20,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { createStore, switchStore } from "@/lib/actions/store";
 import { getCurrentStore, getOrgStores } from "@/lib/data/store";
-import { getCurrentMembership } from "@/lib/data/team";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -35,6 +35,7 @@ export default async function BoutiquePage({
   const orgStores = store ? await getOrgStores(store.organization_id) : [];
   const membership = await getCurrentMembership();
   const canManageStores = membership?.role !== "member";
+  const canManageSettings = hasPermission(membership, "settings");
 
   return (
     <>
@@ -194,11 +195,19 @@ export default async function BoutiquePage({
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent>
-              <StoreForm store={store} />
-            </CardContent>
-          </Card>
+          {canManageSettings ? (
+            <Card>
+              <CardContent>
+                <StoreForm store={store} />
+              </CardContent>
+            </Card>
+          ) : (
+            <Alert
+              tone="warning"
+              title="Accès restreint"
+              description="Vous n'avez pas le droit de modifier les réglages de cette boutique — contactez un administrateur."
+            />
+          )}
         </div>
       ) : (
         <EmptyState

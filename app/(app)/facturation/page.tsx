@@ -1,4 +1,5 @@
 import { CreditCard } from "lucide-react";
+import { notFound } from "next/navigation";
 import { PlanCard } from "@/components/facturation/PlanCard";
 import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/ui/Badge";
@@ -7,12 +8,19 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { PLANS, formatLimit } from "@/lib/billing/plans";
 import { getSubscriptionSummary } from "@/lib/data/subscription";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 
 export default async function FacturationPage({
   searchParams,
 }: {
   searchParams: { error?: string; success?: string };
 }) {
+  // Contrôle d'accès réel : un membre sans le droit "finances" ne peut
+  // pas voir/gérer l'abonnement, même en accédant directement à
+  // /facturation.
+  const membership = await getCurrentMembership();
+  if (!hasPermission(membership, "finances")) notFound();
+
   const summary = await getSubscriptionSummary();
 
   return (

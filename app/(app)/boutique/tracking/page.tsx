@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { getCurrentStore } from "@/lib/data/store";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 
 const inputClasses =
   "mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-1 focus:ring-brand-400";
@@ -15,8 +16,9 @@ export default async function BoutiqueTrackingPage({
 }: {
   searchParams: { error?: string; success?: string };
 }) {
-  const store = await getCurrentStore();
+  const [store, membership] = await Promise.all([getCurrentStore(), getCurrentMembership()]);
   if (!store) notFound();
+  const canManageSettings = hasPermission(membership, "settings");
 
   return (
     <>
@@ -33,6 +35,14 @@ export default async function BoutiqueTrackingPage({
       )}
 
       <div className="max-w-xl space-y-4">
+        {!canManageSettings ? (
+          <Alert
+            tone="warning"
+            title="Accès restreint"
+            description="Vous n'avez pas le droit de modifier les réglages de cette boutique — contactez un administrateur."
+          />
+        ) : (
+        <>
         <Alert
           tone="info"
           title="Vos propres identifiants, aucun engagement de notre part"
@@ -91,6 +101,8 @@ export default async function BoutiqueTrackingPage({
             </form>
           </CardContent>
         </Card>
+        </>
+        )}
       </div>
     </>
   );

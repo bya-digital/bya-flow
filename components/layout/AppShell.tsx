@@ -11,6 +11,8 @@ interface AppShellProps {
   unreadNotifications: number;
   showPlatformAdmin?: boolean;
   showAdminNav?: boolean;
+  hideFinancesNav?: boolean;
+  hideSettingsNav?: boolean;
   stores: { id: string; name: string }[];
   currentStoreId: string | null;
 }
@@ -22,6 +24,8 @@ export function AppShell({
   unreadNotifications,
   showPlatformAdmin = false,
   showAdminNav = true,
+  hideFinancesNav = false,
+  hideSettingsNav = false,
   stores,
   currentStoreId,
 }: AppShellProps) {
@@ -34,6 +38,8 @@ export function AppShell({
         onClose={() => setMobileOpen(false)}
         showPlatformAdmin={showPlatformAdmin}
         showAdminNav={showAdminNav}
+        hideFinancesNav={hideFinancesNav}
+        hideSettingsNav={hideSettingsNav}
       />
       <div className="flex min-h-screen flex-col lg:pl-64">
         <Topbar

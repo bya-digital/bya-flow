@@ -35,6 +35,13 @@ export interface ChatContext {
   growthScore: number | null;
   vipCount: number;
   atRiskCount: number;
+  // Permissions granulaires (Phase 50) : un membre sans le droit
+  // "finances" ne doit jamais recevoir de chiffre d'affaires/panier
+  // moyen via l'assistant, même si la donnée est techniquement dans
+  // ce contexte — le refus se fait côté provider, jamais en amont en
+  // omettant simplement le champ (le provider doit pouvoir le dire
+  // explicitement plutôt que de sembler ne pas savoir).
+  canViewFinances: boolean;
 }
 
 export interface AIProvider {

@@ -53,10 +53,18 @@ export const heuristicProvider: AIProvider = {
         value
       );
 
-    if (/(chiffre d'affaires|ca\b|revenu|vente)/.test(q)) {
-      return `Sur les 30 derniers jours, ${context.storeName} a réalisé ${money(context.revenue30d)} de chiffre d'affaires, sur ${context.ordersCount30d} commande(s) (panier moyen ${money(context.averageBasket30d)}).`;
-    }
-    if (/(commande)/.test(q)) {
+    // Permissions granulaires (Phase 50) : un membre sans le droit
+    // "finances" ne doit jamais recevoir de chiffre d'affaires/panier
+    // moyen ici, même indirectement via le nombre de commandes — refus
+    // explicite plutôt qu'une réponse partielle qui laisserait croire
+    // que l'assistant ne sait juste pas répondre.
+    if (/(chiffre d'affaires|ca\b|revenu|vente|commande)/.test(q)) {
+      if (!context.canViewFinances) {
+        return "Vous n'avez pas accès aux informations financières de cette boutique — contactez un administrateur si vous en avez besoin.";
+      }
+      if (/(chiffre d'affaires|ca\b|revenu|vente)/.test(q)) {
+        return `Sur les 30 derniers jours, ${context.storeName} a réalisé ${money(context.revenue30d)} de chiffre d'affaires, sur ${context.ordersCount30d} commande(s) (panier moyen ${money(context.averageBasket30d)}).`;
+      }
       return `Vous avez reçu ${context.ordersCount30d} commande(s) sur les 30 derniers jours, pour un panier moyen de ${money(context.averageBasket30d)}.`;
     }
     if (/(produit vendu|meilleur produit|top produit|plus vendu)/.test(q)) {

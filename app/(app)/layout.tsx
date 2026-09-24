@@ -2,11 +2,13 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { isPlatformAdmin } from "@/lib/data/platformAdmin";
 import { getCurrentStore, getOrgStores } from "@/lib/data/store";
+import { hasPermission, type PermissionKey, type TeamRole } from "@/lib/data/team";
 import { createClient } from "@/lib/supabase/server";
 
 interface MembershipRow {
   organizations: { name: string } | null;
-  role: string;
+  role: TeamRole;
+  permissions: PermissionKey[] | null;
 }
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -19,12 +21,14 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   let organizationName = "Mon organisation";
   let unreadNotifications = 0;
   let showAdminNav = true;
+  let hideFinancesNav = false;
+  let hideSettingsNav = false;
   let stores: { id: string; name: string }[] = [];
 
   if (user) {
     const { data: membership } = await supabase
       .from("organization_members")
-      .select("organization_id, role, organizations(name)")
+      .select("organization_id, role, permissions, organizations(name)")
       .eq("user_id", user.id)
       .limit(1)
       .maybeSingle<MembershipRow & { organization_id: string }>();
@@ -34,6 +38,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     }
 
     showAdminNav = membership?.role !== "member";
+    hideFinancesNav = membership ? !hasPermission(membership, "finances") : false;
+    hideSettingsNav = membership ? !hasPermission(membership, "settings") : false;
 
     if (membership?.organization_id) {
       const { count } = await supabase
@@ -57,6 +63,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       unreadNotifications={unreadNotifications}
       showPlatformAdmin={showPlatformAdmin}
       showAdminNav={showAdminNav}
+      hideFinancesNav={hideFinancesNav}
+      hideSettingsNav={hideSettingsNav}
       stores={stores}
       currentStoreId={currentStore?.id ?? null}
     >

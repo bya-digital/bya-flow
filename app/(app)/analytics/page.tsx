@@ -1,4 +1,5 @@
 import { BarChart3, ShoppingCart, TrendingUp, Users } from "lucide-react";
+import { notFound } from "next/navigation";
 import { OrderStatusBreakdown } from "@/components/analytics/OrderStatusBreakdown";
 import { PeriodSelector } from "@/components/analytics/PeriodSelector";
 import { KpiCard } from "@/components/dashboard/KpiCard";
@@ -7,6 +8,7 @@ import { TopProducts } from "@/components/dashboard/TopProducts";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { getCurrentStore } from "@/lib/data/store";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 import { createClient } from "@/lib/supabase/server";
 
 const dayLabelFormatter = new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "2-digit" });
@@ -38,6 +40,12 @@ export default async function AnalyticsPage({
 }: {
   searchParams: { period?: string };
 }) {
+  // Contrôle d'accès réel : un membre sans le droit "finances" ne peut
+  // pas voir le chiffre d'affaires, même en accédant directement à
+  // /analytics.
+  const membership = await getCurrentMembership();
+  if (!hasPermission(membership, "finances")) notFound();
+
   const period = [7, 30, 90, 365].includes(Number(searchParams.period))
     ? Number(searchParams.period)
     : 30;

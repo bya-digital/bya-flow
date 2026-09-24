@@ -57,8 +57,9 @@ export default async function EquipePage({
         <CardContent>
           <h2 className="text-sm font-semibold text-slate-900">Inviter un membre</h2>
           <p className="mt-1 text-sm text-slate-500">
-            Un compte administrateur peut gérer les produits, commandes et paramètres. Un membre a
-            accès à l&apos;espace de travail sans pouvoir gérer l&apos;équipe.
+            Un compte administrateur a un accès complet. Un membre a accès à l&apos;espace de
+            travail (sans pouvoir gérer l&apos;équipe) — vous pouvez ensuite lui retirer l&apos;accès
+            aux finances ou aux réglages boutique dans le tableau ci-dessous.
           </p>
           <div className="mt-4">
             <InviteMemberForm />
@@ -102,6 +103,7 @@ export default async function EquipePage({
                 <th className="px-4 py-3">Nom</th>
                 <th className="px-4 py-3">Email</th>
                 <th className="px-4 py-3">Rôle</th>
+                <th className="px-4 py-3">Accès</th>
                 <th className="px-4 py-3" />
               </tr>
             </thead>

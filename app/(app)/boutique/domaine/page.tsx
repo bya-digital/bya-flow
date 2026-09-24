@@ -7,14 +7,16 @@ import { InlineSubmitButton } from "@/components/ui/InlineSubmitButton";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubmitButton } from "@/components/ui/SubmitButton";
 import { getCurrentStore } from "@/lib/data/store";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 
 export default async function BoutiqueDomainePage({
   searchParams,
 }: {
   searchParams: { error?: string; success?: string };
 }) {
-  const store = await getCurrentStore();
+  const [store, membership] = await Promise.all([getCurrentStore(), getCurrentMembership()]);
   if (!store) notFound();
+  const canManageSettings = hasPermission(membership, "settings");
 
   return (
     <>
@@ -36,7 +38,14 @@ export default async function BoutiqueDomainePage({
       )}
 
       <div className="max-w-xl space-y-4">
-        {store.custom_domain ? (
+        {!canManageSettings && (
+          <Alert
+            tone="warning"
+            title="Accès restreint"
+            description="Vous n'avez pas le droit de modifier les réglages de cette boutique — contactez un administrateur."
+          />
+        )}
+        {!canManageSettings ? null : store.custom_domain ? (
           <Card>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">

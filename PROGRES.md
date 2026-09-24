@@ -2481,3 +2481,52 @@ automatisations/facturation).
   visible dans la liste ; `/fidelite` (bouton passé en `SubmitButton`)
   s'affiche normalement. Aucune régression détectée sur les pages
   vérifiées.
+
+## 2026-09-24 — Phase 50 : Permissions granulaires
+
+Directive Section 25. Aujourd'hui un membre simple ('member') a un
+accès complet à toutes les données métier — seule la petite surface
+admin (équipe, clés API, journal d'audit, secrets des fournisseurs)
+est déjà réservée à 'admin'/'owner'. Cette phase ajoute une
+restriction OPTIONNELLE, à la carte, sur deux zones précises pour un
+membre simple : les finances et les réglages boutique — jamais une
+réduction silencieuse de l'existant (`permissions is null` = accès
+complet, exactement comme avant cette migration, pour tout membre
+déjà en place). Owner/admin ne sont jamais concernés.
+
+- **`organization_members.permissions text[]`** (+ même colonne sur
+  `organization_invitations`, gelée à l'invitation puis copiée
+  telle quelle à l'acceptation — même principe que le rôle).
+- **`member_has_permission()`** / **`member_has_store_permission()`**
+  (SQL, SECURITY DEFINER) : owner/admin toujours vrai ; membre simple
+  vrai si `permissions is null` ou si la clé y figure explicitement.
+- **Application réelle (pas seulement une case à cocher côté UI)** :
+  la policy RLS `stores_update_member` exige désormais le droit
+  `settings` — une seule policy à modifier couvre à la fois les
+  réglages généraux, l'apparence, le tracking et le domaine
+  personnalisé (toutes ces pages écrivent sur la même table
+  `stores`).
+- **`/analytics`** et **`/facturation`** bloquées (notFound) sans le
+  droit `finances`, même par URL directe. **`/boutique`** et ses
+  sous-pages (apparence/domaine/tracking) affichent un message
+  "Accès restreint" sans le droit `settings` (le vrai verrou reste la
+  RLS ci-dessus, ce message évite juste un échec silencieux).
+- **Assistant IA (Phase 49)** : `ChatContext.canViewFinances` — un
+  membre sans le droit `finances` reçoit un refus explicite
+  ("vous n'avez pas accès...") sur les questions de chiffre
+  d'affaires/commandes, jamais une réponse partielle.
+- **Nav** : `/analytics`, `/facturation`, `/boutique` masqués dans le
+  menu si le droit correspondant manque (`Sidebar.tsx`).
+- **`/equipe`** : nouvelle colonne "Accès" — cases à cocher par
+  membre (toutes cochées par défaut = accès complet), en plus du
+  rôle. Même logique proposée à l'invitation.
+- **`lib/permissions.ts`** (nouveau, sans dépendance au client
+  Supabase serveur) sépare les constantes/types de permissions de
+  `lib/data/team.ts` pour rester importables depuis les composants
+  client `InviteMemberForm`/`MemberRow` — même bug de frontière
+  client/serveur déjà rencontré et corrigé cette session
+  (`lib/data/segments.ts`, `lib/data/crm.ts`), retrouvé et corrigé
+  ici aussi (`next build` l'a détecté immédiatement).
+- Vérifié : `next build`, `next lint`, `tsc --noEmit`, `npm test`
+  (20/20) tous propres. Vérification en conditions réelles bloquée
+  tant que le SQL n'a pas été collé.

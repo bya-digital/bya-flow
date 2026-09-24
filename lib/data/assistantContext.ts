@@ -1,6 +1,7 @@
 import { getCustomerRfmMap } from "@/lib/data/crm";
 import { getGrowthScore } from "@/lib/data/growthScore";
 import { getCurrentStore } from "@/lib/data/store";
+import { getCurrentMembership, hasPermission } from "@/lib/data/team";
 import { createClient } from "@/lib/supabase/server";
 import type { ChatContext } from "@/lib/ai/types";
 
@@ -19,7 +20,7 @@ export async function getAssistantContext(): Promise<ChatContext | null> {
   since.setDate(since.getDate() - 30);
   const sinceIso = since.toISOString();
 
-  const [ordersRes, newCustomersRes, totalCustomersRes, itemsRes, growthScore, rfmMap] =
+  const [ordersRes, newCustomersRes, totalCustomersRes, itemsRes, growthScore, rfmMap, membership] =
     await Promise.all([
       supabase.from("orders").select("total").eq("store_id", store.id).gte("created_at", sinceIso),
       supabase
@@ -38,6 +39,7 @@ export async function getAssistantContext(): Promise<ChatContext | null> {
         .gte("order.created_at", sinceIso),
       getGrowthScore(),
       getCustomerRfmMap(store.id),
+      getCurrentMembership(),
     ]);
 
   const orders = ordersRes.data ?? [];
@@ -76,5 +78,6 @@ export async function getAssistantContext(): Promise<ChatContext | null> {
     growthScore: growthScore?.score ?? null,
     vipCount,
     atRiskCount,
+    canViewFinances: hasPermission(membership, "finances"),
   };
 }

@@ -8,12 +8,16 @@ import { navSections, platformAdminNavSection } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 const ADMIN_ONLY_HREFS = ["/equipe", "/audit", "/developpeurs"];
+const FINANCES_HREFS = ["/analytics", "/facturation"];
+const SETTINGS_HREFS = ["/boutique"];
 
 interface SidebarProps {
   mobileOpen: boolean;
   onClose: () => void;
   showPlatformAdmin?: boolean;
   showAdminNav?: boolean;
+  hideFinancesNav?: boolean;
+  hideSettingsNav?: boolean;
 }
 
 export function Sidebar({
@@ -21,14 +25,22 @@ export function Sidebar({
   onClose,
   showPlatformAdmin = false,
   showAdminNav = true,
+  hideFinancesNav = false,
+  hideSettingsNav = false,
 }: SidebarProps) {
   const pathname = usePathname();
-  const baseSections = showAdminNav
-    ? navSections
-    : navSections.map((section) => ({
-        ...section,
-        items: section.items.filter((item) => !ADMIN_ONLY_HREFS.includes(item.href)),
-      }));
+  const hiddenHrefs = [
+    ...(showAdminNav ? [] : ADMIN_ONLY_HREFS),
+    ...(hideFinancesNav ? FINANCES_HREFS : []),
+    ...(hideSettingsNav ? SETTINGS_HREFS : []),
+  ];
+  const baseSections =
+    hiddenHrefs.length === 0
+      ? navSections
+      : navSections.map((section) => ({
+          ...section,
+          items: section.items.filter((item) => !hiddenHrefs.includes(item.href)),
+        }));
   const sections = showPlatformAdmin
     ? [...baseSections, platformAdminNavSection]
     : baseSections;
